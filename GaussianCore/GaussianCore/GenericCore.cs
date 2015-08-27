@@ -5,11 +5,27 @@ namespace GaussianCore
 {
     public abstract class GenericCore
     {
+        #region Properties
+
         public double[] CentersInput { get; set; }
 
         public double[] CentersOutput { get; set; }
 
-        public IList<double> L { get; set; }
+        public int InputLength
+        {
+            get { return CentersInput.Length; }
+        }
+
+        public int OutputLength
+        {
+            get { return CentersOutput.Length; }
+        }
+
+        public double[] L { get; set; }
+
+        #endregion
+
+        #region Methods
 
         public abstract double A(IList<double> inputs);
 
@@ -29,5 +45,7 @@ namespace GaussianCore
             }
             return a * Math.Exp(b * s);
         }
+
+        #endregion
     }
 }

@@ -34,7 +34,7 @@ namespace GaussianCore
             {
                 var a = core.A(inputs);
                 var b = core.B(inputs);
-                b = Math.Pow(b, -core.CentersOutput.Length/2.0);
+                b = Math.Pow(b, -core.OutputLength /2.0);
                 var prod = a * b;
                 denom += prod;
                 num += prod * core.CentersOutput[k];
@@ -50,7 +50,7 @@ namespace GaussianCore
             {
                 var a = core.A(inputs);
                 var b = core.B(inputs);
-                var bb = Math.Pow(b, -core.CentersOutput.Length / 2.0);
+                var bb = Math.Pow(b, -core.OutputLength / 2.0);
                 var prod = a * bb;
                 denom += prod;
                 var d = core.CentersOutput[k];

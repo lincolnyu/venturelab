@@ -38,6 +38,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Component.cs" />
+    <Compile Include="ConfinedCoreManager.cs" />
+    <Compile Include="GaussianConfinedCore.cs" />
     <Compile Include="GenericCoreManager.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="GaussianCoreManager.cs" />
