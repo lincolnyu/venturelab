@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+*.suo
+/GaussianCore/GaussianCore/obj/Debug
+/GaussianCore/Sample2D/obj/Debug
+/GaussianCore/Sample2D/bin/Debug
