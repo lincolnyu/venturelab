@@ -30,13 +30,13 @@ namespace GaussianCore
         {
             var c = C(inputs);
             var a = Math.Pow(c, OutputLength);
-            var l = 1.0;
+            var k = 1.0;
             for (var i = 0; i < L.Length; i++)
             {
-                l *= L[i];
+                k *= K[i];
             }
-            l = Math.Sqrt(Math.Abs(l));
-            a *= l;
+            k = Math.Sqrt(Math.Abs(k));
+            a *= k;
             return a;
         }
 
@@ -53,9 +53,9 @@ namespace GaussianCore
             var s = 0.0;
             for (var i = 0; i < K.Length; i++)
             {
-                var d = inputs[i] - K[i];
+                var d = inputs[i] - CentersInput[i];
                 d *= d;
-                d *= L[i];
+                d *= K[i];
                 s += d;
             }
             var c = Math.Exp(s);

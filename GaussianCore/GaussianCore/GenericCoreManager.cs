@@ -6,6 +6,11 @@ namespace GaussianCore
 {
     public abstract class GenericCoreManager : ICoreManager, IEnumerable<GenericCore>
     {
+        #region Properties
+        public virtual double Epsilon => double.Epsilon;
+
+        #endregion
+
         #region Methods
 
         #region IEnumerable<GenericCore> members
@@ -39,11 +44,14 @@ namespace GaussianCore
             foreach (var core in this)
             {
                 var a = core.A(inputs);
-                var b = core.B(inputs);
-                b = Math.Pow(b, -core.OutputLength /2.0);
-                var prod = a * b;
-                denom += prod;
-                num += prod * core.CentersOutput[k];
+                if (a >= Epsilon)
+                {
+                    var b = core.B(inputs);
+                    var bb = Math.Pow(b, -core.OutputLength / 2.0);
+                    var prod = a * bb;
+                    denom += prod;
+                    num += prod * core.CentersOutput[k];
+                }
             }
             return num / denom;
         }
@@ -55,14 +63,17 @@ namespace GaussianCore
             foreach (var core in this)
             {
                 var a = core.A(inputs);
-                var b = core.B(inputs);
-                var bb = Math.Pow(b, -core.OutputLength / 2.0);
-                var prod = a * bb;
-                denom += prod;
-                var d = core.CentersOutput[k];
-                d *= d;
-                d -= 0.5 / (core.L[k]*b);
-                num = prod * d;
+                if (a > Epsilon)
+                {
+                    var b = core.B(inputs);
+                    var bb = Math.Pow(b, -core.OutputLength / 2.0);
+                    var prod = a * bb;
+                    denom += prod;
+                    var d = core.CentersOutput[k];
+                    d *= d;
+                    d -= 0.5 / (core.L[k] * b);
+                    num += prod * d;
+                }
             }
             return num / denom;
         }

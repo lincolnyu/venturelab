@@ -8,6 +8,14 @@ namespace GaussianCore
     {
         #region Properties
 
+        #region Methods
+
+        // TODO Review the EPSILON mechanism
+
+        public override double Epsilon => 0.0001;
+
+        #endregion
+
         public IList<GaussianConfinedCore> Cores { get; } = new List<GaussianConfinedCore>();
 
         public const double Attenuation = 0.5;
