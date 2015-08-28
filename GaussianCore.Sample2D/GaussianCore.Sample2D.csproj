@@ -7,8 +7,8 @@
     <ProjectGuid>{20B8B81F-7A04-4D94-9273-5149B1F9C06D}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Sample2D</RootNamespace>
-    <AssemblyName>Sample2D</AssemblyName>
+    <RootNamespace>GaussianCore.Sample2D</RootNamespace>
+    <AssemblyName>GaussianCore.Sample2D</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
