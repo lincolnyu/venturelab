@@ -37,16 +37,16 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Component.cs" />
-    <Compile Include="ConfinedCoreManager.cs" />
-    <Compile Include="GaussianConfinedCore.cs" />
-    <Compile Include="GenericCoreManager.cs" />
-    <Compile Include="Core.cs" />
-    <Compile Include="GaussianCoreManager.cs" />
-    <Compile Include="GenericCore.cs" />
-    <Compile Include="GridCoreManager.cs" />
+    <Compile Include="Spheric\Component.cs" />
+    <Compile Include="Generic\ConfinedCoreManager.cs" />
+    <Compile Include="Generic\GaussianConfinedCore.cs" />
+    <Compile Include="Generic\GenericCoreManager.cs" />
+    <Compile Include="Spheric\Core.cs" />
+    <Compile Include="Spheric\GaussianCoreManager.cs" />
+    <Compile Include="Generic\GenericCore.cs" />
+    <Compile Include="Spheric\GridCoreManager.cs" />
     <Compile Include="ICoreManager.cs" />
-    <Compile Include="DistanceCoreManager.cs" />
+    <Compile Include="Spheric\DistanceCoreManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

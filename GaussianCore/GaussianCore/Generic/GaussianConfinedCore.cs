@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GaussianCore
+namespace GaussianCore.Generic
 {
     public class GaussianConfinedCore : GenericCore
     {
         #region Constructors
+
         public GaussianConfinedCore(int inputLen, int outputLen) : base(inputLen, outputLen)
         {
             K = new double[inputLen];
@@ -42,8 +43,21 @@ namespace GaussianCore
 
         public override double B(IList<double> inputs)
         {
+#if true
             var c = C(inputs);
             return Math.Pow(c, 1.0/OutputLength);
+#else
+            var s = 1.0;
+            for (var i = 0; i < K.Length; i++)
+            {
+                var d = inputs[i] - CentersInput[i];
+                d *= d;
+                d /= -K[i] / 100;
+                s += d;
+            }
+            var b = 1 / s;
+            return b;
+#endif 
         }
 
         #endregion
@@ -62,6 +76,6 @@ namespace GaussianCore
             return c;
         }
 
-        #endregion
+#endregion
     }
 }

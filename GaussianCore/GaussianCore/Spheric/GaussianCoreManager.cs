@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GaussianCore
+namespace GaussianCore.Spheric
 {
     public abstract class GaussianCoreManager : ICoreManager, IEnumerable<Core>
     {
         #region Properties
+
         public int OutputStartingFrom { get; set; }
 
         #endregion
 
         public abstract IEnumerator<Core> GetEnumerator();
         
-
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

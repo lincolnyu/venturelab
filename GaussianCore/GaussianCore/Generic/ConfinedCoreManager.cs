@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GaussianCore
+namespace GaussianCore.Generic
 {
     public class ConfinedCoreManager : GenericCoreManager
     {

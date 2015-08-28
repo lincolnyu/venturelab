@@ -2,11 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace GaussianCore
+namespace GaussianCore.Generic
 {
     public abstract class GenericCoreManager : ICoreManager, IEnumerable<GenericCore>
     {
         #region Properties
+
         public virtual double Epsilon => double.Epsilon;
 
         #endregion

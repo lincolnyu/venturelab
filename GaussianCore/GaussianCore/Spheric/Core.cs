@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GaussianCore
+namespace GaussianCore.Spheric
 {
     public class Core
     {

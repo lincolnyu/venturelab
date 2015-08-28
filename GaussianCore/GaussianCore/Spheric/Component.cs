@@ -1,4 +1,4 @@
-﻿namespace GaussianCore
+﻿namespace GaussianCore.Spheric
 {
     public class Component
     {

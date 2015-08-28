@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace GaussianCore
+namespace GaussianCore.Spheric
 {
     public class GridCoreManager : GaussianCoreManager
     {
