@@ -5,21 +5,26 @@ namespace GaussianCore
 {
     public abstract class GenericCore
     {
+        #region Constructors
+
+        protected GenericCore(int inputLen, int outputLen)
+        {
+            CentersInput = new double[inputLen];
+            CentersOutput = new double[outputLen];
+            L = new double[outputLen];
+        }
+
+        #endregion
+
         #region Properties
 
-        public double[] CentersInput { get; set; }
+        public double[] CentersInput { get; }
 
-        public double[] CentersOutput { get; set; }
+        public double[] CentersOutput { get; }
 
-        public int InputLength
-        {
-            get { return CentersInput.Length; }
-        }
+        public int InputLength => CentersInput.Length;
 
-        public int OutputLength
-        {
-            get { return CentersOutput.Length; }
-        }
+        public int OutputLength => CentersOutput.Length;
 
         public double[] L { get; set; }
 

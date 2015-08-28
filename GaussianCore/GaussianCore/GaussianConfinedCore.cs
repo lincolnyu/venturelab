@@ -5,12 +5,20 @@ namespace GaussianCore
 {
     public class GaussianConfinedCore : GenericCore
     {
+        #region Constructors
+        public GaussianConfinedCore(int inputLen, int outputLen) : base(inputLen, outputLen)
+        {
+            K = new double[inputLen];
+        }
+
+        #endregion
+
         #region Properties
 
         /// <summary>
         ///  Input precision coefficients
         /// </summary>
-        public double[] K { get; set; }
+        public double[] K { get; }
 
         #endregion
 
@@ -20,8 +28,8 @@ namespace GaussianCore
 
         public override double A(IList<double> inputs)
         {
-            var b = B(inputs);
-            var a = Math.Pow(b, OutputLength);
+            var c = C(inputs);
+            var a = Math.Pow(c, OutputLength);
             var l = 1.0;
             for (var i = 0; i < L.Length; i++)
             {
@@ -34,18 +42,25 @@ namespace GaussianCore
 
         public override double B(IList<double> inputs)
         {
-            var s = 0.0;
-            for (var i = 0; i< K.Length; i++)
-            {
-                var d = inputs[i] - K[i];
-                d *= d;
-                s += d;
-            }
-            var b = Math.Exp(s);
-            return b;
+            var c = C(inputs);
+            return Math.Pow(c, 1.0/OutputLength);
         }
 
         #endregion
+
+        private double C(IList<double> inputs)
+        {
+            var s = 0.0;
+            for (var i = 0; i < K.Length; i++)
+            {
+                var d = inputs[i] - K[i];
+                d *= d;
+                d *= L[i];
+                s += d;
+            }
+            var c = Math.Exp(s);
+            return c;
+        }
 
         #endregion
     }

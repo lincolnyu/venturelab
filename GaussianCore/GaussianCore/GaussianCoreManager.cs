@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace GaussianCore
 {
-    public abstract class GaussianCoreManager : ICoreManager
+    public abstract class GaussianCoreManager : ICoreManager, IEnumerable<Core>
     {
         #region Properties
         public int OutputStartingFrom { get; set; }
@@ -19,9 +19,9 @@ namespace GaussianCore
             return GetEnumerator();
         }
 
-        public double GetIntensity(IList<double> inoutputs)
+        public double GetIntensity(IList<double> inputs, IList<double> outputs)
         {
-            return this.Sum(core => core.GetIntensity(inoutputs));
+            return this.Sum(core => core.GetIntensity(inputs, outputs));
         }
 
         public double GetExpectedY(IList<double> inputs, int k)

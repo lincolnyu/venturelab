@@ -4,9 +4,11 @@ using System.Collections.Generic;
 
 namespace GaussianCore
 {
-    public abstract class GenericCoreManager : IEnumerable<GenericCore>
+    public abstract class GenericCoreManager : ICoreManager, IEnumerable<GenericCore>
     {
         #region Methods
+
+        #region IEnumerable<GenericCore> members
 
         public abstract IEnumerator<GenericCore> GetEnumerator();
 
@@ -14,6 +16,10 @@ namespace GaussianCore
         {
             return GetEnumerator();
         }
+
+        #endregion
+
+        #region ICoreManager members
 
         public double GetIntensity(IList<double> inputs, IList<double> outputs)
         {
@@ -60,6 +66,8 @@ namespace GaussianCore
             }
             return num / denom;
         }
+
+        #endregion
 
         #endregion
     }

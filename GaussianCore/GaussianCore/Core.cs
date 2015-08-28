@@ -7,6 +7,9 @@ namespace GaussianCore
     {
         #region Properties
 
+        /// <summary>
+        ///  percentage the pdf drops to when it gets to half the characterized distance
+        /// </summary>
         public const double Attenuation = 0.5;
 
         public IList<Component> Components { get; } = new List<Component>();
@@ -79,7 +82,7 @@ namespace GaussianCore
             {
                 var sqoo = OutputOffsets[i - outputStartFrom];
                 sqoo *= sqoo;
-                var loutput = Math.Log(Attenuation) / sqoo;
+                var loutput = Math.Log(Attenuation) * 4 / sqoo;
                 Components[i].L = loutput;
                 AOutput *= Math.Sqrt(-loutput) ;
             }
@@ -98,12 +101,12 @@ namespace GaussianCore
             return result;
         }
 
-        public double GetIntensity(IList<double> inoutputs)
+        public double GetIntensity(IList<double> inputs, IList<double> outputs)
         {
             var result = Multiple * AInput * AOutput;
-            for (var i = 0; i < inoutputs.Count; i++)
+            for (var i = 0; i < Components.Count; i++)
             {
-                var dx = inoutputs[i] - Components[i].Center;
+                var dx = ((i < inputs.Count)? inputs[i] : outputs[i- inputs.Count]) - Components[i].Center;
                 var sqdx = dx * dx;
                 var e = Math.Exp(Components[i].L * sqdx);
                 result *= e;

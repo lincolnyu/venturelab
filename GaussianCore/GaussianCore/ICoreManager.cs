@@ -2,11 +2,11 @@
 
 namespace GaussianCore
 {
-    public interface ICoreManager : IEnumerable<Core>
+    public interface ICoreManager
     {
         #region Methods
 
-        double GetIntensity(IList<double> inoutputs);
+        double GetIntensity(IList<double> inputs, IList<double> outputs);
 
         double GetExpectedY(IList<double> inputs, int k);
 

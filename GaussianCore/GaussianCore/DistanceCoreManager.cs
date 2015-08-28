@@ -107,7 +107,7 @@ namespace GaussianCore
             var aoutput = Math.Pow(invPi, outputCount/2.0);
             for (var k = 0; k < componentSize; k++)
             {
-                llist[k] = Math.Log(Core.Attenuation) / sqdlist[k];
+                llist[k] = Math.Log(Core.Attenuation) * 4 / sqdlist[k];
                 if (k < OutputStartingFrom)
                 {
                     ainput *= -llist[k];
