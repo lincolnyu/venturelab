@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace SecurityAccess
 {
     /// <summary>
-    ///  1d, 2d, 4d, 8d, 16d, 32d, 64d, 128d, 256d, 512d, 1024d, 2048d, 4096d 
+    ///  extracts statistic point from raw stock data.
     /// </summary>
     public class Extractor
     {
@@ -20,7 +20,7 @@ namespace SecurityAccess
         /// statistic point to the day to start the processing with</param>
         /// <param name="interval">interval in number of days</param>
         /// <param name="count">total number of statistic point to try to extract</param>
-        public IEnumerable<StatisticPoint> Suck(IList<DailyStockdata> data, int start, int interval, int count)
+        public IEnumerable<StatisticPoint> Suck(IList<DailyStockEntry> data, int start, int interval, int count)
         {
             for (var i = StatisticPoint.FirstCentralDay + start; count > 0; count--)
             {

@@ -9,3 +9,6 @@
 /GaussianCore.Sample2D/obj/Debug
 /SecurityAccess/bin/Debug
 /SecurityAccess/obj/Debug
+/SecurityAnalysisConsole/bin/Debug
+/SecurityAnalysisConsole/obj/Debug
+*.user
