@@ -40,8 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsxHistoryHelper.cs" />
-    <Compile Include="MultiTapMethod.cs" />
+    <Compile Include="Asx\HistoryHelper.cs" />
+    <Compile Include="Asx\DailyStockData.cs" />
+    <Compile Include="MultiTapMethod\StatisticPoint.cs" />
+    <Compile Include="MultiTapMethod\Extractor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
