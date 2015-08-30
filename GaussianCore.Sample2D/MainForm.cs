@@ -231,7 +231,7 @@ namespace Sample2D
 
         public ICoreManager CreateDistanceCore(int count)
         {
-            var cm = new DistanceCoreManager { OutputStartingFrom = 1 };
+            var cm = new VariableCoreManager { OutputStartingFrom = 1 };
             for (; count > 0; count--)
             {
                 var x = _r.NextDouble() * FuncWidth;
@@ -249,7 +249,7 @@ namespace Sample2D
 
         public ICoreManager CreateGaussianConfinedCores(int count)
         {
-            var cm = new ConfinedCoreManager();
+            var cm = new FixedConfinedCoreManager();
             for (; count > 0; count--)
             {
                 var x = _r.NextDouble() * FuncWidth;

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace GaussianCore.Spheric
 {
-    public class GridCoreManager : GaussianCoreManager
+    public class FixedCoreManager : GaussianCoreManager
     {
         #region Properties
 

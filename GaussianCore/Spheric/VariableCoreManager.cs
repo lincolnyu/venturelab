@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GaussianCore.Spheric
 {
-    public class DistanceCoreManager : GaussianCoreManager
+    public class VariableCoreManager : GaussianCoreManager
     {
         #region Properties
 

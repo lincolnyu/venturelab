@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace GaussianCore.Generic
 {
-    public class ConfinedCoreManager : GenericCoreManager
+    public class FixedConfinedCoreManager : GenericCoreManager
     {
         #region Properties
 
