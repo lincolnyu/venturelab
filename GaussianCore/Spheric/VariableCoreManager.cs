@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace GaussianCore.Spheric
 {
@@ -9,127 +9,104 @@ namespace GaussianCore.Spheric
 
         public IList<Core> Cores { get; } = new List<Core>();
 
+        public const double DistanceTolerance = 0.0001;
+
         #endregion
 
         #region Methods
 
+        #region GaussianCoreManager members
         public override IEnumerator<Core> GetEnumerator()
         {
             return Cores.GetEnumerator();
         }
 
-        private double[] GetMeanSquareDistance()
-        {
-            var componentSize = Cores[0].Components.Count;
-            var sqdlist = new double[componentSize];
-            for (var i = 0; i < Cores.Count - 1; i++)
-            {
-                var c1 = Cores[i];
-                for (var j = i + 1; j < Cores.Count; j++)
-                {
-                    var c2 = Cores[j];
-                    for (var k = 0; k < componentSize; k++)
-                    {
-                        var x1 = c1.Components[k].Center;
-                        var x2 = c2.Components[k].Center;
-                        sqdlist[k] = (x2 - x1) * (x2 - x1);
-                    }
-                }
-            }
-            for (var k = 0; k < componentSize; k++)
-            {
-                sqdlist[k] /= Cores.Count*Cores.Count;
-            }
-            return sqdlist;
-        }
-
-        private double[] GetMaxMinSquareDistance()
-        {
-            var componentSize = Cores[0].Components.Count;
-            var sqdtable = new double[Cores.Count][];
-            for (var i = 0; i < Cores.Count; i++)
-            {
-                sqdtable[i] = new double[componentSize];
-                for (var k = 0; k < componentSize; k++)
-                {
-                    sqdtable[i][k] = double.MaxValue;
-                }
-            }
-            for (var i = 0; i < Cores.Count - 1; i++)
-            {
-                var c1 = Cores[i];
-                for (var j = i + 1; j < Cores.Count; j++)
-                {
-                    var c2 = Cores[j];
-                    for (var k = 0; k < componentSize; k++)
-                    {
-                        var x1 = c1.Components[k].Center;
-                        var x2 = c2.Components[k].Center;
-                        var sqd = (x2 - x1) * (x2 - x1);
-                        if (sqd < sqdtable[i][k])
-                        {
-                            sqdtable[i][k] = sqd;
-                        }
-                        if (sqd < sqdtable[j][k])
-                        {
-                            sqdtable[j][k] = sqd;
-                        }
-                    }
-                }
-            }
-            var sqdlist = new double[componentSize];
-            for (var k = 0; k < componentSize; k++)
-            {
-                var max = 0.0;
-                for (var i = 0; i < Cores.Count; i++)
-                {
-                    if (sqdtable[i][k] > max)
-                    {
-                        max = sqdtable[i][k];
-                    }
-
-                }
-                sqdlist[k] = max;
-            }
-
-            return sqdlist;
-        }
+        #endregion
 
         public void UpdateCoreCoeffs()
         {
-            var componentSize = Cores[0].Components.Count;
-            var sqdlist = GetMaxMinSquareDistance();
+            UpdateMinimumDistances();
 
-            var llist = new double[componentSize];
-            var invPi = 1 / Math.PI;
-            var ainput = Math.Pow(invPi, OutputStartingFrom/2.0);
-            var outputCount = componentSize - OutputStartingFrom;
-            var aoutput = Math.Pow(invPi, outputCount/2.0);
-            for (var k = 0; k < componentSize; k++)
+            foreach (var c in Cores)
             {
-                llist[k] = Math.Log(Core.Attenuation) * 4 / sqdlist[k];
-                if (k < OutputStartingFrom)
+                c.UpdateCoefficients(OutputStartingFrom);
+            }
+        }
+
+        public void UpdateMinimumDistances()
+        {
+            foreach (var c in Cores)
+            {
+                c.MinimumInputSquareDistance = double.MaxValue;
+                c.MinimumOutputSquareDistance = double.MaxValue;
+            }
+            var eliminated = new HashSet<int>();
+            var listOfEliminated = new LinkedList<int>();
+            var componentSize = Cores[0].Components.Count;
+            for (var i = 0; i < Cores.Count-1; i++)
+            {
+                if (eliminated.Contains(i))
                 {
-                    ainput *= -llist[k];
+                    listOfEliminated.AddLast(i);
+                    continue;
                 }
-                else
+                var c1 = Cores[i];
+                for (var j = i + 1; j < Cores.Count; j++)
                 {
-                    aoutput *= -llist[k];
+                    var c2 = Cores[j];
+                    var d = c1.GetSquareDistanceEuclid(c2, 0, OutputStartingFrom);
+                    if (d < DistanceTolerance)
+                    {
+                        // merge i and j by removing j
+                        eliminated.Add(j);
+                        c1.Multiple++;
+                        continue;
+                    }
+                    IList<double> v = null;
+                    double vds = 0;
+                    if (d <= c2.MinimumInputSquareDistance)
+                    {
+                        v = c2.GetVector(c1, OutputStartingFrom, componentSize);
+                        vds = v.Sum(x => x * x);
+
+                        if (d < c2.MinimumInputSquareDistance || vds < c2.MinimumOutputSquareDistance)
+                        {
+                            c2.MinimumInputSquareDistance = d;
+                            c2.OutputOffsets = v;
+                            c2.MinimumOutputSquareDistance = vds;
+                            c2.ClosestNeighbour = c1;
+                        }
+                    }
+                    
+                    if (d < c1.MinimumInputSquareDistance)
+                    {
+                        if (v != null)
+                        {
+                            v = v.Select(x => -x).ToList();
+                        }
+                        else
+                        {
+                            v = c1.GetVector(c2, OutputStartingFrom, componentSize);
+                            vds = v.Sum(x => x * x);
+                        }
+
+                        if (d < c1.MinimumInputSquareDistance || vds < c1.MinimumOutputSquareDistance)
+                        {
+                            c1.MinimumInputSquareDistance = d;
+                            c1.OutputOffsets = v;
+                            c1.MinimumOutputSquareDistance = vds;
+                            c1.ClosestNeighbour = c2;
+                        }
+                    }
                 }
             }
-
-            foreach (var core in Cores)
+            foreach (var i in listOfEliminated.Reverse())
             {
-                for (var k = 0; k < componentSize; k++)
-                {
-                    core.Components[k].L = llist[k];
-                }
-                core.Multiple = 1;
-                core.AInput = ainput;
-                core.AOutput = aoutput;
+                Cores.RemoveAt(i);
             }
         }
 
         #endregion
+
     }
 }

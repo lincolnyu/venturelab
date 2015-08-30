@@ -231,7 +231,7 @@ namespace Sample2D
 
         public ICoreManager CreateDistanceCore(int count)
         {
-            var cm = new VariableCoreManager { OutputStartingFrom = 1 };
+            var cm = new FixedCoreManager { OutputStartingFrom = 1 };
             for (; count > 0; count--)
             {
                 var x = _r.NextDouble() * FuncWidth;
