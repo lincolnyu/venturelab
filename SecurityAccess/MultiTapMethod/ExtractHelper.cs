@@ -26,7 +26,7 @@ namespace SecurityAccess
             int count = int.MaxValue)
         {
             for (var i = StatisticPoint.FirstCentralDay + start; count > 0 
-                && i < data.Count - StatisticPoint.MinDistToEnd; count--)
+                && i < data.Count - StatisticPoint.MinDistToEnd; i++, count--)
             {
                 var sp = new StatisticPoint();
                 var d1 = data[i];
@@ -176,6 +176,15 @@ namespace SecurityAccess
                 }
                 lengths[code] = len+count;
             }
+
+            using (var sw = new StreamWriter(infoFile))
+            {
+                foreach (var kvp in lengths)
+                {
+                    sw.WriteLine("{0}:{1}", kvp.Key, kvp.Value);
+                }
+            }
+
             logWriter.WriteLine("All processed.");
         }
 
