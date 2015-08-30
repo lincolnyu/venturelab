@@ -108,6 +108,17 @@ namespace SecurityAccess.Asx
 
         #region Methods
 
+        public static bool IsCodeFile(string fn, out string code)
+        {
+            var ext = Path.GetExtension(fn);
+            if (!ext.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+            {
+                code = null;
+                return false;
+            }
+            code = Path.GetFileNameWithoutExtension(fn);
+            return (code.Length == 3);
+        }
 
         public void Reorganise()
         {

@@ -113,7 +113,7 @@ namespace SecurityAccess.Asx
             DateTime date, double open, double high, double low, double close, double volume)
         {
             var dateStr = date.DateToString();
-            var line = string.Format("{0},{1},{2},{3},{4},{5}", code,
+            var line = string.Format("{0},{1},{2},{3},{4},{5},{6}", code,
                 dateStr, open, high, low, close, volume);
             output.WriteLine(line);
         }
@@ -168,7 +168,6 @@ namespace SecurityAccess.Asx
             }
             return prevDay;
         }
-
 
         #endregion
     }

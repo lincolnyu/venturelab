@@ -1,13 +1,15 @@
 ﻿using SecurityAccess.Asx;
 using SecurityAccess.MultiTapMethod;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace SecurityAccess
 {
     /// <summary>
     ///  extracts statistic point from raw stock data.
     /// </summary>
-    public class Extractor
+    public static class ExtractHelper
     {
         #region Methods
 
@@ -20,9 +22,11 @@ namespace SecurityAccess
         /// statistic point to the day to start the processing with</param>
         /// <param name="interval">interval in number of days</param>
         /// <param name="count">total number of statistic point to try to extract</param>
-        public IEnumerable<StatisticPoint> Suck(IList<DailyStockEntry> data, int start, int interval, int count)
+        public static IEnumerable<StatisticPoint> Suck(this IList<DailyStockEntry> data, int start, int interval, 
+            int count = int.MaxValue)
         {
-            for (var i = StatisticPoint.FirstCentralDay + start; count > 0; count--)
+            for (var i = StatisticPoint.FirstCentralDay + start; count > 0 
+                && i < data.Count - StatisticPoint.MinDistToEnd; count--)
             {
                 var sp = new StatisticPoint();
                 var d1 = data[i];
@@ -109,6 +113,80 @@ namespace SecurityAccess
                 sp.FP90 = sum / 90;
 
                 yield return sp;
+            }
+        }
+
+        public static int Export(this IEnumerable<StatisticPoint> points, StreamWriter sw)
+        {
+            var count = 0;
+            foreach (var p in points)
+            {
+                var a = 1 / p.P1C;
+                sw.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},"
+                    +"{13},{14},{15},{16},{17},{18},{19},{20},{21},{22}",
+                    p.P1O*a, p.P1H * a, p.P1L * a, p.P2 * a, p.P3 * a, p.P4 * a, p.P5 * a,
+                    p.P15 * a, p.P30 * a, p.P90 * a, p.P180 * a, p.P360 * a, p.P720 * a, p.P1800 * a, 
+                    p.V1 * a, p.V5 * a, p.V30 * a, p.V360 * a, p.FP1 * a, p.FP2 * a, p.FP5 * a, p.FP30 * a, p.FP90 * a);
+                count++;
+            }
+            return count;
+        }
+
+        public static void ProcessFiles(this string srcDir, string dstDir, TextWriter logWriter = null)
+        {
+            var srcDirInfo = new DirectoryInfo(srcDir);
+            var srcFiles = srcDirInfo.GetFiles();
+
+            var infoFile = Path.Combine(dstDir, "info.txt");
+            var lengths = new Dictionary<string, int>();
+            if (File.Exists(infoFile))
+            {
+                using (var sr = new StreamReader(infoFile))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        var line = sr.ReadLine();
+                        var segs = line.Split(':');
+                        var key = segs[0];
+                        var len = int.Parse(segs[1]);
+                        lengths[key] = len;
+                    }
+                }
+            }
+
+            foreach (var srcFile in srcFiles.OrderBy(x => x.Name))
+            {
+                string code;
+                if (!FileReorganiser.IsCodeFile(srcFile.Name, out code))
+                {
+                    continue;
+                }
+                int len = 0;
+                bool append = false;
+                if (lengths.TryGetValue(code, out len))
+                {
+                    append = true;
+                }
+
+                var dstPath = Path.Combine(dstDir, srcFile.Name);
+                var count = ProcessFile(srcFile.FullName, dstPath, append ? len : 0, append);
+                if (logWriter != null)
+                {
+                    logWriter.WriteLine("{0} Processed (starting {1} counting {2})...", srcFile.Name, len, count);
+                }
+                lengths[code] = len+count;
+            }
+            logWriter.WriteLine("All processed.");
+        }
+
+        private static int ProcessFile(string srcPath, string dstPath, int start=0, bool append=false)
+        {
+            var entries = srcPath.ReadDailyStockEntries().ToList();
+            var statisticPoints = entries.Suck(start, 1);
+            using (var sw = new StreamWriter(dstPath, append))
+            {
+                var count = statisticPoints.Export(sw);
+                return count;
             }
         }
 

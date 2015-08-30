@@ -9,6 +9,8 @@
         /// </summary>
         public const int FirstCentralDay = 1799;
 
+        public const int MinDistToEnd = 360;
+
         #endregion
 
         #region Properties
