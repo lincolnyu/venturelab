@@ -7,8 +7,8 @@ namespace SecurityAnalysisConsole
     {
         static void ReorganiseFiles(string srcDir, string dstDir)
         {
-            var fr = new FileReorganiser(Console.Out);
-            fr.Reorganise(srcDir, dstDir);
+            var fr = new FileReorganiser(srcDir, dstDir, Console.Out);
+            fr.Reorganise();
         }
 
         static void Main(string[] args)
