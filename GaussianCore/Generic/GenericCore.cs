@@ -30,6 +30,8 @@ namespace GaussianCore.Generic
 
         public double Multiple { get; set; } = 1;
 
+        public double InvLCoeff { get; set; }
+
         #endregion
 
         #region Methods
@@ -50,7 +52,18 @@ namespace GaussianCore.Generic
                 d *= L[i];
                 s += d;
             }
-            return Multiple * a*Math.Exp(b*s);
+            return Multiple * a * Math.Exp(b * s);
+        }
+
+        public void UpdateInvLCoeff()
+        {
+            var result = 1.0;
+            foreach (var l in L)
+            {
+                result *= l;
+            }
+            if (result < 0) result = -result;
+            InvLCoeff = 1 / Math.Sqrt(result);
         }
 
         #endregion

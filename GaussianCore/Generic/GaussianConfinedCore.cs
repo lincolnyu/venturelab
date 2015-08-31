@@ -21,6 +21,8 @@ namespace GaussianCore.Generic
         /// </summary>
         public double[] K { get; }
 
+        public int Alpha { get; internal set; } = 5;
+
         #endregion
 
         #region Methods
@@ -29,35 +31,21 @@ namespace GaussianCore.Generic
 
         public override double A(IList<double> inputs)
         {
-            var c = C(inputs);
-            var a = Math.Pow(c, OutputLength);
-            var k = 1.0;
+            var a = C(inputs);
+            var l = 1.0;
             for (var i = 0; i < L.Length; i++)
             {
-                k *= K[i];
+                l *= L[i];
             }
-            k = Math.Sqrt(Math.Abs(k));
-            a *= k;
+            l = Math.Sqrt(Math.Abs(l));
+            a *= l; // to counteract the output coefficients
             return a;
         }
 
         public override double B(IList<double> inputs)
         {
-#if true
             var c = C(inputs);
-            return Math.Pow(c, 1.0/OutputLength);
-#else
-            var s = 1.0;
-            for (var i = 0; i < K.Length; i++)
-            {
-                var d = inputs[i] - CentersInput[i];
-                d *= d;
-                d /= -K[i] / 100;
-                s += d;
-            }
-            var b = 1 / s;
-            return b;
-#endif 
+            return Math.Pow(c, 1.0 / (Alpha * OutputLength));
         }
 
         #endregion
@@ -76,6 +64,6 @@ namespace GaussianCore.Generic
             return c;
         }
 
-#endregion
+        #endregion
     }
 }

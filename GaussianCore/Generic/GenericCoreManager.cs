@@ -46,7 +46,7 @@ namespace GaussianCore.Generic
             var num = 0.0;
             foreach (var core in this)
             {
-                var a = core.A(inputs) * core.Multiple;
+                var a = core.A(inputs) * core.Multiple * core.InvLCoeff;
                 if (a >= EpsilonY)
                 {
                     var b = core.B(inputs);
@@ -65,7 +65,7 @@ namespace GaussianCore.Generic
             var num = 0.0;
             foreach (var core in this)
             {
-                var a = core.A(inputs) * core.Multiple;
+                var a = core.A(inputs) * core.Multiple * core.InvLCoeff;
                 if (a >= EpsilonSquareY)
                 {
                     var b = core.B(inputs);

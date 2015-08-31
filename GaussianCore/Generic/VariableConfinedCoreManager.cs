@@ -22,12 +22,15 @@ namespace GaussianCore.Generic
             #endregion
 
             #region Methods
+
             public void UpdateCoreCoeffs()
             {
-                const double relax = 0.25;// empirical? 4.0 for theoreticallydropping to half at halfway to the nearest
+                const double relax = 4.0;// empirical? 4.0 for theoreticallydropping to half at halfway to the nearest
                 var core = (GaussianConfinedCore)Core;
 
-                var linput = Math.Log(Attenuation) * relax / MinInputSquareDistance; //*4 to drop to half halfway to neighbour
+                var alpha2 = core.Alpha * 2;
+                var r = alpha2 / (alpha2 - 1);
+                var linput = Math.Log(Attenuation) * relax*0.5 / MinInputSquareDistance; //*4 to drop to half halfway to neighbour
                 for (var i = 0; i < core.InputLength; i++)
                 {
                     core.K[i] = linput;
@@ -39,6 +42,8 @@ namespace GaussianCore.Generic
                     var loutput = Math.Log(Attenuation) * relax / sqoo;
                     core.L[i] = loutput;
                 }
+
+                core.UpdateInvLCoeff();
             }
 
             #endregion
@@ -48,9 +53,9 @@ namespace GaussianCore.Generic
 
         #region Properties
 
-        public override double EpsilonY => 0.0001;
+        public override double EpsilonY => double.Epsilon;
 
-        public override double EpsilonSquareY => 0.00001;
+        public override double EpsilonSquareY => double.Epsilon;
 
         public List<CoreInfo> CoreInfos { get; } = new List<CoreInfo>();
 

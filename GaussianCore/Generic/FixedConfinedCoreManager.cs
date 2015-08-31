@@ -11,10 +11,9 @@ namespace GaussianCore.Generic
         #region Methods
 
         // TODO Review the EPSILON mechanism
+        public override double EpsilonY => double.Epsilon;
 
-        public override double EpsilonY => 0.00001;
-
-        public override double EpsilonSquareY => 0.00001;
+        public override double EpsilonSquareY => double.Epsilon;
 
         #endregion
 
@@ -40,17 +39,18 @@ namespace GaussianCore.Generic
             double[] sqdilist;
             double[] sqdolist;
             GetMaxMinSquareDistance(out sqdilist, out sqdolist);
-
+            const double relax = 4.0;// empirical? 4.0 for theoreticallydropping to half at halfway to the nearest
             foreach (var core in Cores)
             {
                 for (var k = 0; k < core.InputLength; k++)
                 {
-                    core.K[k] = Math.Log(Attenuation)*4/sqdilist[k];
+                    core.K[k] = Math.Log(Attenuation)* relax*0.5 / sqdilist[k];
                 }
                 for (var k = 0; k < core.OutputLength; k++)
                 {
-                    core.L[k] = Math.Log(Attenuation)*4/sqdolist[k];
+                    core.L[k] = Math.Log(Attenuation) * relax / sqdolist[k];
                 }
+                core.UpdateInvLCoeff();
             }
         }
 

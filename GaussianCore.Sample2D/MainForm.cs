@@ -39,16 +39,18 @@ namespace GaussianCore.Sample2D
         {
             InitBufs(MainPictureBox.Width, MainPictureBox.Height);
 
-            //_cm = CreateFixedSphericCores(100);
+            _cm = CreateFixedSphericCores(100);
             //_cm = CreateVariableSphericCores(100);
-            _cm = CreateFixedConfinedCores(100);
+            //_cm = CreateFixedConfinedCores(100);
             //_cm = CreateVariableConfinedCores(100);
+
+            Redraw();
         }
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
             InitBufs(MainPictureBox.Width, MainPictureBox.Height);
-            MainPictureBox.Invalidate();
+            Redraw();
         }
 
         private void InitBufs(int width, int height)
@@ -61,8 +63,17 @@ namespace GaussianCore.Sample2D
 
         private void MainPictureBox_Paint(object sender, PaintEventArgs e)
         {
+           
+        }
+
+        private void Redraw()
+        {
+            if (_cm == null)
+            {
+                return;
+            }
             var currImage = _imageBuf[_imageIndex];
-            Refresh(currImage);
+            Draw(currImage);
             MainPictureBox.Image = currImage;
             _imageIndex++;
             if (_imageIndex >= _imageBuf.Length)
@@ -71,11 +82,11 @@ namespace GaussianCore.Sample2D
             }
         }
 
-        private void Refresh(Image image)
+        private void Draw(Image image)
         {
             using (var g = Graphics.FromImage(image))
             {
-                PaintPdf(g, 0, -2, FuncWidth, 4, 100, 80);
+                PaintPdf(g, 0, -2, FuncWidth, 4, 120, 80);
                 PaintCores(g, 0, -2, FuncWidth, 4);
                 PaintCurves(g, 0, -2, FuncWidth, 4, 0.1);
             }
@@ -84,7 +95,7 @@ namespace GaussianCore.Sample2D
         private void PaintCores(Graphics g, double xstart, double ystart,
             double xwidth, double ywidth)
         {
-            var pen = new Pen(Color.Pink, 2);
+            var pen = new Pen(Color.Red, 1);
             var w = ClientRectangle.Width;
             var h = ClientRectangle.Height;
             var pw = w / xwidth;
@@ -142,7 +153,7 @@ namespace GaussianCore.Sample2D
 
             var data = new double[ycount, xcount];
 
-            var max = 0.0;
+            var max = new double[xcount];
             for (var y = ystart; i < ycount; i++, y += yinc)
             {
                 j = 0;
@@ -150,9 +161,9 @@ namespace GaussianCore.Sample2D
                 {
                     var a = _cm.GetIntensity(new[] { x }, new[] { y });
                     data[i, j] = a;
-                    if (a > max)
+                    if (a > max[j])
                     {
-                        max = a;
+                        max[j] = a;
                     }
                 }
             }
@@ -163,7 +174,7 @@ namespace GaussianCore.Sample2D
                 j = 0;
                 for (var x = xstart; j < xcount; j++, x += xinc)
                 {
-                    var a = data[i, j] / max; 
+                    var a = data[i, j] / max[j];
                     var p = (int)(a * 255);
                     var clr = Color.FromArgb(p, p, p);
                     var brush = new SolidBrush(clr);
@@ -289,6 +300,6 @@ namespace GaussianCore.Sample2D
             return (float)((y - y0) * ph);
         }
 
-#endregion
+        #endregion
     }
 }
