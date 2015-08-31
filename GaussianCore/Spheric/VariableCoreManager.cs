@@ -54,47 +54,38 @@ namespace GaussianCore.Spheric
                 for (var j = i + 1; j < Cores.Count; j++)
                 {
                     var c2 = Cores[j];
-                    var d = c1.GetSquareDistanceEuclid(c2, 0, OutputStartingFrom);
-                    if (d < DistanceTolerance)
+                    var sqid = c1.GetSquareDistanceEuclid(c2, 0, OutputStartingFrom);
+                    var outOffset = c2.GetSquareOffset(c1, OutputStartingFrom, componentSize);
+                    var sqod = outOffset.Sum();
+                    var sqd = sqid + sqod;
+
+                    if (sqd < DistanceTolerance)
                     {
                         // merge i and j by removing j
                         eliminated.Add(j);
                         c1.Multiple++;
                         continue;
                     }
-                    IList<double> v = null;
-                    double vds = 0;
-                    if (d <= c2.MinimumInputSquareDistance)
-                    {
-                        v = c2.GetVector(c1, OutputStartingFrom, componentSize);
-                        vds = v.Sum(x => x * x);
 
-                        if (d < c2.MinimumInputSquareDistance || vds < c2.MinimumOutputSquareDistance)
+                    if (sqid <= c2.MinimumInputSquareDistance)
+                    {
+                        
+                        if (sqid < c2.MinimumInputSquareDistance || sqod < c2.MinimumOutputSquareDistance)
                         {
-                            c2.MinimumInputSquareDistance = d;
-                            c2.OutputOffsets = v;
-                            c2.MinimumOutputSquareDistance = vds;
+                            c2.MinimumInputSquareDistance = sqid;
+                            c2.OutputOffsets = outOffset;
+                            c2.MinimumOutputSquareDistance = sqod;
                             c2.ClosestNeighbour = c1;
                         }
                     }
                     
-                    if (d < c1.MinimumInputSquareDistance)
+                    if (sqid < c1.MinimumInputSquareDistance)
                     {
-                        if (v != null)
+                        if (sqid < c1.MinimumInputSquareDistance || sqod < c1.MinimumOutputSquareDistance)
                         {
-                            v = v.Select(x => -x).ToList();
-                        }
-                        else
-                        {
-                            v = c1.GetVector(c2, OutputStartingFrom, componentSize);
-                            vds = v.Sum(x => x * x);
-                        }
-
-                        if (d < c1.MinimumInputSquareDistance || vds < c1.MinimumOutputSquareDistance)
-                        {
-                            c1.MinimumInputSquareDistance = d;
-                            c1.OutputOffsets = v;
-                            c1.MinimumOutputSquareDistance = vds;
+                            c1.MinimumInputSquareDistance = sqid;
+                            c1.OutputOffsets = outOffset;
+                            c1.MinimumOutputSquareDistance = sqod;
                             c1.ClosestNeighbour = c2;
                         }
                     }

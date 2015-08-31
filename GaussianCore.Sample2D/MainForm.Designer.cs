@@ -1,4 +1,4 @@
-﻿namespace Sample2D
+﻿namespace GaussianCore.Sample2D
 {
     partial class MainForm
     {
@@ -36,18 +36,20 @@
             // 
             this.MainPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MainPictureBox.Location = new System.Drawing.Point(0, 0);
+            this.MainPictureBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MainPictureBox.Name = "MainPictureBox";
-            this.MainPictureBox.Size = new System.Drawing.Size(529, 354);
+            this.MainPictureBox.Size = new System.Drawing.Size(705, 436);
             this.MainPictureBox.TabIndex = 0;
             this.MainPictureBox.TabStop = false;
             this.MainPictureBox.Paint += new System.Windows.Forms.PaintEventHandler(this.MainPictureBox_Paint);
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(529, 354);
+            this.ClientSize = new System.Drawing.Size(705, 436);
             this.Controls.Add(this.MainPictureBox);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "MainForm";
             this.Text = "Main Form";
             this.Load += new System.EventHandler(this.MainForm_Load);

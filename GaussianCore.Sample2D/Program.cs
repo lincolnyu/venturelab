@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using GaussianCore.Sample2D;
 
 namespace Sample2D
 {

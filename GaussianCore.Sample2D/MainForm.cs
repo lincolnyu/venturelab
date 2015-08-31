@@ -1,13 +1,12 @@
-﻿using GaussianCore;
-using GaussianCore.Generic;
-using GaussianCore.Spheric;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using GaussianCore.Generic;
+using GaussianCore.Spheric;
 
-namespace Sample2D
+namespace GaussianCore.Sample2D
 {
     public partial class MainForm : Form
     {
@@ -19,7 +18,7 @@ namespace Sample2D
 
         private const double FuncWidth = Math.PI*6;
 
-        private Image[] _imageBuf = new Image[2];
+        private readonly Image[] _imageBuf = new Image[2];
 
         private int _imageIndex;
 
@@ -40,9 +39,10 @@ namespace Sample2D
         {
             InitBufs(MainPictureBox.Width, MainPictureBox.Height);
 
-            //_cm = CreateGridCore(100);
-            //_cm = CreateDistanceCore(100);
-            _cm = CreateGaussianConfinedCores(100);
+            //_cm = CreateFixedSphericCores(100);
+            //_cm = CreateVariableSphericCores(100);
+            _cm = CreateFixedConfinedCores(100);
+            //_cm = CreateVariableConfinedCores(100);
         }
 
         private void MainForm_Resize(object sender, EventArgs e)
@@ -138,7 +138,7 @@ namespace Sample2D
 
             var xinc = xwidth / xcount;
             var yinc = ywidth / ycount;
-            int i = 0, j = 0;
+            int i = 0, j;
 
             var data = new double[ycount, xcount];
 
@@ -211,25 +211,7 @@ namespace Sample2D
             }
         }
 
-        public ICoreManager CreateGridCore(int count)
-        {
-            var cm = new GridCoreManager { OutputStartingFrom = 1 };
-            for (; count > 0; count--)
-            {
-                var x = _r.NextDouble() * FuncWidth;
-                var y = Math.Sin(x);
-                var core = new Core();
-                var cx = new Component { Center = x };
-                var cy = new Component { Center = y };
-                core.Components.Add(cx);
-                core.Components.Add(cy);
-                cm.Cores.Add(core);
-            }
-            cm.UpdateCoreCoeffs();
-            return cm;
-        }
-
-        public ICoreManager CreateDistanceCore(int count)
+        public ICoreManager CreateFixedSphericCores(int count)
         {
             var cm = new FixedCoreManager { OutputStartingFrom = 1 };
             for (; count > 0; count--)
@@ -247,7 +229,25 @@ namespace Sample2D
             return cm;
         }
 
-        public ICoreManager CreateGaussianConfinedCores(int count)
+        public ICoreManager CreateVariableSphericCores(int count)
+        {
+            var cm = new VariableCoreManager { OutputStartingFrom = 1 };
+            for (; count > 0; count--)
+            {
+                var x = _r.NextDouble() * FuncWidth;
+                var y = Math.Sin(x);
+                var core = new Core();
+                var cx = new Component { Center = x };
+                var cy = new Component { Center = y };
+                core.Components.Add(cx);
+                core.Components.Add(cy);
+                cm.Cores.Add(core);
+            }
+            cm.UpdateCoreCoeffs();
+            return cm;
+        }
+
+        public ICoreManager CreateFixedConfinedCores(int count)
         {
             var cm = new FixedConfinedCoreManager();
             for (; count > 0; count--)
@@ -263,6 +263,22 @@ namespace Sample2D
             return cm;
         }
 
+        public ICoreManager CreateVariableConfinedCores(int count)
+        {
+            var cm = new VariableConfinedCoreManager();
+            for (; count > 0; count--)
+            {
+                var x = _r.NextDouble() * FuncWidth;
+                var y = Math.Sin(x);
+                var core = new GaussianConfinedCore(1, 1);
+                core.CentersInput[0] = x;
+                core.CentersOutput[0] = y;
+                cm.AddCore(core);
+            }
+            cm.UpdateCoreCoeffs();
+            return cm;
+        }
+
         private float XToVx(double x, double x0, double pw)
         {
             return (float)((x - x0) * pw);
@@ -273,6 +289,6 @@ namespace Sample2D
             return (float)((y - y0) * ph);
         }
 
-        #endregion
+#endregion
     }
 }

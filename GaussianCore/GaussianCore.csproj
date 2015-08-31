@@ -37,6 +37,7 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Generic\CoreGeometryHelper.cs" />
     <Compile Include="Generic\VariableConfinedCoreManager.cs" />
     <Compile Include="Spheric\Component.cs" />
     <Compile Include="Generic\FixedConfinedCoreManager.cs" />

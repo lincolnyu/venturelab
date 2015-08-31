@@ -8,7 +8,9 @@ namespace GaussianCore.Generic
     {
         #region Properties
 
-        public virtual double Epsilon => double.Epsilon;
+        public virtual double EpsilonY => double.Epsilon;
+
+        public virtual double EpsilonSquareY => EpsilonY;
 
         #endregion
 
@@ -44,8 +46,8 @@ namespace GaussianCore.Generic
             var num = 0.0;
             foreach (var core in this)
             {
-                var a = core.A(inputs);
-                if (a >= Epsilon)
+                var a = core.A(inputs) * core.Multiple;
+                if (a >= EpsilonY)
                 {
                     var b = core.B(inputs);
                     var bb = Math.Pow(b, -core.OutputLength / 2.0);
@@ -63,8 +65,8 @@ namespace GaussianCore.Generic
             var num = 0.0;
             foreach (var core in this)
             {
-                var a = core.A(inputs);
-                if (a > Epsilon)
+                var a = core.A(inputs) * core.Multiple;
+                if (a >= EpsilonSquareY)
                 {
                     var b = core.B(inputs);
                     var bb = Math.Pow(b, -core.OutputLength / 2.0);

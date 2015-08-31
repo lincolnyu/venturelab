@@ -28,6 +28,8 @@ namespace GaussianCore.Generic
 
         public double[] L { get; set; }
 
+        public double Multiple { get; set; } = 1;
+
         #endregion
 
         #region Methods
@@ -48,7 +50,7 @@ namespace GaussianCore.Generic
                 d *= L[i];
                 s += d;
             }
-            return a * Math.Exp(b * s);
+            return Multiple * a*Math.Exp(b*s);
         }
 
         #endregion

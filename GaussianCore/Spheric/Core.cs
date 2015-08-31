@@ -40,12 +40,13 @@ namespace GaussianCore.Spheric
             return GetSquareDistanceEuclid(other, 0, Components.Count);
         }
 
-        public IList<double> GetVector(Core other, int start, int end)
+        public IList<double> GetSquareOffset(Core other, int start, int end)
         {
             var result = new List<double>(end-start);
             for (var i = start; i < end; i++)
             {
                 var d = other.Components[i].Center - Components[i].Center;
+                d *= d;
                 result.Add(d);
             }
             return result;
@@ -67,8 +68,9 @@ namespace GaussianCore.Spheric
 
         public void UpdateCoefficients(int outputStartFrom)
         {
+            const double relax = 0.1;// empirical? 4.0 for theoreticallydropping to half at halfway to the nearest
             var invPi = 1/Math.PI;
-            var linput = Math.Log(Attenuation) / MinimumInputSquareDistance;
+            var linput = Math.Log(Attenuation) * relax / MinimumInputSquareDistance;
             for (var i = 0; i < outputStartFrom; i++)
             {
                 Components[i].L = linput;
@@ -82,7 +84,7 @@ namespace GaussianCore.Spheric
             {
                 var sqoo = OutputOffsets[i - outputStartFrom];
                 sqoo *= sqoo;
-                var loutput = Math.Log(Attenuation) * 4 / sqoo;
+                var loutput = Math.Log(Attenuation) * relax / sqoo;
                 Components[i].L = loutput;
                 AOutput *= Math.Sqrt(-loutput) ;
             }

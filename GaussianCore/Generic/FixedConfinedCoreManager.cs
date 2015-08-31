@@ -12,7 +12,9 @@ namespace GaussianCore.Generic
 
         // TODO Review the EPSILON mechanism
 
-        public override double Epsilon => 0.0001;
+        public override double EpsilonY => 0.00001;
+
+        public override double EpsilonSquareY => 0.00001;
 
         #endregion
 
