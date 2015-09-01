@@ -26,7 +26,7 @@ namespace SecurityAnalysisConsole
                     // args[1]: src, args[2]: dst
                     ReorganiseFiles(args[1], args[2]);
                 }
-                else if (args[0].Equals("-reorganise-update", StringComparison.OrdinalIgnoreCase))
+                else if (args[0].Equals("-reorganise-inc", StringComparison.OrdinalIgnoreCase))
                 {
                     // args[1]: src, args[2]: dst
                     ReorganiseFiles(args[1], args[2], true);

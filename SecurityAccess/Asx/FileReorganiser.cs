@@ -75,7 +75,7 @@ namespace SecurityAccess.Asx
             InputDir = inputDir;
             OutputDir = outputDir;
             LogWriter = logWriter;
-            Append = false;
+            Append = append;
             Mode = mode;
         }
 
@@ -142,7 +142,7 @@ namespace SecurityAccess.Asx
 
                 if (LogWriter != null)
                 {
-                    LogWriter.WriteLine("Processing {0}...", file.Name);
+                    LogWriter.Write("Processing {0}...", file.Name);
                 }
 
                 if (Mode != InterpolationModes.None)
@@ -189,6 +189,11 @@ namespace SecurityAccess.Asx
                 }
 
                 AgeWriterPool();
+
+                if (LogWriter != null)
+                {
+                    LogWriter.WriteLine("done");
+                }
             }
 
             if (LogWriter != null)

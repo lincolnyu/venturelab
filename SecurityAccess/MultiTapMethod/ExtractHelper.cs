@@ -137,7 +137,7 @@ namespace SecurityAccess
             var srcDirInfo = new DirectoryInfo(srcDir);
             var srcFiles = srcDirInfo.GetFiles();
 
-            var infoFile = Path.Combine(dstDir, "info.txt");
+            var infoFile = Path.Combine(dstDir, "_info.txt");
             var lengths = new Dictionary<string, int>();
             if (File.Exists(infoFile))
             {
