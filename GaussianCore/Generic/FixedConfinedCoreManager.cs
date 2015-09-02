@@ -17,7 +17,7 @@ namespace GaussianCore.Generic
 
         #endregion
 
-        public IList<GaussianConfinedCore> Cores { get; } = new List<GaussianConfinedCore>();
+        public List<GaussianConfinedCore> Cores { get; } = new List<GaussianConfinedCore>();
 
         public const double Attenuation = 0.5;
 

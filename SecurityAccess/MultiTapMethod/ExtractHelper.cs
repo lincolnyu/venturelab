@@ -29,6 +29,9 @@ namespace SecurityAccess
                 && i < data.Count - StatisticPoint.MinDistToEnd; i++, count--)
             {
                 var sp = new StatisticPoint();
+
+                // history prices and volumes
+
                 var d1 = data[i];
                 sp.P1O = d1.Open;
                 sp.P1H = d1.High;
@@ -38,54 +41,70 @@ namespace SecurityAccess
 
                 var d2 = data[i - 1];
                 sp.P2 = d2.Close;
+                sp.V2 = d2.Volume;
 
                 var d3 = data[i - 2];
                 sp.P3 = d3.Close;
+                sp.V3 = d3.Volume;
 
                 var d4 = data[i - 3];
-                sp.P4 = d3.Close;
+                sp.P4 = d4.Close;
+                sp.V4 = d4.Volume;
 
                 var d5 = data[i - 4];
-                var sum = d1.Close + d2.Close + d3.Close + d4.Close + d5.Close;
-                sp.P5 = sum / 5;
+                sp.P5 = d5.Close;
                 sp.V5 = d5.Volume;
 
                 int j;
-                for (j = 5; j < 15; j++)
+                var sum = 0.0;
+                var vsum = 0.0;
+                for (j = 0; j < 15; j++)
                 {
                     sum += data[i - j].Close;
+                    vsum += data[i - j].Volume;
                 }
                 sp.P15 = sum / 15;
+                sp.V15 = vsum / 15;
 
                 for (; j < 30; j++)
                 {
                     sum += data[i - j].Close;
+                    vsum += data[i - j].Volume;
                 }
                 sp.P30 = sum / 30;
+                sp.V30 = vsum / 30;
 
                 for (; j < 90; j++)
                 {
                     sum += data[i - j].Close;
+                    vsum += data[i - j].Volume;
                 }
                 sp.P90 = sum / 90;
+                sp.V90 = vsum / 90;
 
                 for (; j < 180; j++)
                 {
                     sum += data[i - j].Close;
+                    vsum += data[i - j].Volume;
                 }
                 sp.P180 = sum / 180;
 
                 for (; j < 360; j++)
                 {
                     sum += data[i - j].Close;
+                    vsum += data[i - j].Volume;
                 }
                 sp.P360 = sum / 360;
+                sp.V360 = vsum / 360;
 
                 for (; j < 1800; j++)
                 {
                     sum += data[i - j].Close;
                 }
                 sp.P1800 = sum / 1800;
+
+                // future prices
+
                 sp.FP1 = (data[i + 1].High + data[i + 1].Low) /2;
                 sp.FP2 = (data[i + 2].High + data[i + 2].Low )/ 2;
                 for (j = 0; j < 5; j++)
@@ -110,7 +129,7 @@ namespace SecurityAccess
                 {
                     sum += data[i + j].Close;
                 }
-                sp.FP90 = sum / 90;
+                sp.FP90 = sum / 90;                
 
                 yield return sp;
             }
@@ -122,11 +141,13 @@ namespace SecurityAccess
             foreach (var p in points)
             {
                 var a = 1 / p.P1C;
+                var b = 1 / p.V1;
                 sw.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},"
-                    +"{13},{14},{15},{16},{17},{18},{19},{20},{21},{22}",
-                    p.P1O*a, p.P1H * a, p.P1L * a, p.P2 * a, p.P3 * a, p.P4 * a, p.P5 * a,
-                    p.P15 * a, p.P30 * a, p.P90 * a, p.P180 * a, p.P360 * a, p.P720 * a, p.P1800 * a, 
-                    p.V1 * a, p.V5 * a, p.V30 * a, p.V360 * a, p.FP1 * a, p.FP2 * a, p.FP5 * a, p.FP30 * a, p.FP90 * a);
+                    + "{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27}",
+                    p.P1O * a, p.P1H * a, p.P1L * a, p.P2 * a, p.P3 * a, p.P4 * a, p.P5 * a, p.P15 * a,
+                    p.P30 * a, p.P90 * a, p.P180 * a, p.P360 * a, p.P720 * a, p.P1800 * a,
+                    p.V2 * b, p.V3 * b, p.V4 * b, p.V5 * b, p.V15 * b, p.V30 * b, p.V90 * b, p.V360 * b,
+                    p.FP1 * a, p.FP2 * a, p.FP5 * a, p.FP15, p.FP30 * a, p.FP90 * a);
                 count++;
             }
             return count;

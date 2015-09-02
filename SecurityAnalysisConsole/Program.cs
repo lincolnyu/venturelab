@@ -1,6 +1,8 @@
 ﻿using System;
-using SecurityAccess.Asx;
 using SecurityAccess;
+using SecurityAccess.Asx;
+using SecurityAccess.MultiTapMethod;
+using GaussianCore.Generic;
 
 namespace SecurityAnalysisConsole
 {
@@ -15,6 +17,15 @@ namespace SecurityAnalysisConsole
         static void SuckIntoStatistic(string srcDir, string dstDir)
         {
             ExtractHelper.ProcessFiles(srcDir, dstDir, Console.Out);
+        }
+
+        static void BuildFixedConfined(string selectionFile, string srcDir, string savePath)
+        {
+            var coreManager = new FixedConfinedCoreManager();
+            var builder = new FixedConfinedBuilder(coreManager);
+            builder.LoadCodeSelection(selectionFile);
+            builder.Build(srcDir);
+            builder.Save(savePath);
         }
 
         static void Main(string[] args)
@@ -34,6 +45,10 @@ namespace SecurityAnalysisConsole
                 else if (args[0].Equals("-suck", StringComparison.OrdinalIgnoreCase))
                 {
                     SuckIntoStatistic(args[1], args[2]);
+                }
+                else if (args[0].Equals("-build-fixedconfined", StringComparison.OrdinalIgnoreCase))
+                {
+                    BuildFixedConfined(args[1], args[2], args[3]);
                 }
             }
             catch (Exception e)
