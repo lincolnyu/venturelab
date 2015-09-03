@@ -19,13 +19,14 @@ namespace SecurityAnalysisConsole
             ExtractHelper.ProcessFiles(srcDir, dstDir, Console.Out);
         }
 
-        static void BuildFixedConfined(string selectionFile, string srcDir, string savePath)
+        static FixedConfinedBuilder BuildFixedConfined(string selectionFile, string srcDir, string savePath)
         {
             var coreManager = new FixedConfinedCoreManager();
             var builder = new FixedConfinedBuilder(coreManager);
             builder.LoadCodeSelection(selectionFile);
             builder.Build(srcDir);
             builder.Save(savePath);
+            return builder;
         }
 
         static void Main(string[] args)
@@ -48,7 +49,11 @@ namespace SecurityAnalysisConsole
                 }
                 else if (args[0].Equals("-build-fixedconfined", StringComparison.OrdinalIgnoreCase))
                 {
-                    BuildFixedConfined(args[1], args[2], args[3]);
+                    var builder = BuildFixedConfined(args[1], args[2], args[3]);
+                    if (args.Length > 4)
+                    {
+                        builder.ExportToText(args[4]);
+                    }
                 }
             }
             catch (Exception e)

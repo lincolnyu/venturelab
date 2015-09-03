@@ -89,7 +89,8 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(TargetPath) \\seagate-central\public\documents\sac
-copy $(TargetDir)SecurityAccess.dll \\seagate-central\public\documents\sac</PostBuildEvent>
+copy $(TargetDir)SecurityAccess.dll \\seagate-central\public\documents\sac
+copy $(TargetDir)GaussianCore.dll \\seagate-central\public\documents\sac</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

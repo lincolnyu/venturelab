@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System;
 
 namespace SecurityAccess.MultiTapMethod
 {
@@ -71,11 +72,38 @@ namespace SecurityAccess.MultiTapMethod
             }
         }
 
+        /// <summary>
+        ///  Exports to text fille
+        /// </summary>
+        /// <param name="path">The path of the text file</param>
+        public void ExportToText(string path)
+        {
+            using (var sw = new StreamWriter(path))
+            {
+                foreach (var core in CoreManager)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var v in core.CentersInput)
+                    {
+                        sb.AppendFormat("{0},", v);
+                    }
+                    sb.Remove(sb.Length - 1, 1);
+                    sb.Append(';');
+                    foreach (var v in core.CentersOutput)
+                    {
+                        sb.AppendFormat("{0},", v);
+                    }
+                    sb.Remove(sb.Length - 1, 1);
+                    sw.WriteLine(sb);
+                }
+            }
+        }
+
         public void Save(string path)
         {
             using (var fs = new FileStream(path, FileMode.Create))
             {
-                using (var bw = new StreamWriter(fs))
+                using (var bw = new BinaryWriter(fs))
                 {
                     bw.Write(CoreManager.Cores.Count);
                     foreach (var core in CoreManager)
@@ -88,6 +116,7 @@ namespace SecurityAccess.MultiTapMethod
                         {
                             bw.Write(v);
                         }
+                        // TODO core coeffs to improve loading speed...
                     }
                 }
             }
@@ -119,6 +148,8 @@ namespace SecurityAccess.MultiTapMethod
                     }
                 }
             }
+            // TODO enhance this by storing core coefficients
+            CoreManager.UpdateCoreCoeffs();
         }
 
         public void LoadCodeSelection(string file)

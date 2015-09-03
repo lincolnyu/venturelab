@@ -97,6 +97,12 @@ namespace SecurityAccess
                 sp.P360 = sum / 360;
                 sp.V360 = vsum / 360;
 
+                for (; j < 720; j++)
+                {
+                    sum += data[i - j].Close;
+                }
+                sp.P720 = sum / 720;
+
                 for (; j < 1800; j++)
                 {
                     sum += data[i - j].Close;
@@ -105,6 +111,7 @@ namespace SecurityAccess
 
                 // future prices
 
+                sum = 0.0;
                 sp.FP1 = (data[i + 1].High + data[i + 1].Low) /2;
                 sp.FP2 = (data[i + 2].High + data[i + 2].Low )/ 2;
                 for (j = 0; j < 5; j++)
