@@ -69,6 +69,37 @@ namespace SecurityAccess.Asx
             return Path.Combine(dir, fn);
         }
 
+        public static int ReadDailyStockEntriesToBuffer(this string fn, 
+            DailyStockEntry[] buffer, int bufferStart, int bufferEnd, ref int i)
+        {
+            var entries = fn.ReadDailyStockEntries();
+            var c = 0;
+            foreach (var entry in entries)
+            {
+                if (i >= bufferEnd)
+                {
+                    i = bufferStart;
+                }
+                buffer[i] = entry;
+                i++;
+                c++;
+            }
+            return c;
+        }
+
+        public static IEnumerable<DailyStockEntry> EnumerateDailyStockEntryLoopBuffer(
+            this IList<DailyStockEntry> buffer, int bufferStart, int bufferEnd, int start)
+        {
+            for (var i = start; i < bufferEnd; i++)
+            {
+                yield return buffer[i];
+            }
+            for (var i = bufferStart; i < start; i++)
+            {
+                yield return buffer[i];
+            }
+        }
+
         public static IEnumerable<DailyStockEntry> ReadDailyStockEntries(this string fn)
         {
             DailyStockEntry data = new DailyStockEntry();

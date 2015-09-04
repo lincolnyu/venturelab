@@ -26,6 +26,9 @@ namespace GaussianCore.Generic
 
         public int OutputLength => CentersOutput.Length;
 
+        /// <summary>
+        ///  Output precision coeffs
+        /// </summary>
         public double[] L { get; set; }
 
         public double Multiple { get; set; } = 1;
@@ -57,13 +60,13 @@ namespace GaussianCore.Generic
 
         public void UpdateInvLCoeff()
         {
-            var result = 1.0;
+            var invl = 1.0;
             foreach (var l in L)
             {
-                result *= l;
+                invl *= l;
             }
-            if (result < 0) result = -result;
-            InvLCoeff = 1 / Math.Sqrt(result);
+            if (invl < 0) invl = -invl;
+            InvLCoeff = 1 / Math.Sqrt(invl);
         }
 
         #endregion

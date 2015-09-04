@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System;
 
 namespace SecurityAccess.MultiTapMethod
 {
@@ -83,22 +82,46 @@ namespace SecurityAccess.MultiTapMethod
                 foreach (var core in CoreManager)
                 {
                     var sb = new StringBuilder();
-                    foreach (var v in core.CentersInput)
+                    var gc = (GaussianConfinedCore)core;
+                    foreach (var v in gc.CentersInput)
+                    {
+                        sb.AppendFormat("{0},", v);
+                    }
+                    sb.Remove(sb.Length - 1, 1);
+
+                    sb.Append(';');
+                    foreach (var v in gc.CentersOutput)
                     {
                         sb.AppendFormat("{0},", v);
                     }
                     sb.Remove(sb.Length - 1, 1);
                     sb.Append(';');
-                    foreach (var v in core.CentersOutput)
+
+                    foreach (var v in gc.K)
                     {
                         sb.AppendFormat("{0},", v);
                     }
                     sb.Remove(sb.Length - 1, 1);
+                    sb.Append(';');
+
+                    foreach (var v in gc.L)
+                    {
+                        sb.AppendFormat("{0},", v);
+                    }
+                    sb.Remove(sb.Length - 1, 1);
+                    sb.Append(';');
+
+                    sb.AppendFormat("{0}", gc.Multiple);
+
                     sw.WriteLine(sb);
                 }
             }
         }
-
+        
+        /// <summary>
+        ///  Save the built and updated core set to the spcecified file
+        /// </summary>
+        /// <param name="path"></param>
         public void Save(string path)
         {
             using (var fs = new FileStream(path, FileMode.Create))
@@ -108,15 +131,24 @@ namespace SecurityAccess.MultiTapMethod
                     bw.Write(CoreManager.Cores.Count);
                     foreach (var core in CoreManager)
                     {
-                        foreach (var v in core.CentersInput)
+                        var gc = (GaussianConfinedCore)core;
+                        foreach (var v in gc.CentersInput)
                         {
                             bw.Write(v);
                         }
-                        foreach (var v in core.CentersOutput)
+                        foreach (var v in gc.CentersOutput)
                         {
                             bw.Write(v);
                         }
-                        // TODO core coeffs to improve loading speed...
+                        foreach (var v in gc.K)
+                        {
+                            bw.Write(v);
+                        }
+                        foreach (var v in gc.L)
+                        {
+                            bw.Write(v);
+                        }
+                        bw.Write(gc.Multiple);
                     }
                 }
             }
@@ -134,22 +166,32 @@ namespace SecurityAccess.MultiTapMethod
                     for (var i = 0; i < count; i++)
                     {
                         var core = new GaussianConfinedCore(22, 6);
-                        for (var j = 0; i < 22; j++)
+                        for (var j = 0; j < 22; j++)
                         {
                             var val = br.ReadDouble();
                             core.CentersInput[j] = val;
                         }
-                        for (var j = 0; i < 6; i++)
+                        for (var j = 0; j < 6; i++)
                         {
                             var val = br.ReadDouble();
                             core.CentersOutput[j] = val;
                         }
+                        for (var j = 0; j < 22; j++)
+                        {
+                            var val = br.ReadDouble();
+                            core.K[j] = val;
+                        }
+                        for (var j = 0; j < 6; j++)
+                        {
+                            var val = br.ReadDouble();
+                            core.L[j] = val;
+                        }
+                        core.Multiple = br.ReadDouble();
+                        core.UpdateInvLCoeff();
                         CoreManager.Cores.Add(core);
                     }
                 }
             }
-            // TODO enhance this by storing core coefficients
-            CoreManager.UpdateCoreCoeffs();
         }
 
         public void LoadCodeSelection(string file)

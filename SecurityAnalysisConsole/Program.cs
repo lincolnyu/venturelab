@@ -3,6 +3,7 @@ using SecurityAccess;
 using SecurityAccess.Asx;
 using SecurityAccess.MultiTapMethod;
 using GaussianCore.Generic;
+using System.IO;
 
 namespace SecurityAnalysisConsole
 {
@@ -27,6 +28,16 @@ namespace SecurityAnalysisConsole
             builder.Build(srcDir);
             builder.Save(savePath);
             return builder;
+        }
+
+        static void Predict(string dataPath, string inputPath, string historyPath, TextWriter tw)
+        {
+            var input = PredictHelper.GetInputAsStaticPoint(historyPath, inputPath);
+            var coreManager = new FixedConfinedCoreManager();
+            var builder = new FixedConfinedBuilder(coreManager);
+            builder.Load(dataPath);
+            var prediction = coreManager.Predict(input);
+            prediction.Export(tw);
         }
 
         static void Main(string[] args)
@@ -54,6 +65,10 @@ namespace SecurityAnalysisConsole
                     {
                         builder.ExportToText(args[4]);
                     }
+                }
+                else if (args[0].Equals("-predict", StringComparison.OrdinalIgnoreCase))
+                {
+                    Predict(args[1], args[2], args[3], Console.Out);
                 }
             }
             catch (Exception e)

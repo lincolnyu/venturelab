@@ -28,118 +28,125 @@ namespace SecurityAccess
             for (var i = StatisticPoint.FirstCentralDay + start; count > 0 
                 && i < data.Count - StatisticPoint.MinDistToEnd; i++, count--)
             {
-                var sp = new StatisticPoint();
-
-                // history prices and volumes
-
-                var d1 = data[i];
-                sp.P1O = d1.Open;
-                sp.P1H = d1.High;
-                sp.P1L = d1.Low;
-                sp.P1C = d1.Close;
-                sp.V1 = d1.Volume;
-
-                var d2 = data[i - 1];
-                sp.P2 = d2.Close;
-                sp.V2 = d2.Volume;
-
-                var d3 = data[i - 2];
-                sp.P3 = d3.Close;
-                sp.V3 = d3.Volume;
-
-                var d4 = data[i - 3];
-                sp.P4 = d4.Close;
-                sp.V4 = d4.Volume;
-
-                var d5 = data[i - 4];
-                sp.P5 = d5.Close;
-                sp.V5 = d5.Volume;
-
-                int j;
-                var sum = 0.0;
-                var vsum = 0.0;
-                for (j = 0; j < 15; j++)
-                {
-                    sum += data[i - j].Close;
-                    vsum += data[i - j].Volume;
-                }
-                sp.P15 = sum / 15;
-                sp.V15 = vsum / 15;
-
-                for (; j < 30; j++)
-                {
-                    sum += data[i - j].Close;
-                    vsum += data[i - j].Volume;
-                }
-                sp.P30 = sum / 30;
-                sp.V30 = vsum / 30;
-
-                for (; j < 90; j++)
-                {
-                    sum += data[i - j].Close;
-                    vsum += data[i - j].Volume;
-                }
-                sp.P90 = sum / 90;
-                sp.V90 = vsum / 90;
-
-                for (; j < 180; j++)
-                {
-                    sum += data[i - j].Close;
-                    vsum += data[i - j].Volume;
-                }
-                sp.P180 = sum / 180;
-
-                for (; j < 360; j++)
-                {
-                    sum += data[i - j].Close;
-                    vsum += data[i - j].Volume;
-                }
-                sp.P360 = sum / 360;
-                sp.V360 = vsum / 360;
-
-                for (; j < 720; j++)
-                {
-                    sum += data[i - j].Close;
-                }
-                sp.P720 = sum / 720;
-
-                for (; j < 1800; j++)
-                {
-                    sum += data[i - j].Close;
-                }
-                sp.P1800 = sum / 1800;
-
-                // future prices
-
-                sum = 0.0;
-                sp.FP1 = (data[i + 1].High + data[i + 1].Low) /2;
-                sp.FP2 = (data[i + 2].High + data[i + 2].Low )/ 2;
-                for (j = 0; j < 5; j++)
-                {
-                    sum += data[i + j].Close;
-                }
-                sp.FP5 = sum / 5;
-
-                for (; j < 15; j++)
-                {
-                    sum += data[i + j].Close;
-                }
-                sp.FP15 = sum / 15;
-
-                for (; j < 30; j++)
-                {
-                    sum += data[i + j].Close;
-                }
-                sp.FP30 = sum / 30;
-
-                for (; j < 90; j++)
-                {
-                    sum += data[i + j].Close;
-                }
-                sp.FP90 = sum / 90;                
+                var sp = data.SuckOne(i);
 
                 yield return sp;
             }
+        }
+
+        public static StatisticPoint SuckOne(this IList<DailyStockEntry> data, int start)
+        {
+            var sp = new StatisticPoint();
+
+            // history prices and volumes
+
+            var d1 = data[start];
+            sp.P1O = d1.Open;
+            sp.P1H = d1.High;
+            sp.P1L = d1.Low;
+            sp.P1C = d1.Close;
+            sp.V1 = d1.Volume;
+
+            var d2 = data[start - 1];
+            sp.P2 = d2.Close;
+            sp.V2 = d2.Volume;
+
+            var d3 = data[start - 2];
+            sp.P3 = d3.Close;
+            sp.V3 = d3.Volume;
+
+            var d4 = data[start - 3];
+            sp.P4 = d4.Close;
+            sp.V4 = d4.Volume;
+
+            var d5 = data[start - 4];
+            sp.P5 = d5.Close;
+            sp.V5 = d5.Volume;
+
+            int j;
+            var sum = 0.0;
+            var vsum = 0.0;
+            for (j = 0; j < 15; j++)
+            {
+                sum += data[start - j].Close;
+                vsum += data[start - j].Volume;
+            }
+            sp.P15 = sum / 15;
+            sp.V15 = vsum / 15;
+
+            for (; j < 30; j++)
+            {
+                sum += data[start - j].Close;
+                vsum += data[start - j].Volume;
+            }
+            sp.P30 = sum / 30;
+            sp.V30 = vsum / 30;
+
+            for (; j < 90; j++)
+            {
+                sum += data[start - j].Close;
+                vsum += data[start - j].Volume;
+            }
+            sp.P90 = sum / 90;
+            sp.V90 = vsum / 90;
+
+            for (; j < 180; j++)
+            {
+                sum += data[start - j].Close;
+                vsum += data[start - j].Volume;
+            }
+            sp.P180 = sum / 180;
+
+            for (; j < 360; j++)
+            {
+                sum += data[start - j].Close;
+                vsum += data[start - j].Volume;
+            }
+            sp.P360 = sum / 360;
+            sp.V360 = vsum / 360;
+
+            for (; j < 720; j++)
+            {
+                sum += data[start - j].Close;
+            }
+            sp.P720 = sum / 720;
+
+            for (; j < 1800; j++)
+            {
+                sum += data[start - j].Close;
+            }
+            sp.P1800 = sum / 1800;
+
+            // future prices
+
+            sum = 0.0;
+            sp.FP1 = (data[start + 1].High + data[start + 1].Low) / 2;
+            sp.FP2 = (data[start + 2].High + data[start + 2].Low) / 2;
+            for (j = 0; j < 5; j++)
+            {
+                sum += data[start + j].Close;
+            }
+            sp.FP5 = sum / 5;
+
+            for (; j < 15; j++)
+            {
+                sum += data[start + j].Close;
+            }
+            sp.FP15 = sum / 15;
+
+            for (; j < 30; j++)
+            {
+                sum += data[start + j].Close;
+            }
+            sp.FP30 = sum / 30;
+
+            for (; j < 90; j++)
+            {
+                sum += data[start + j].Close;
+            }
+            sp.FP90 = sum / 90;
+
+            return sp;
         }
 
         public static int Export(this IEnumerable<StatisticPoint> points, StreamWriter sw)
@@ -158,6 +165,34 @@ namespace SecurityAccess
                 count++;
             }
             return count;
+        }
+
+        public static void GenerateInput(this StatisticPoint p, IList<double> input)
+        {
+            var a = 1 / p.P1C;
+            var b = 1 / p.V1;
+            input[0] = p.P1O * a;
+            input[1] = p.P1H * a;
+            input[2] = p.P1L * a;
+            input[3] = p.P2 * a;
+            input[4] = p.P3 * a;
+            input[5] = p.P4 * a;
+            input[6] = p.P5 * a;
+            input[7] = p.P15* a;
+            input[8] = p.P30 * a;
+            input[9] = p.P90 * a;
+            input[10] = p.P180 * a;
+            input[11] = p.P360 * a;
+            input[12] = p.P720 * a;
+            input[13] = p.P1800 * a;
+            input[14] = p.V2 * b;
+            input[15] = p.V3 * b;
+            input[16] = p.V4 * b;
+            input[17] = p.V5 * b;
+            input[18] = p.V15 * b;
+            input[19] = p.V30 * b;
+            input[20] = p.V90 * b;
+            input[21] = p.V360 * b;
         }
 
         public static void ProcessFiles(this string srcDir, string dstDir, TextWriter logWriter = null)
