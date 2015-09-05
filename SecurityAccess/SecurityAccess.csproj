@@ -43,6 +43,9 @@
     <Compile Include="Asx\FileReorganiser.cs" />
     <Compile Include="Asx\HistoryHelper.cs" />
     <Compile Include="Asx\DailyStockEntry.cs" />
+    <Compile Include="Asx\InterpolationHelper.cs" />
+    <Compile Include="Asx\IOutputFile.cs" />
+    <Compile Include="Asx\SingleReorganiseHelper.cs" />
     <Compile Include="MultiTapMethod\FixedConfinedBuilder.cs" />
     <Compile Include="MultiTapMethod\Prediction.cs" />
     <Compile Include="MultiTapMethod\PredictHelper.cs" />

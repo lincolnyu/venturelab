@@ -171,7 +171,7 @@ namespace SecurityAccess.MultiTapMethod
                             var val = br.ReadDouble();
                             core.CentersInput[j] = val;
                         }
-                        for (var j = 0; j < 6; i++)
+                        for (var j = 0; j < 6; j++)
                         {
                             var val = br.ReadDouble();
                             core.CentersOutput[j] = val;

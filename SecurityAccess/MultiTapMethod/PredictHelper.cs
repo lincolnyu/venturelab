@@ -34,7 +34,7 @@ namespace SecurityAccess.MultiTapMethod
             }
 
             var yielded = buffer.EnumerateDailyStockEntryLoopBuffer(0, required, inputEntryCount);
-            return yielded.ToList().SuckOne(0);
+            return yielded.ToList().SuckOnlyInput(StatisticPoint.FirstCentralDay);
         }
 
         public static Prediction Predict(this GaussianCore.ICoreManager coreManager,

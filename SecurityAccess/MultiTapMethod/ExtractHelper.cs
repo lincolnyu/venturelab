@@ -34,7 +34,7 @@ namespace SecurityAccess
             }
         }
 
-        public static StatisticPoint SuckOne(this IList<DailyStockEntry> data, int start)
+        public static StatisticPoint SuckOnlyInput(this IList<DailyStockEntry> data, int start)
         {
             var sp = new StatisticPoint();
 
@@ -117,9 +117,18 @@ namespace SecurityAccess
             }
             sp.P1800 = sum / 1800;
 
+            return sp;
+        }
+
+        public static StatisticPoint SuckOne(this IList<DailyStockEntry> data, int start)
+        {
+            var sp = data.SuckOnlyInput(start);   
+
             // future prices
 
-            sum = 0.0;
+            var sum = 0.0;
+            int j;
+
             sp.FP1 = (data[start + 1].High + data[start + 1].Low) / 2;
             sp.FP2 = (data[start + 2].High + data[start + 2].Low) / 2;
             for (j = 0; j < 5; j++)

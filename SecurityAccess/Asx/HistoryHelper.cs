@@ -100,6 +100,12 @@ namespace SecurityAccess.Asx
             }
         }
 
+        /// <summary>
+        ///  Reads dse sequence from the specified file (normally a by date raw file but
+        ///  it doesn't have to, as far as it uses the standard format)
+        /// </summary>
+        /// <param name="fn"></param>
+        /// <returns></returns>
         public static IEnumerable<DailyStockEntry> ReadDailyStockEntries(this string fn)
         {
             DailyStockEntry data = new DailyStockEntry();

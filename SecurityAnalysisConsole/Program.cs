@@ -4,12 +4,13 @@ using SecurityAccess.Asx;
 using SecurityAccess.MultiTapMethod;
 using GaussianCore.Generic;
 using System.IO;
+using System.Linq;
 
 namespace SecurityAnalysisConsole
 {
     class Program
     {
-        static void ReorganiseFiles(string srcDir, string dstDir, bool append=false)
+        static void ReorganiseFiles(string srcDir, string dstDir, bool append = false)
         {
             var fr = new FileReorganiser(srcDir, dstDir, Console.Out, append);
             fr.Reorganise();
@@ -30,7 +31,7 @@ namespace SecurityAnalysisConsole
             return builder;
         }
 
-        static void Predict(string dataPath, string inputPath, string historyPath, TextWriter tw)
+        static void Predict(string dataPath, string historyPath, string inputPath, TextWriter tw)
         {
             var input = PredictHelper.GetInputAsStaticPoint(historyPath, inputPath);
             var coreManager = new FixedConfinedCoreManager();
@@ -40,35 +41,63 @@ namespace SecurityAnalysisConsole
             prediction.Export(tw);
         }
 
+        /// <summary>
+        ///  Prepare current data for prediction analysis
+        /// </summary>
+        /// <param name="code">The code</param>
+        /// <param name="srcPath">The source path for the by date data</param>
+        /// <param name="dstPath">The dest path for the by code data</param>
+        static void PreparePredict(string code, string srcPath, string dstPath)
+        {
+            var sfs = srcPath.GetStockFiles();
+            var dses = sfs.GetDailyEntries(code);
+            using (var sw = new StreamWriter(dstPath))
+            {
+                dses.OutputDailyStockEntries(sw);
+            }
+        }
+
         static void Main(string[] args)
         {
             try
             {
-                if (args[0].Equals("-reorganise", StringComparison.OrdinalIgnoreCase))
+                var subcmd = args[0].ToLower();
+                switch (subcmd)
                 {
-                    // args[1]: src, args[2]: dst
-                    ReorganiseFiles(args[1], args[2]);
-                }
-                else if (args[0].Equals("-reorganise-inc", StringComparison.OrdinalIgnoreCase))
-                {
-                    // args[1]: src, args[2]: dst
-                    ReorganiseFiles(args[1], args[2], true);
-                }
-                else if (args[0].Equals("-suck", StringComparison.OrdinalIgnoreCase))
-                {
-                    SuckIntoStatistic(args[1], args[2]);
-                }
-                else if (args[0].Equals("-build-fixedconfined", StringComparison.OrdinalIgnoreCase))
-                {
-                    var builder = BuildFixedConfined(args[1], args[2], args[3]);
-                    if (args.Length > 4)
-                    {
-                        builder.ExportToText(args[4]);
-                    }
-                }
-                else if (args[0].Equals("-predict", StringComparison.OrdinalIgnoreCase))
-                {
-                    Predict(args[1], args[2], args[3], Console.Out);
+                    case "-reorganise":
+                        // args[1]: src, args[2]: dst
+                        ReorganiseFiles(args[1], args[2]);
+                        break;
+                    case "-reorganise-inc":
+                        // args[1]: src, args[2]: dst
+                        ReorganiseFiles(args[1], args[2], true);
+                        break;
+                    case "-suck":
+                        SuckIntoStatistic(args[1], args[2]);
+                        break;
+                    case "-build-fixedconfined":
+                        {
+                            var builder = BuildFixedConfined(args[1], args[2], args[3]);
+                            if (args.Length > 4)
+                            {
+                                builder.ExportToText(args[4]);
+                            }
+                            break;
+                        }
+                    case "-prepare":
+                        PreparePredict(args[1], args[2], args[3]);
+                        break;
+                    case "-predict":
+                        if (args.Length == 4)
+                        {
+                            Predict(args[1], args[2], args[3], Console.Out);
+                        }
+                        else
+                        {
+                            // args.Length == 3
+                            Predict(args[1], args[2], null, Console.Out);
+                        }
+                        break;
                 }
             }
             catch (Exception e)

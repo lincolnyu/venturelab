@@ -2,25 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static SecurityAccess.Asx.InterpolationHelper;
 
 namespace SecurityAccess.Asx
 {
     public class FileReorganiser
     {
-        #region Enumerations
-
-        public enum InterpolationModes
-        {
-            None,
-            Linear,
-            Extend,
-        }
-
-        #endregion
-
         #region Nested classes
 
-        public class OutputFile
+        public class OutputFile : IInterpolatable
         {
             public OutputFile(FileReorganiser owner, string code)
             {
@@ -36,6 +26,7 @@ namespace SecurityAccess.Asx
             public string Code { get; }
 
             public int MissingDays { get; set; }
+
             public DailyStockEntry LastAvailable { get; set; }
 
             public int TotalCount { get; set; }
@@ -69,7 +60,7 @@ namespace SecurityAccess.Asx
         #region Constructors
 
         public FileReorganiser(string inputDir, string outputDir, 
-            TextWriter logWriter = null, bool append=false, 
+            TextWriter logWriter = null, bool append=false,
             InterpolationModes mode = InterpolationModes.None)
         {
             InputDir = inputDir;
@@ -127,19 +118,13 @@ namespace SecurityAccess.Asx
                 LogWriter.WriteLine("Reorganising...");
             }
 
-            var dir = new DirectoryInfo(InputDir);
-            var files = dir.GetFiles();
 
             // only used for interpolation
             var dates = new List<DateTime>();
 
-            foreach (var file in files.OrderBy(x => x.Name))
+            var files = InputDir.GetStockFiles();
+            foreach (var file in files.Where(x=>x.Name.IsAsxHistoryFile()).OrderBy(x => x.Name))
             {
-                if (!file.Name.IsAsxHistoryFile())
-                {
-                    continue;
-                }
-
                 if (LogWriter != null)
                 {
                     LogWriter.Write("Processing {0}...", file.Name);
@@ -151,26 +136,25 @@ namespace SecurityAccess.Asx
                     dates.Add(dt);
                 }
 
-                var dsds = file.FullName.ReadDailyStockEntries();
-                foreach (var dsd in dsds)
+                var dses = file.FullName.ReadDailyStockEntries();
+                foreach (var dse in dses)
                 {
                     OutputFile outFile;
-                    if (!OutputFiles.TryGetValue(dsd.Code, out outFile))
+                    if (!OutputFiles.TryGetValue(dse.Code, out outFile))
                     {
-                        var outFilePath = OutputDir.GetOutputFileName(dsd.Code);
-                        outFile = new OutputFile(this, dsd.Code);
-                        OutputFiles[dsd.Code] = outFile;
+                        var outFilePath = OutputDir.GetOutputFileName(dse.Code);
+                        outFile = new OutputFile(this, dse.Code);
+                        OutputFiles[dse.Code] = outFile;
                     }
                     
                     if (Mode != InterpolationModes.None && outFile.MissingDays > 0)
                     {
-                        // TODO
-                        Interpolate(Mode, dates, outFile, dsd);
+                        Interpolate(Mode, dates, outFile, dse);
                     }
 
                     outFile.MissingDays = -1;
-                    outFile.LastAvailable = dsd;
-                    outFile.WriteDailyStockEntry(dsd);
+                    outFile.LastAvailable = dse;
+                    outFile.WriteDailyStockEntry(dse);
                 }
 
                 if (Mode != InterpolationModes.None)
@@ -274,42 +258,7 @@ namespace SecurityAccess.Asx
                 wpp.Value.Writer.Close();
             }
         }
-
-        private void Interpolate(InterpolationModes mode, IList<DateTime> dates, OutputFile outFile, DailyStockEntry dsd)
-        {
-            switch (mode)
-            {
-                case InterpolationModes.Linear:
-                    {
-                        for (var i = 0; i < outFile.MissingDays; i++)
-                        {
-                            var r2 = (i + 1) / (outFile.MissingDays + 1);
-                            var r1 = 1 - r2;
-                            var close = outFile.LastAvailable.Close * r1 + dsd.Open * r2;
-                            var open = close;
-                            var low = close;
-                            var high = close;
-                            outFile.WriteDailyStockEntry(dsd.Code, dates[dates.Count - outFile.MissingDays + i - 1],
-                                open, high, low, close, 0.0);
-                        }
-                        break;
-                    }
-                case InterpolationModes.Extend:
-                    {
-                        for (var i = 0; i < outFile.MissingDays; i++)
-                        {
-                            var close = outFile.LastAvailable.Close;
-                            var open = close;
-                            var low = close;
-                            var high = close;
-                            outFile.WriteDailyStockEntry(dsd.Code, dates[dates.Count - outFile.MissingDays + i - 1],
-                                open, high, low, close, 0.0);
-                        }
-                        break;
-                    }
-            }
-        }
-
+        
         #endregion
     }
 }
