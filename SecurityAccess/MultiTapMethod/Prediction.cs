@@ -43,15 +43,15 @@ namespace SecurityAccess.MultiTapMethod
 
             if (mean > 1)
             {
-                s = string.Format("+{0:  0.0} (+/-{1:0.0}) %", (mean - 1) * 100, sv * 100);
+                s = string.Format("+{0:  0.0} (+-{1:0.0}) %", (mean - 1) * 100, sv * 100);
             }
             else if (mean < 1)
             {
-                s = string.Format("-{0:  0.0} (+/-{1:0.0}) %", (1 - mean) * 100, sv * 100);
+                s = string.Format("-{0:  0.0} (+-{1:0.0}) %", (1 - mean) * 100, sv * 100);
             }
             else
             {
-                s = string.Format("   0.0 (+/-{0:000.0}) %", sv);
+                s = string.Format("   0.0 (+-{0:0.0}) %", sv);
             }
 
             return s;
