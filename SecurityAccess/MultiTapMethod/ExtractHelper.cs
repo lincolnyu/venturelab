@@ -170,7 +170,7 @@ namespace SecurityAccess
                     p.P1O * a, p.P1H * a, p.P1L * a, p.P2 * a, p.P3 * a, p.P4 * a, p.P5 * a, p.P15 * a,
                     p.P30 * a, p.P90 * a, p.P180 * a, p.P360 * a, p.P720 * a, p.P1800 * a,
                     p.V2 * b, p.V3 * b, p.V4 * b, p.V5 * b, p.V15 * b, p.V30 * b, p.V90 * b, p.V360 * b,
-                    p.FP1 * a, p.FP2 * a, p.FP5 * a, p.FP15, p.FP30 * a, p.FP90 * a);
+                    p.FP1 * a, p.FP2 * a, p.FP5 * a, p.FP15 * a, p.FP30 * a, p.FP90 * a);
                 count++;
             }
             return count;

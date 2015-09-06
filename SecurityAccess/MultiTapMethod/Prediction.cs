@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace SecurityAccess.MultiTapMethod
 {
@@ -28,13 +29,33 @@ namespace SecurityAccess.MultiTapMethod
 
         public void Export(TextWriter tw)
         {
-            tw.WriteLine("FP1:  {0:###.0}% / {1:###.0}%", FP1 * 100, FP1Sv * 100 / FP1);
-            tw.WriteLine("FP2:  {0:###.0}% / {1:###.0}%", FP2 * 100, FP2Sv * 100 / FP2);
-            tw.WriteLine("FP5:  {0:###.0}% / {1:###.0}%", FP5 * 100, FP5Sv * 100 / FP5);
-            tw.WriteLine("FP15: {0:###.0}% / {1:###.0}%", FP15 * 100, FP15Sv * 100 / FP15);
-            tw.WriteLine("FP30: {0:###.0}% / {1:###.0}%", FP30 * 100, FP30Sv * 100 / FP30);
-            tw.WriteLine("FP90: {0:###.0}% / {1:###.0}%", FP90 * 100, FP90Sv * 100 / FP90);
+            tw.WriteLine("FP1:  {0}", FormatResult(FP1, FP1Sv));
+            tw.WriteLine("FP2:  {0}", FormatResult(FP2, FP2Sv));
+            tw.WriteLine("FP5:  {0}", FormatResult(FP5, FP5Sv));
+            tw.WriteLine("FP15: {0}", FormatResult(FP15, FP15Sv));
+            tw.WriteLine("FP30: {0}", FormatResult(FP30, FP30Sv));
+            tw.WriteLine("FP90: {0}", FormatResult(FP90, FP90Sv));
         }
+
+        private string FormatResult(double mean, double sv)
+        {
+            string s;
+
+            if (mean > 1)
+            {
+                s = string.Format("+{0:  0.0} (+/-{1:0.0}) %", (mean - 1) * 100, sv * 100);
+            }
+            else if (mean < 1)
+            {
+                s = string.Format("-{0:  0.0} (+/-{1:0.0}) %", (1 - mean) * 100, sv * 100);
+            }
+            else
+            {
+                s = string.Format("   0.0 (+/-{0:000.0}) %", sv);
+            }
+
+            return s;
+        } 
 
         public void Export(string fn, string desc, bool append=false)
         {
