@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GaussianCore.Generic
 {
-    public abstract class GenericCore
+    public abstract class GenericCore : ICore
     {
         #region Constructors
 
@@ -18,13 +18,24 @@ namespace GaussianCore.Generic
 
         #region Properties
 
-        public double[] CentersInput { get; }
+        #region ICore members
 
-        public double[] CentersOutput { get; }
 
-        public int InputLength => CentersInput.Length;
+        public IList<double> CentersInput
+        {
+            get;
+        }
 
-        public int OutputLength => CentersOutput.Length;
+        public IList<double> CentersOutput
+        {
+            get;
+        }
+
+        #endregion
+
+        public int InputLength => CentersInput.Count;
+
+        public int OutputLength => CentersOutput.Count;
 
         /// <summary>
         ///  Output precision coeffs
@@ -48,7 +59,7 @@ namespace GaussianCore.Generic
             var a = A(inputs);
             var b = B(inputs);
             var s = 0.0;
-            for (var i = 0; i < CentersOutput.Length; i++)
+            for (var i = 0; i < CentersOutput.Count; i++)
             {
                 var d = outputs[i] - CentersOutput[i];
                 d *= d;

@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 namespace GaussianCore.Generic
 {
-    public abstract class GenericCoreManager : ICoreManager, IEnumerable<GenericCore>
+    public abstract class GenericCoreManager : ICoreManager, 
+        IEnumerable<GenericCore>
     {
         #region Properties
 
@@ -79,6 +80,21 @@ namespace GaussianCore.Generic
                 }
             }
             return num / denom;
+        }
+
+        double ICoreManager.GetIntensity(IList<double> inputs, IList<double> outputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        double ICoreManager.GetExpectedY(IList<double> inputs, int k)
+        {
+            throw new NotImplementedException();
+        }
+
+        double ICoreManager.GetExpectedSquareY(IList<double> inputs, int k)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

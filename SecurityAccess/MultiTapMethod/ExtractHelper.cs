@@ -11,6 +11,17 @@ namespace SecurityAccess
     /// </summary>
     public static class ExtractHelper
     {
+        #region Enumerations
+
+        public enum ExportModes
+        {
+            Text,
+            Binary,
+            Both
+        }
+
+        #endregion
+
         #region Methods
 
         /// <summary>
@@ -66,56 +77,56 @@ namespace SecurityAccess
             int j;
             var sum = 0.0;
             var vsum = 0.0;
-            for (j = 0; j < 15; j++)
+            for (j = 0; j < 10; j++)
             {
                 sum += data[start - j].Close;
                 vsum += data[start - j].Volume;
             }
-            sp.P15 = sum / 15;
-            sp.V15 = vsum / 15;
+            sp.P10 = sum / 10;
+            sp.V10 = vsum / 10;
 
-            for (; j < 30; j++)
+            for (; j < 20; j++)
             {
                 sum += data[start - j].Close;
                 vsum += data[start - j].Volume;
             }
-            sp.P30 = sum / 30;
-            sp.V30 = vsum / 30;
+            sp.P20 = sum / 20;
+            sp.V20 = vsum / 20;
 
-            for (; j < 90; j++)
+            for (; j < 65; j++)
             {
                 sum += data[start - j].Close;
                 vsum += data[start - j].Volume;
             }
-            sp.P90 = sum / 90;
-            sp.V90 = vsum / 90;
+            sp.P65 = sum / 65;
+            sp.V65 = vsum / 65;
 
-            for (; j < 180; j++)
+            for (; j < 130; j++)
             {
                 sum += data[start - j].Close;
                 vsum += data[start - j].Volume;
             }
-            sp.P180 = sum / 180;
+            sp.P130 = sum / 130;
 
-            for (; j < 360; j++)
+            for (; j < 260; j++)
             {
                 sum += data[start - j].Close;
                 vsum += data[start - j].Volume;
             }
-            sp.P360 = sum / 360;
-            sp.V360 = vsum / 360;
+            sp.P260 = sum / 260;
+            sp.V260 = vsum / 260;
 
-            for (; j < 720; j++)
+            for (; j < 520; j++)
             {
                 sum += data[start - j].Close;
             }
-            sp.P720 = sum / 720;
+            sp.P520 = sum / 520;
 
-            for (; j < 1800; j++)
+            for (; j < 1300; j++)
             {
                 sum += data[start - j].Close;
             }
-            sp.P1800 = sum / 1800;
+            sp.P1300 = sum / 1300;
 
             return sp;
         }
@@ -137,43 +148,73 @@ namespace SecurityAccess
             }
             sp.FP5 = sum / 5;
 
-            for (; j < 15; j++)
+            for (; j < 10; j++)
             {
                 sum += data[start + j].Close;
             }
-            sp.FP15 = sum / 15;
+            sp.FP10 = sum / 10;
 
-            for (; j < 30; j++)
+            for (; j < 20; j++)
             {
                 sum += data[start + j].Close;
             }
-            sp.FP30 = sum / 30;
+            sp.FP20 = sum / 20;
 
-            for (; j < 90; j++)
+            for (; j < 65; j++)
             {
                 sum += data[start + j].Close;
             }
-            sp.FP90 = sum / 90;
+            sp.FP65 = sum / 65;
 
             return sp;
         }
 
-        public static int Export(this IEnumerable<StatisticPoint> points, StreamWriter sw)
+        public static void Write(StatisticPoint p, TextWriter tw)
         {
-            var count = 0;
-            foreach (var p in points)
-            {
-                var a = 1 / p.P1C;
-                var b = 1 / p.V1;
-                sw.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},"
-                    + "{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27}",
-                    p.P1O * a, p.P1H * a, p.P1L * a, p.P2 * a, p.P3 * a, p.P4 * a, p.P5 * a, p.P15 * a,
-                    p.P30 * a, p.P90 * a, p.P180 * a, p.P360 * a, p.P720 * a, p.P1800 * a,
-                    p.V2 * b, p.V3 * b, p.V4 * b, p.V5 * b, p.V15 * b, p.V30 * b, p.V90 * b, p.V360 * b,
-                    p.FP1 * a, p.FP2 * a, p.FP5 * a, p.FP15 * a, p.FP30 * a, p.FP90 * a);
-                count++;
-            }
-            return count;
+            var a = 1 / p.P1C;
+            var b = 1 / p.V1;
+            tw.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},"
+                + "{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27}",
+                p.P1O * a, p.P1H * a, p.P1L * a, p.P2 * a, p.P3 * a, p.P4 * a, p.P5 * a, p.P10 * a,
+                p.P20 * a, p.P65 * a, p.P130 * a, p.P260 * a, p.P520 * a, p.P1300 * a,
+                p.V2 * b, p.V3 * b, p.V4 * b, p.V5 * b, p.V10 * b, p.V20 * b, p.V65 * b, p.V260 * b,
+                p.FP1 * a, p.FP2 * a, p.FP5 * a, p.FP10 * a, p.FP20 * a, p.FP65 * a);
+        }
+
+        private static void Write(StatisticPoint p, BinaryWriter bw)
+        {
+            var a = 1 / p.P1C;
+            var b = 1 / p.V1;
+
+            bw.Write(p.P1O * a);
+            bw.Write(p.P1H * a);
+            bw.Write(p.P1L * a);
+            bw.Write(p.P2 * a);
+            bw.Write(p.P3 * a);
+            bw.Write(p.P4 * a);
+            bw.Write(p.P5 * a);
+            bw.Write(p.P10 * a);
+            bw.Write(p.P20 * a);
+            bw.Write(p.P65 * a);
+            bw.Write(p.P130 * a);
+            bw.Write(p.P260 * a);
+            bw.Write(p.P520 * a);
+            bw.Write(p.P1300 * a);
+            bw.Write(p.V2 * b);
+            bw.Write(p.V3 * b);
+            bw.Write(p.V4 * b);
+            bw.Write(p.V5 * b);
+            bw.Write(p.V10 * b);
+            bw.Write(p.V20 * b);
+            bw.Write(p.V65 * b);
+            bw.Write(p.V260 * b);
+
+            bw.Write(p.FP1 * a);
+            bw.Write(p.FP2 * a);
+            bw.Write(p.FP5 * a);
+            bw.Write(p.FP10 * a);
+            bw.Write(p.FP20 * a);
+            bw.Write(p.FP65 * a);
         }
 
         public static void GenerateInput(this StatisticPoint p, IList<double> input)
@@ -187,24 +228,25 @@ namespace SecurityAccess
             input[4] = p.P3 * a;
             input[5] = p.P4 * a;
             input[6] = p.P5 * a;
-            input[7] = p.P15* a;
-            input[8] = p.P30 * a;
-            input[9] = p.P90 * a;
-            input[10] = p.P180 * a;
-            input[11] = p.P360 * a;
-            input[12] = p.P720 * a;
-            input[13] = p.P1800 * a;
+            input[7] = p.P10* a;
+            input[8] = p.P20 * a;
+            input[9] = p.P65 * a;
+            input[10] = p.P130 * a;
+            input[11] = p.P260 * a;
+            input[12] = p.P520 * a;
+            input[13] = p.P1300 * a;
             input[14] = p.V2 * b;
             input[15] = p.V3 * b;
             input[16] = p.V4 * b;
             input[17] = p.V5 * b;
-            input[18] = p.V15 * b;
-            input[19] = p.V30 * b;
-            input[20] = p.V90 * b;
-            input[21] = p.V360 * b;
+            input[18] = p.V10 * b;
+            input[19] = p.V20 * b;
+            input[20] = p.V65 * b;
+            input[21] = p.V260 * b;
         }
 
-        public static void ProcessFiles(this string srcDir, string dstDir, TextWriter logWriter = null)
+        public static void ProcessFiles(this string srcDir, string dstDir,
+            ExportModes mode = ExportModes.Binary, TextWriter logWriter = null)
         {
             var srcDirInfo = new DirectoryInfo(srcDir);
             var srcFiles = srcDirInfo.GetFiles();
@@ -240,13 +282,36 @@ namespace SecurityAccess
                     append = true;
                 }
 
-                var dstPath = Path.Combine(dstDir, srcFile.Name);
-                var count = ProcessFile(srcFile.FullName, dstPath, append ? len : 0, append);
+                int count = 0;
+                var statisticPoints = GetStatisticPoints(srcFile.FullName, append ? len : 0);
+                switch (mode)
+                {
+                    case ExportModes.Binary:
+                        {
+                            var dstPath = Path.Combine(dstDir, string.Format("{0}.dat", code));
+                            count = statisticPoints.ExportText(dstPath, append);
+                            break;
+                        }
+                    case ExportModes.Text:
+                        {
+                            var dstPath = Path.Combine(dstDir, string.Format("{0}.txt", code));
+                            count = statisticPoints.ExportText(dstPath, append);
+                            break;
+                        }
+                    case ExportModes.Both:
+                        {
+                            var datPath = Path.Combine(dstDir, string.Format("{0}.dat", code));
+                            var txtPath = Path.Combine(dstDir, string.Format("{0}.txt", code));
+                            count = statisticPoints.ExportBinaryAndText(datPath, txtPath, append);
+                            break;
+                        }
+                }
+
                 if (logWriter != null)
                 {
-                    logWriter.WriteLine("{0} Processed (starting {1} counting {2})...", srcFile.Name, len, count);
+                    logWriter.WriteLine("{0} Processed (starting {1} counting {2})...", code, len, count);
                 }
-                lengths[code] = len+count;
+                lengths[code] = len + count;
             }
 
             using (var sw = new StreamWriter(infoFile))
@@ -260,15 +325,90 @@ namespace SecurityAccess
             logWriter.WriteLine("All processed.");
         }
 
-        private static int ProcessFile(string srcPath, string dstPath, int start=0, bool append=false)
+        private static IEnumerable<StatisticPoint> GetStatisticPoints(string srcPath, int start)
         {
             var entries = srcPath.ReadDailyStockEntries().ToList();
             var statisticPoints = entries.Suck(start, 1);
+
+            return statisticPoints;
+        }
+
+        public static int ExportText(this IEnumerable<StatisticPoint> statisticPoints, string dstPath, 
+            bool append)
+        {
             using (var sw = new StreamWriter(dstPath, append))
             {
-                var count = statisticPoints.Export(sw);
+                var count = statisticPoints.Write(sw);
                 return count;
             }
+        }
+
+        public static int ExportBinary(this IEnumerable<StatisticPoint> statisticPoints, string dstPath, bool append)
+        {
+            using (var fs = new FileStream(dstPath, append ? FileMode.Append : FileMode.Create))
+            {
+                using (var bw = new BinaryWriter(fs))
+                {
+                    var count = statisticPoints.Write(bw);
+                    return count;
+                }
+            }
+        }
+
+        public static int ExportBinaryAndText(this IEnumerable<StatisticPoint> statisticPoints, 
+            string datPath, string txtPath, bool append)
+        {
+            using (var sw = new StreamWriter(txtPath, append))
+            {
+                using (var fs = new FileStream(datPath, append ? FileMode.Append : FileMode.Create))
+                {
+                    using (var bw = new BinaryWriter(fs))
+                    {
+                        var count = statisticPoints.Write(bw, sw);
+                        return count;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Writes a sequence of points in order to text
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="tw"></param>
+        /// <returns></returns>
+        public static int Write(this IEnumerable<StatisticPoint> points, TextWriter tw)
+        {
+            var count = 0;
+            foreach (var p in points)
+            {
+                Write(p, tw);
+                count++;
+            }
+            return count;
+        }
+
+        public static int Write(this IEnumerable<StatisticPoint> points, BinaryWriter bw)
+        {
+            var count = 0;
+            foreach (var p in points)
+            {
+                Write(p, bw);
+                count++;
+            }
+            return count;
+        }
+
+        public static int Write(this IEnumerable<StatisticPoint> points, BinaryWriter bw, TextWriter tw)
+        {
+            var count = 0;
+            foreach (var p in points)
+            {
+                Write(p, bw);
+                Write(p, tw);
+                count++;
+            }
+            return count;
         }
 
         #endregion

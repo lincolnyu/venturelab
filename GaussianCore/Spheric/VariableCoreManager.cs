@@ -16,6 +16,7 @@ namespace GaussianCore.Spheric
         #region Methods
 
         #region GaussianCoreManager members
+
         public override IEnumerator<Core> GetEnumerator()
         {
             return Cores.GetEnumerator();

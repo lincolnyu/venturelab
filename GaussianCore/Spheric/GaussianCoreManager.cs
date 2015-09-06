@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,12 +13,18 @@ namespace GaussianCore.Spheric
 
         #endregion
 
+        #region Methods
+
+        #region IEnumerable<Core> members
+
         public abstract IEnumerator<Core> GetEnumerator();
         
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
+
+        #endregion
 
         public double GetIntensity(IList<double> inputs, IList<double> outputs)
         {
@@ -60,5 +67,7 @@ namespace GaussianCore.Spheric
             res /= denom;
             return res;
         }
+
+        #endregion
     }
 }

@@ -16,17 +16,25 @@ namespace SecurityAnalysisConsole
             fr.Reorganise();
         }
 
-        static void SuckIntoStatistic(string srcDir, string dstDir)
+        static void SuckIntoStatistic(string srcDir, string dstDir, 
+            bool exportTxtToo)
         {
-            ExtractHelper.ProcessFiles(srcDir, dstDir, Console.Out);
+            ExtractHelper.ProcessFiles(srcDir, dstDir,
+                exportTxtToo ? ExtractHelper.ExportModes.Both : ExtractHelper.ExportModes.Binary,
+                Console.Out);
+        }
+
+        static void BuildFixedConfinedForAll(string srcDir, string dstDir)
+        {
+          //  FixedConfinedBuilder.RebuildAll(srcDir, dstDir, true, Console.Out);
         }
 
         static FixedConfinedBuilder BuildFixedConfined(string selectionFile, string srcDir, string savePath)
         {
             var coreManager = new FixedConfinedCoreManager();
             var builder = new FixedConfinedBuilder(coreManager);
-            builder.LoadCodeSelection(selectionFile);
-            builder.Build(srcDir);
+            var codes = FixedConfinedBuilder.LoadCodeSelection(selectionFile);
+            builder.BuildFromBinary(srcDir, codes);
             builder.Save(savePath);
             return builder;
         }
@@ -72,10 +80,13 @@ namespace SecurityAnalysisConsole
                         // args[1]: src, args[2]: dst
                         ReorganiseFiles(args[1], args[2], true);
                         break;
-                    case "-suck":
-                        SuckIntoStatistic(args[1], args[2]);
+                    case "-suck-txt":
+                        SuckIntoStatistic(args[1], args[2], true);
                         break;
-                    case "-build-fixedconfined":
+                    case "-suck":
+                        SuckIntoStatistic(args[1], args[2], false);
+                        break;
+                    case "-build-fc":
                         {
                             var builder = BuildFixedConfined(args[1], args[2], args[3]);
                             if (args.Length > 4)
@@ -84,6 +95,9 @@ namespace SecurityAnalysisConsole
                             }
                             break;
                         }
+                    case "-build-fc-all":
+                        BuildFixedConfinedForAll(args[1], args[2]);
+                        break;
                     case "-prepare":
                         PreparePredict(args[1], args[2], args[3]);
                         break;

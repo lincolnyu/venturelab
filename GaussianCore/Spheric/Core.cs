@@ -3,9 +3,29 @@ using System.Collections.Generic;
 
 namespace GaussianCore.Spheric
 {
-    public class Core
+    public class Core : ICore
     {
         #region Properties
+
+        #region ICore members
+
+        public IList<double> CentersInput
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public IList<double> CentersOutput
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
 
         /// <summary>
         ///  percentage the pdf drops to when it gets to half the characterized distance

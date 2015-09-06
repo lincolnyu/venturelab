@@ -7,9 +7,9 @@
         /// <summary>
         ///  First day that is late enough to make a statistic point
         /// </summary>
-        public const int FirstCentralDay = 1799;
+        public const int FirstCentralDay = 1299;
 
-        public const int MinDistToEnd = 360;
+        public const int MinDistToEnd = 65;
 
         #endregion
 
@@ -26,23 +26,23 @@
         public double P3 { get; set; }
         public double P4 { get; set; }
         public double P5 { get; set; } 
-        public double P15 { get; set; } // avg and same as below
-        public double P30 { get; set; }
-        public double P90 { get; set; }
-        public double P180 { get; set; }
-        public double P360 { get; set; }
-        public double P720 { get; set; }
-        public double P1800 { get; set; }
+        public double P10 { get; set; } // avg and same as below
+        public double P20 { get; set; }
+        public double P65 { get; set; }
+        public double P130 { get; set; }
+        public double P260 { get; set; }
+        public double P520 { get; set; }
+        public double P1300 { get; set; }
 
         public double V1 { get; set; }
         public double V2 { get; set; }
         public double V3 { get; set; }
         public double V4 { get; set; }
         public double V5 { get; set; } 
-        public double V15 { get; set; } // avg and same as below
-        public double V30 { get; set; }
-        public double V90 { get; set; }
-        public double V360 { get; set; }
+        public double V10 { get; set; } // avg and same as below
+        public double V20 { get; set; }
+        public double V65 { get; set; }
+        public double V260 { get; set; }
 
         #endregion
 
@@ -51,9 +51,9 @@
         public double FP1 { get; set; }  // close
         public double FP2 { get; set; }  // close
         public double FP5 { get; set; }  // avg of close and same as below
-        public double FP15 { get; set; }
-        public double FP30 { get; set; }
-        public double FP90 { get; set; }
+        public double FP10 { get; set; }
+        public double FP20 { get; set; }
+        public double FP65 { get; set; }
 
         #endregion
 

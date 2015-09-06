@@ -1,6 +1,8 @@
 ﻿using GaussianCore.Generic;
+using SecurityAccess.Asx;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace SecurityAccess.MultiTapMethod
@@ -12,7 +14,6 @@ namespace SecurityAccess.MultiTapMethod
         public FixedConfinedBuilder(FixedConfinedCoreManager fccm)
         {
             CoreManager = fccm;
-            Codes = new List<string>();
         }
 
         #endregion
@@ -21,25 +22,40 @@ namespace SecurityAccess.MultiTapMethod
 
         public FixedConfinedCoreManager CoreManager { get; private set; }
 
-        public List<string> Codes { get; private set; }
-
         #endregion
 
         #region Methods
 
-        public void Build(string statisticsDir, bool append=false)
+        // TODO incremental build to be implemented
+
+        public void BuildFromText(string statisticsDir, IEnumerable<string> codes, bool append=false)
         {
             if (!append)
             {
                 CoreManager.Cores.Clear();
             }
-            foreach (var code in Codes)
+            foreach (var code in codes)
             {
                 var fn = string.Format("{0}.txt", code);
                 var path = Path.Combine(statisticsDir, fn);
                 AddStatistics(path);
             }
             CoreManager.UpdateCoreCoeffs();
+        }
+
+        public void BuildFromBinary(string statisticsDir, IEnumerable<string> codes, bool append = false)
+        {
+            if (!append)
+            {
+                CoreManager.Cores.Clear();
+            }
+
+            foreach (var code in codes)
+            {
+                var fn = string.Format("{0}.dat", code);
+                var path = Path.Combine(statisticsDir, fn);
+                Load(path, true, true);
+            }
         }
 
         private void AddStatistics(string path)
@@ -122,13 +138,14 @@ namespace SecurityAccess.MultiTapMethod
         ///  Save the built and updated core set to the spcecified file
         /// </summary>
         /// <param name="path"></param>
-        public void Save(string path)
+        public void Save(string path, bool centersOnly=false)
         {
             using (var fs = new FileStream(path, FileMode.Create))
             {
                 using (var bw = new BinaryWriter(fs))
                 {
                     bw.Write(CoreManager.Cores.Count);
+                    bw.Write(centersOnly);
                     foreach (var core in CoreManager)
                     {
                         var gc = (GaussianConfinedCore)core;
@@ -140,13 +157,16 @@ namespace SecurityAccess.MultiTapMethod
                         {
                             bw.Write(v);
                         }
-                        foreach (var v in gc.K)
+                        if (!centersOnly)
                         {
-                            bw.Write(v);
-                        }
-                        foreach (var v in gc.L)
-                        {
-                            bw.Write(v);
+                            foreach (var v in gc.K)
+                            {
+                                bw.Write(v);
+                            }
+                            foreach (var v in gc.L)
+                            {
+                                bw.Write(v);
+                            }
                         }
                         bw.Write(gc.Multiple);
                     }
@@ -154,15 +174,19 @@ namespace SecurityAccess.MultiTapMethod
             }
         }
 
-        public void Load(string path)
+        public void Load(string path, bool deduceCoeffs=false, bool append=false)
         {
-            CoreManager.Cores.Clear();
+            if (!append)
+            {
+                CoreManager.Cores.Clear();
+            }
             using (var fs = new FileStream(path, FileMode.Open))
             {
                 using (var br = new BinaryReader(fs))
                 {
                     int count = br.ReadInt32();
                     CoreManager.Cores.Capacity = count;
+                    var centersOnly = br.ReadBoolean();
                     for (var i = 0; i < count; i++)
                     {
                         var core = new GaussianConfinedCore(22, 6);
@@ -176,27 +200,35 @@ namespace SecurityAccess.MultiTapMethod
                             var val = br.ReadDouble();
                             core.CentersOutput[j] = val;
                         }
-                        for (var j = 0; j < 22; j++)
+                        if (!centersOnly)
                         {
-                            var val = br.ReadDouble();
-                            core.K[j] = val;
+                            for (var j = 0; j < 22; j++)
+                            {
+                                var val = br.ReadDouble();
+                                core.K[j] = val;
+                            }
+                            for (var j = 0; j < 6; j++)
+                            {
+                                var val = br.ReadDouble();
+                                core.L[j] = val;
+                            }
+                            core.UpdateInvLCoeff();
                         }
-                        for (var j = 0; j < 6; j++)
-                        {
-                            var val = br.ReadDouble();
-                            core.L[j] = val;
-                        }
+
                         core.Multiple = br.ReadDouble();
-                        core.UpdateInvLCoeff();
                         CoreManager.Cores.Add(core);
+                    }
+                    if (deduceCoeffs && centersOnly)
+                    {
+                        CoreManager.UpdateCoreCoeffs();
                     }
                 }
             }
         }
 
-        public void LoadCodeSelection(string file)
+        public static List<string> LoadCodeSelection(string file)
         {
-            Codes.Clear();
+            var codes = new List<string>();
             using (var sr = new StreamReader(file))
             {
                 while (!sr.EndOfStream)
@@ -207,24 +239,25 @@ namespace SecurityAccess.MultiTapMethod
                         continue;
                     }
                     var code = line.ToUpper();
-                    Codes.Add(code);
+                    codes.Add(code);
                 }
             }
-            SortCodes();
+            SortCodes(codes);
+            return codes;
         }
 
-        private void SortCodes()
+        private static void SortCodes(List<string> codes)
         {
-            Codes.Sort();
-            for (var i = Codes.Count-1; i>0; )
+            codes.Sort();
+            for (var i = codes.Count-1; i>0; )
             {
                 var j = i - 1;
-                for (; j >= 0 && Codes[j] == Codes[i]; j--)
+                for (; j >= 0 && codes[j] == codes[i]; j--)
                 {
                 }
                 if (i - j > 1)
                 {
-                    Codes.RemoveRange(j + 2, i - j - 1);
+                    codes.RemoveRange(j + 2, i - j - 1);
                 }
                 i = j;
             }

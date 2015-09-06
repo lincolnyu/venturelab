@@ -37,8 +37,10 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classification\CoreDistanceHelper.cs" />
     <Compile Include="Generic\CoreGeometryHelper.cs" />
     <Compile Include="Generic\VariableConfinedCoreManager.cs" />
+    <Compile Include="ICore.cs" />
     <Compile Include="Spheric\Component.cs" />
     <Compile Include="Generic\FixedConfinedCoreManager.cs" />
     <Compile Include="Generic\GaussianConfinedCore.cs" />
