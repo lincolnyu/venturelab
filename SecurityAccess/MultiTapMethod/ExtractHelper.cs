@@ -289,7 +289,7 @@ namespace SecurityAccess
                     case ExportModes.Binary:
                         {
                             var dstPath = Path.Combine(dstDir, string.Format("{0}.dat", code));
-                            count = statisticPoints.ExportText(dstPath, append);
+                            count = statisticPoints.ExportBinary(dstPath, append);
                             break;
                         }
                     case ExportModes.Text:
@@ -345,11 +345,36 @@ namespace SecurityAccess
 
         public static int ExportBinary(this IEnumerable<StatisticPoint> statisticPoints, string dstPath, bool append)
         {
+            int originalCount = 0;
+            if (append)
+            {
+                using (var fs = new FileStream(dstPath, FileMode.Open))
+                {
+                    using (var br = new BinaryReader(fs))
+                    {
+                        br.ReadUInt32(); // skip the flag
+                        originalCount = br.ReadInt32();
+                    }
+                }
+            }
+
             using (var fs = new FileStream(dstPath, append ? FileMode.Append : FileMode.Create))
             {
                 using (var bw = new BinaryWriter(fs))
                 {
+                    // NOTE it's fc - i/o only compatible
+                    if (!append)
+                    {
+                        bw.Write((uint)FixedConfinedBuilder.Flags.InputOutputOnly);
+                        // place holder for counter
+                        bw.Write(0);
+                    }
+
                     var count = statisticPoints.Write(bw);
+
+                    bw.Seek(sizeof(uint), SeekOrigin.Begin);
+                    bw.Write(originalCount + count);
+
                     return count;
                 }
             }

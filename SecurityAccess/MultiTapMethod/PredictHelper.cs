@@ -62,17 +62,17 @@ namespace SecurityAccess.MultiTapMethod
                 FP1 = y0,
                 FP2 = y1,  // close
                 FP5 = y2,  // avg of close and same as below
-                FP15 = y3,
-                FP30 = y4,
-                FP90 = y5,
+                FP10 = y3,
+                FP20 = y4,
+                FP65 = y5,
 
                 // standard variance
                 FP1Sv = Math.Sqrt(yy0 - y0 * y0),
                 FP2Sv = Math.Sqrt(yy1 - y1 * y1),
                 FP5Sv = Math.Sqrt(yy2 - y2 * y2),
-                FP15Sv = Math.Sqrt(yy3 - y3 * y3),
-                FP30Sv = Math.Sqrt(yy4 - y4 * y4),
-                FP90Sv = Math.Sqrt(yy5 - y5 * y5),
+                FP10Sv = Math.Sqrt(yy3 - y3 * y3),
+                FP20Sv = Math.Sqrt(yy4 - y4 * y4),
+                FP65Sv = Math.Sqrt(yy5 - y5 * y5),
             };
 
             return p;

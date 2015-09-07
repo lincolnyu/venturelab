@@ -1,14 +1,23 @@
 ﻿using GaussianCore.Generic;
-using SecurityAccess.Asx;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace SecurityAccess.MultiTapMethod
 {
     public class FixedConfinedBuilder
     {
+        #region Enumerations
+
+        public enum Flags : uint
+        {
+            InputOutputOnly = 0,
+            InputOutputAndMutiple = 1,
+            Complete = 2,// input/output, coeffs and mutiple
+        }
+
+        #endregion
+
         #region Constructors
 
         public FixedConfinedBuilder(FixedConfinedCoreManager fccm)
@@ -91,7 +100,7 @@ namespace SecurityAccess.MultiTapMethod
         ///  Exports to text fille
         /// </summary>
         /// <param name="path">The path of the text file</param>
-        public void ExportToText(string path)
+        public void ExportToText(string path, Flags flag = Flags.Complete)
         {
             using (var sw = new StreamWriter(path))
             {
@@ -103,49 +112,42 @@ namespace SecurityAccess.MultiTapMethod
                     {
                         sb.AppendFormat("{0},", v);
                     }
-                    sb.Remove(sb.Length - 1, 1);
-
-                    sb.Append(';');
                     foreach (var v in gc.CentersOutput)
                     {
                         sb.AppendFormat("{0},", v);
                     }
-                    sb.Remove(sb.Length - 1, 1);
-                    sb.Append(';');
-
-                    foreach (var v in gc.K)
+                    if (flag != Flags.InputOutputOnly)
                     {
-                        sb.AppendFormat("{0},", v);
+                        sb.AppendFormat("{0},", gc.Multiple);
                     }
-                    sb.Remove(sb.Length - 1, 1);
-                    sb.Append(';');
-
-                    foreach (var v in gc.L)
+                    if (flag == Flags.Complete)
                     {
-                        sb.AppendFormat("{0},", v);
+                        foreach (var v in gc.K)
+                        {
+                            sb.AppendFormat("{0},", v);
+                        }
+                        foreach (var v in gc.L)
+                        {
+                            sb.AppendFormat("{0},", v);
+                        }
                     }
-                    sb.Remove(sb.Length - 1, 1);
-                    sb.Append(';');
-
-                    sb.AppendFormat("{0}", gc.Multiple);
-
                     sw.WriteLine(sb);
                 }
             }
         }
-        
+
         /// <summary>
         ///  Save the built and updated core set to the spcecified file
         /// </summary>
         /// <param name="path"></param>
-        public void Save(string path, bool centersOnly=false)
+        public void Save(string path, Flags flag = Flags.Complete)
         {
             using (var fs = new FileStream(path, FileMode.Create))
             {
                 using (var bw = new BinaryWriter(fs))
                 {
+                    bw.Write((uint)flag);
                     bw.Write(CoreManager.Cores.Count);
-                    bw.Write(centersOnly);
                     foreach (var core in CoreManager)
                     {
                         var gc = (GaussianConfinedCore)core;
@@ -157,7 +159,11 @@ namespace SecurityAccess.MultiTapMethod
                         {
                             bw.Write(v);
                         }
-                        if (!centersOnly)
+                        if (flag != Flags.InputOutputOnly)
+                        {
+                            bw.Write(gc.Multiple);
+                        }
+                        if (flag == Flags.Complete)
                         {
                             foreach (var v in gc.K)
                             {
@@ -168,7 +174,6 @@ namespace SecurityAccess.MultiTapMethod
                                 bw.Write(v);
                             }
                         }
-                        bw.Write(gc.Multiple);
                     }
                 }
             }
@@ -184,9 +189,9 @@ namespace SecurityAccess.MultiTapMethod
             {
                 using (var br = new BinaryReader(fs))
                 {
+                    var flag = (Flags)br.ReadUInt32();
                     int count = br.ReadInt32();
                     CoreManager.Cores.Capacity = count;
-                    var centersOnly = br.ReadBoolean();
                     for (var i = 0; i < count; i++)
                     {
                         var core = new GaussianConfinedCore(22, 6);
@@ -200,7 +205,11 @@ namespace SecurityAccess.MultiTapMethod
                             var val = br.ReadDouble();
                             core.CentersOutput[j] = val;
                         }
-                        if (!centersOnly)
+                        if (flag != Flags.InputOutputOnly)
+                        {
+                            core.Multiple = br.ReadDouble();
+                        }
+                        if (flag == Flags.Complete)
                         {
                             for (var j = 0; j < 22; j++)
                             {
@@ -214,11 +223,9 @@ namespace SecurityAccess.MultiTapMethod
                             }
                             core.UpdateInvLCoeff();
                         }
-
-                        core.Multiple = br.ReadDouble();
                         CoreManager.Cores.Add(core);
                     }
-                    if (deduceCoeffs && centersOnly)
+                    if (deduceCoeffs && flag != Flags.Complete)
                     {
                         CoreManager.UpdateCoreCoeffs();
                     }

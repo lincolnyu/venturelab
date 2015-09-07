@@ -39,6 +39,22 @@ namespace SecurityAnalysisConsole
             return builder;
         }
 
+        /// <summary>
+        ///  Prepare current data for prediction analysis
+        /// </summary>
+        /// <param name="code">The code</param>
+        /// <param name="srcDir">The source directory for the (mostly recent) by date data</param>
+        /// <param name="dstPath">The dest path for the by code data</param>
+        static void PreparePredict(string code, string srcDir, string dstPath)
+        {
+            var sfs = srcDir.GetStockFiles();
+            var dses = sfs.GetDailyEntries(code);
+            using (var sw = new StreamWriter(dstPath))
+            {
+                dses.OutputDailyStockEntries(sw);
+            }
+        }
+
         static void Predict(string dataPath, string historyPath, string inputPath, TextWriter tw)
         {
             var input = PredictHelper.GetInputAsStaticPoint(historyPath, inputPath);
@@ -47,22 +63,6 @@ namespace SecurityAnalysisConsole
             builder.Load(dataPath);
             var prediction = coreManager.Predict(input);
             prediction.Export(tw);
-        }
-
-        /// <summary>
-        ///  Prepare current data for prediction analysis
-        /// </summary>
-        /// <param name="code">The code</param>
-        /// <param name="srcPath">The source path for the by date data</param>
-        /// <param name="dstPath">The dest path for the by code data</param>
-        static void PreparePredict(string code, string srcPath, string dstPath)
-        {
-            var sfs = srcPath.GetStockFiles();
-            var dses = sfs.GetDailyEntries(code);
-            using (var sw = new StreamWriter(dstPath))
-            {
-                dses.OutputDailyStockEntries(sw);
-            }
         }
 
         static void Main(string[] args)
