@@ -118,7 +118,7 @@ namespace SecurityAccess.MultiTapMethod
                     }
                     if (flag != Flags.InputOutputOnly)
                     {
-                        sb.AppendFormat("{0},", gc.Multiple);
+                        sb.AppendFormat("{0},", gc.Weight);
                     }
                     if (flag == Flags.Complete)
                     {
@@ -161,7 +161,7 @@ namespace SecurityAccess.MultiTapMethod
                         }
                         if (flag != Flags.InputOutputOnly)
                         {
-                            bw.Write(gc.Multiple);
+                            bw.Write(gc.Weight);
                         }
                         if (flag == Flags.Complete)
                         {
@@ -207,7 +207,7 @@ namespace SecurityAccess.MultiTapMethod
                         }
                         if (flag != Flags.InputOutputOnly)
                         {
-                            core.Multiple = br.ReadDouble();
+                            core.Weight = br.ReadDouble();
                         }
                         if (flag == Flags.Complete)
                         {

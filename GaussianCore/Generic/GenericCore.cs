@@ -42,7 +42,7 @@ namespace GaussianCore.Generic
         /// </summary>
         public double[] L { get; set; }
 
-        public double Multiple { get; set; } = 1;
+        public double Weight { get; set; } = 1;
 
         public double InvLCoeff { get; set; }
 
@@ -66,7 +66,7 @@ namespace GaussianCore.Generic
                 d *= L[i];
                 s += d;
             }
-            return Multiple * a * Math.Exp(b * s);
+            return Weight * a * Math.Exp(b * s);
         }
 
         public void UpdateInvLCoeff()

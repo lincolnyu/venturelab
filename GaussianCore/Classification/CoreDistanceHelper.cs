@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace GaussianCore.Classification
 {
@@ -45,7 +46,8 @@ namespace GaussianCore.Classification
                 var d = c1.CentersInput[i] - c2.CentersInput[i];
                 sum += d * d;
             }
-            return sum;
+            var a = Math.Min(c1.Weight, c2.Weight);
+            return sum * 2;
         }
 
         #endregion

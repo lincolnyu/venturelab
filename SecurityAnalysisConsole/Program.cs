@@ -5,6 +5,7 @@ using SecurityAccess.MultiTapMethod;
 using GaussianCore.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace SecurityAnalysisConsole
 {
@@ -29,15 +30,15 @@ namespace SecurityAnalysisConsole
           //  FixedConfinedBuilder.RebuildAll(srcDir, dstDir, true, Console.Out);
         }
 
-        static FixedConfinedBuilder BuildFixedConfined(string selectionFile, string srcDir, string savePath)
+        static FixedConfinedBuilder BuildFixedConfined(IList<string> codes, string srcDir, string savePath)
         {
             var coreManager = new FixedConfinedCoreManager();
             var builder = new FixedConfinedBuilder(coreManager);
-            var codes = FixedConfinedBuilder.LoadCodeSelection(selectionFile);
             builder.BuildFromBinary(srcDir, codes);
             builder.Save(savePath);
             return builder;
         }
+        
 
         /// <summary>
         ///  Prepare current data for prediction analysis
@@ -86,9 +87,19 @@ namespace SecurityAnalysisConsole
                     case "-suck":
                         SuckIntoStatistic(args[1], args[2], false);
                         break;
+                    case "-build-fc-sel":
+                        {
+                            var codes = FixedConfinedBuilder.LoadCodeSelection(args[1]);
+                            var builder = BuildFixedConfined(codes, args[2], args[3]);
+                            if (args.Length > 4)
+                            {
+                                builder.ExportToText(args[4]);
+                            }
+                            break;
+                        }
                     case "-build-fc":
                         {
-                            var builder = BuildFixedConfined(args[1], args[2], args[3]);
+                            var builder = BuildFixedConfined(new[] { args[1] }, args[2], args[3]);
                             if (args.Length > 4)
                             {
                                 builder.ExportToText(args[4]);

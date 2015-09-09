@@ -41,7 +41,7 @@ namespace GaussianCore.Spheric
         /// </summary>
         public double AOutput { get; set; }
 
-        public int Multiple { get; set; } = 1;
+        public double Weight { get; set; } = 1;
 
         public Core ClosestNeighbour { get; set; }
 
@@ -112,7 +112,7 @@ namespace GaussianCore.Spheric
 
         public double GetLeadingIntensity(IList<double> inputs)
         {
-            var result = Multiple * AInput;
+            var result = Weight * AInput;
             for (var i = 0; i < inputs.Count; i++)
             {
                 var dx = inputs[i] - Components[i].Center;
@@ -125,7 +125,7 @@ namespace GaussianCore.Spheric
 
         public double GetIntensity(IList<double> inputs, IList<double> outputs)
         {
-            var result = Multiple * AInput * AOutput;
+            var result = Weight * AInput * AOutput;
             for (var i = 0; i < Components.Count; i++)
             {
                 var dx = ((i < inputs.Count)? inputs[i] : outputs[i- inputs.Count]) - Components[i].Center;

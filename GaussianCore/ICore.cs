@@ -13,6 +13,8 @@ namespace GaussianCore
 
         IList<double> CentersOutput { get; }
 
+        double Weight { get; }
+
         #endregion
     }
 }

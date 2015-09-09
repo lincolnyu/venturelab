@@ -124,7 +124,7 @@ namespace GaussianCore.Spheric
                 {
                     core.Components[k].L = llist[k];
                 }
-                core.Multiple = 1;
+                core.Weight = 1;
                 core.AInput = ainput;
                 core.AOutput = aoutput;
             }

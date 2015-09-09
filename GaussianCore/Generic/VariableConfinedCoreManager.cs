@@ -132,7 +132,7 @@ namespace GaussianCore.Generic
                     if (sqd < DistanceToEliminate)
                     {
                         eliminated.Add(j);
-                        c1.Core.Multiple++;
+                        c1.Core.Weight++;
                         continue;
                     }
 

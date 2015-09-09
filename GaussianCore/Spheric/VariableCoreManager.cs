@@ -64,7 +64,7 @@ namespace GaussianCore.Spheric
                     {
                         // merge i and j by removing j
                         eliminated.Add(j);
-                        c1.Multiple++;
+                        c1.Weight++;
                         continue;
                     }
 
