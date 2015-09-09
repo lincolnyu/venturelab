@@ -1,6 +1,8 @@
-﻿using GaussianCore.Generic;
+﻿using GaussianCore;
+using GaussianCore.Generic;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace SecurityAccess.MultiTapMethod
@@ -67,30 +69,39 @@ namespace SecurityAccess.MultiTapMethod
             }
         }
 
+        public static IEnumerable<ICore> GetCores(StreamReader sr)
+        {
+            while (!sr.EndOfStream)
+            {
+                var line = sr.ReadLine();
+                if (line == null)
+                {
+                    continue;
+                }
+                var segs = line.Split(',');
+
+                var core = new GaussianConfinedCore(22, 6);
+                for (var i = 0; i < 22; i++)
+                {
+                    var val = double.Parse(segs[i]);
+                    core.CentersInput[i] = val;
+                }
+                for (var i = 0; i < 6; i++)
+                {
+                    var val = double.Parse(segs[i + 22]);
+                    core.CentersOutput[i] = val;
+                }
+                yield return core;
+            }
+        }
+
         private void AddStatistics(string path)
         {
             using (var sr = new StreamReader(path))
             {
-                while (!sr.EndOfStream)
+                var cores = GetCores(sr).Cast<GaussianConfinedCore>();
+                foreach (var core in cores)
                 {
-                    var line = sr.ReadLine();
-                    if (line == null)
-                    {
-                        continue;
-                    }
-                    var segs = line.Split(',');
-
-                    var core = new GaussianConfinedCore(22, 6);
-                    for (var i = 0; i < 22; i++)
-                    {
-                        var val = double.Parse(segs[i]);
-                        core.CentersInput[i] = val;
-                    }
-                    for (var i = 0; i < 6; i++)
-                    {
-                        var val = double.Parse(segs[i + 22]);
-                        core.CentersOutput[i] = val;
-                    }
                     CoreManager.Cores.Add(core);
                 }
             }

@@ -99,6 +99,12 @@ namespace SecurityAccess.Asx
 
         #region Methods
 
+        public static bool IsCodeFile(string fn)
+        {
+            string dummy;
+            return IsCodeFile(fn, out dummy);
+        }
+
         public static bool IsCodeFile(string fn, out string code)
         {
             var ext = Path.GetExtension(fn);

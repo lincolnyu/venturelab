@@ -51,6 +51,7 @@
     <Compile Include="MultiTapMethod\PredictHelper.cs" />
     <Compile Include="MultiTapMethod\StatisticPoint.cs" />
     <Compile Include="MultiTapMethod\ExtractHelper.cs" />
+    <Compile Include="MultiTapMethod\SimilarityClassifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
