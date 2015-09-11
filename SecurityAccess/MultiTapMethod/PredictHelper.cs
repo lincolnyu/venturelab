@@ -33,7 +33,7 @@ namespace SecurityAccess.MultiTapMethod
                 return null;// not enough data
             }
 
-            var yielded = buffer.EnumerateDailyStockEntryLoopBuffer(0, required, inputEntryCount);
+            var yielded = buffer.EnumerateDailyStockEntryLoopBuffer(0, required, i);
             return yielded.ToList().SuckOnlyInput(StatisticPoint.FirstCentralDay);
         }
 
