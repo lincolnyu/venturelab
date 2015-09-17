@@ -4,30 +4,56 @@ using SecurityAccess.Asx;
 using SecurityAccess.MultiTapMethod;
 using GaussianCore.Generic;
 using System.IO;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace SecurityAnalysisConsole
 {
     class Program
     {
-        static void ReorganiseFiles(string srcDir, string dstDir, bool append = false)
+        class ClassifierQuitter
         {
-            var fr = new FileReorganiser(srcDir, dstDir, Console.Out, append);
+            public double SimilarThreshold { get; set; }
+
+            public ClassifierQuitter(double similarThreshold)
+            {
+                SimilarThreshold = similarThreshold;
+            }
+
+            public bool Quit(SimilarityClassifier.DistanceEntry de)
+            {
+                var d = Math.Sqrt(de.SquareDistance);
+                return d > SimilarThreshold;
+            }
+        }
+
+        static void ReorganiseFiles(string byDateDir, string byCodeDir, bool append = false)
+        {
+            var fr = new FileReorganiser(byDateDir, byCodeDir, Console.Out, append);
             fr.Reorganise();
         }
 
-        static void SuckIntoStatistic(string srcDir, string dstDir, 
+        static void SuckIntoStatistics(string byCodeDir, string statisticsDir, 
             bool exportTxtToo)
         {
-            ExtractHelper.ProcessFiles(srcDir, dstDir,
+            ExtractHelper.ProcessFiles(byCodeDir, statisticsDir,
                 exportTxtToo ? ExtractHelper.ExportModes.Both : ExtractHelper.ExportModes.Binary,
                 Console.Out);
         }
 
-        static void BuildFixedConfinedForAll(string srcDir, string dstDir)
+        static void ClassifyNew(string statisticsDir, string similarsDir)
         {
-          //  FixedConfinedBuilder.RebuildAll(srcDir, dstDir, true, Console.Out);
+            var classifier = new SimilarityClassifier(statisticsDir);
+            var csets = classifier.GetCoreSets();
+            var sdl = SimilarityClassifier.GetOrderedSquareDistances(csets);
+
+            var cq = new ClassifierQuitter(0.2);
+            classifier.Classify(csets, sdl, cq.Quit, similarsDir);
+        }
+
+        static void ClassifyInc(string statisticsDir, string similarsDir)
+        {
+            var classifier = new SimilarityClassifier(statisticsDir);
+            classifier.ClassifyInc(similarsDir);
         }
 
         static FixedConfinedBuilder BuildFixedConfined(IList<string> codes, string srcDir, string savePath)
@@ -38,7 +64,7 @@ namespace SecurityAnalysisConsole
             builder.Save(savePath);
             return builder;
         }
-        
+
 
         /// <summary>
         ///  Prepare current data for prediction analysis
@@ -75,18 +101,28 @@ namespace SecurityAnalysisConsole
                 {
                     case "-reorganise":
                         // args[1]: src, args[2]: dst
-                        ReorganiseFiles(args[1], args[2]);
+                        ReorganiseFiles(args[1], args[2], false);
                         break;
                     case "-reorganise-inc":
                         // args[1]: src, args[2]: dst
                         ReorganiseFiles(args[1], args[2], true);
                         break;
                     case "-suck-txt":
-                        SuckIntoStatistic(args[1], args[2], true);
+                        SuckIntoStatistics(args[1], args[2], true);
                         break;
                     case "-suck":
-                        SuckIntoStatistic(args[1], args[2], false);
+                        SuckIntoStatistics(args[1], args[2], false);
                         break;
+                    case "-classify":
+                        ClassifyNew(args[1], args[2]);
+                        break;
+                    case "-classify-inc":
+                        ClassifyInc(args[1], args[2]);
+                        break;
+
+
+
+                    #region Naive prediction:...
                     case "-build-fc-sel":
                         {
                             var codes = FixedConfinedBuilder.LoadCodeSelection(args[1]);
@@ -106,9 +142,6 @@ namespace SecurityAnalysisConsole
                             }
                             break;
                         }
-                    case "-build-fc-all":
-                        BuildFixedConfinedForAll(args[1], args[2]);
-                        break;
                     case "-prepare":
                         PreparePredict(args[1], args[2], args[3]);
                         break;
@@ -123,6 +156,7 @@ namespace SecurityAnalysisConsole
                             Predict(args[1], args[2], null, Console.Out);
                         }
                         break;
+                        #endregion
                 }
             }
             catch (Exception e)

@@ -270,8 +270,8 @@ namespace SecurityAccess
 
             foreach (var srcFile in srcFiles.OrderBy(x => x.Name))
             {
-                string code;
-                if (!FileReorganiser.IsCodeFile(srcFile.Name, out code))
+                string code, ext;
+                 if (!FileReorganiser.IsCodeFile(srcFile.Name, out code, out ext) && ext != ".txt")
                 {
                     continue;
                 }

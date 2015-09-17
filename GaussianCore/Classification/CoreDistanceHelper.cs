@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GaussianCore.Classification
 {
@@ -25,9 +26,12 @@ namespace GaussianCore.Classification
             foreach (var c1 in cl1)
             {
                 var minD = double.MaxValue;
+                double a = 0;
                 foreach (var c2 in cl2)
                 {
-                    var d = c1.GetSquareDistance(c2);
+                    var d = c1.GetNormalisedSquareDistance(c2);
+                    a = Math.Min(c1.Weight, c2.Weight);
+                    var nd = d / a; // TODO maybe it should be other nonlinear function of d and a
                     if (d < minD)
                     {
                         minD = d;
@@ -35,19 +39,33 @@ namespace GaussianCore.Classification
                 }
                 res += minD;
             }
+            var maxWeight = Math.Max(cl1.Max(x => x.Weight), cl2.Max(x => x.Weight));
+            res *= maxWeight;
+            res /= cl1.Count;
             return res;
         }
 
-        public static double GetSquareDistance(this ICore c1, ICore c2)
+        /// <summary>
+        ///  Returns the square distance between two cores noramlised by dividing 
+        ///  the number of compoenents times the weight into it
+        /// </summary>
+        /// <param name="c1"></param>
+        /// <param name="c2"></param>
+        /// <returns></returns>
+        public static double GetNormalisedSquareDistance(this ICore c1, ICore c2)
         {
-            var sum = 0.0;
-            for (var i = 0; i < c1.CentersInput.Count; i++)
+            var sumNum = 0.0;
+            var sumDenom = 0.0;
+            var count = c1.CentersInput.Count;
+            
+            for (var i = 0; i < count; i++)
             {
                 var d = c1.CentersInput[i] - c2.CentersInput[i];
-                sum += d * d;
+                sumNum += d * d;
+                var s = c1.CentersInput[i] + c2.CentersInput[i];
+                sumDenom += d * d;
             }
-            var a = Math.Min(c1.Weight, c2.Weight);
-            return sum * 2;
+            return sumNum / sumDenom;
         }
 
         #endregion

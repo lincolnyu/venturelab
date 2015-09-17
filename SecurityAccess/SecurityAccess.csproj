@@ -47,6 +47,7 @@
     <Compile Include="Asx\IOutputFile.cs" />
     <Compile Include="Asx\SingleReorganiseHelper.cs" />
     <Compile Include="MultiTapMethod\FixedConfinedBuilder.cs" />
+    <Compile Include="MultiTapMethod\IDictioanry.cs" />
     <Compile Include="MultiTapMethod\Prediction.cs" />
     <Compile Include="MultiTapMethod\PredictHelper.cs" />
     <Compile Include="MultiTapMethod\StatisticPoint.cs" />

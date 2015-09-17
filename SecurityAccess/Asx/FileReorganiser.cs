@@ -101,14 +101,14 @@ namespace SecurityAccess.Asx
 
         public static bool IsCodeFile(string fn)
         {
-            string dummy;
-            return IsCodeFile(fn, out dummy);
+            string dummy, dummy2;
+            return IsCodeFile(fn, out dummy, out dummy2);
         }
 
-        public static bool IsCodeFile(string fn, out string code)
+        public static bool IsCodeFile(string fn, out string code, out string ext)
         {
-            var ext = Path.GetExtension(fn);
-            if (!ext.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+            ext = Path.GetExtension(fn).ToLower();
+            if (ext != ".txt" && ext != ".dat")
             {
                 code = null;
                 return false;
