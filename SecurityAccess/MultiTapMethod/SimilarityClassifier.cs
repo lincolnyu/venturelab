@@ -136,7 +136,7 @@ namespace SecurityAccess.MultiTapMethod
 
             if (logger != null)
             {
-                logger.Write("Analyses distances...");
+                logger.WriteLine("Analyses distances...");
             }
             
             for (var i = 0; i < coresets.Count - 1; i++)
@@ -144,6 +144,11 @@ namespace SecurityAccess.MultiTapMethod
                 var cs1 = coresets[i].Cores;
                 for (var j = i + 1; j < coresets.Count; j++)
                 {
+                    if (logger != null)
+                    {
+                        logger.Write("Get distance between {0} and {1}...", i, j);
+                    }
+
                     var cs2 = coresets[j].Cores;
                     var sd = cs1.GetSquareDistance(cs2);
                     list.Add(new DistanceEntry
@@ -152,13 +157,18 @@ namespace SecurityAccess.MultiTapMethod
                         CoreSet2 = coresets[j],
                         SquareDistance = sd
                     });
+
+                    if (logger != null)
+                    {
+                        logger.WriteLine("done");
+                    }
                 }
             }
             list.Sort();
 
             if (logger != null)
             {
-                logger.WriteLine("done");
+                logger.WriteLine("Distance analysis done");
             }
 
             return list;

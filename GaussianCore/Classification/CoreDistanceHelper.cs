@@ -29,8 +29,8 @@ namespace GaussianCore.Classification
                 double a = 0;
                 foreach (var c2 in cl2)
                 {
-                    var d = c1.GetNormalisedSquareDistance(c2);
                     a = Math.Min(c1.Weight, c2.Weight);
+                    var d = c1.GetNormalisedSquareDistance(c2);
                     var nd = d / a; // TODO maybe it should be other nonlinear function of d and a
                     if (d < minD)
                     {
@@ -63,7 +63,7 @@ namespace GaussianCore.Classification
                 var d = c1.CentersInput[i] - c2.CentersInput[i];
                 sumNum += d * d;
                 var s = c1.CentersInput[i] + c2.CentersInput[i];
-                sumDenom += d * d;
+                sumDenom += s * s;
             }
             return sumNum / sumDenom;
         }
