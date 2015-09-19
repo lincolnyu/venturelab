@@ -42,9 +42,10 @@ namespace SecurityAnalysisConsole
 
         static void ClassifyNew(string statisticsDir, string similarsDir)
         {
-            var classifier = new SimilarityClassifier(statisticsDir);
+            Console.WriteLine("Preparing classification...");
+            var classifier = new SimilarityClassifier(statisticsDir, Console.Out);
             var csets = classifier.GetCoreSets();
-            var sdl = SimilarityClassifier.GetOrderedSquareDistances(csets);
+            var sdl = SimilarityClassifier.GetOrderedSquareDistances(csets, Console.Out);
 
             var cq = new ClassifierQuitter(0.2);
             classifier.Classify(csets, sdl, cq.Quit, similarsDir);

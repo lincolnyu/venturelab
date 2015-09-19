@@ -62,9 +62,10 @@ namespace SecurityAccess.MultiTapMethod
 
         #region Constructors
 
-        public SimilarityClassifier(string statisticsDir)
+        public SimilarityClassifier(string statisticsDir, TextWriter logger = null)
         {
             StatisticsDir = statisticsDir;
+            Logger = logger;
         }
 
         #endregion
@@ -74,6 +75,8 @@ namespace SecurityAccess.MultiTapMethod
         public string StatisticsDir { get; private set; }
 
         public ISet<Similar> Similars { get; private set; } = new HashSet<Similar>();
+
+        public TextWriter Logger { get; private set; }
 
         #endregion
 
@@ -89,13 +92,15 @@ namespace SecurityAccess.MultiTapMethod
             var files = dir.GetFiles();
 
             var coresets = new List<CoreSet>();
-            foreach (var file in files.Where(f => f.Extension.ToLower().Equals(".dat")))
+
+            foreach (var file in files.Where(f => f.Extension.ToLower().Equals(".dat")).OrderBy(x=>x.Name))
             {
                 string code, dummy;
                 if (!FileReorganiser.IsCodeFile(file.Name, out code, out dummy))
                 {
                     continue;
                 }
+                LogWrite("Loading code {0}...", code);
                 using (var fs = file.OpenRead())
                 {
                     using (var br = new BinaryReader(fs))
@@ -103,23 +108,37 @@ namespace SecurityAccess.MultiTapMethod
                         int count;
                         FixedConfinedBuilder.Flags flag;
                         FixedConfinedBuilder.GetHeader(br, out count, out flag);
-                        var cores = FixedConfinedBuilder.LoadCores(br, count, flag);
-                        var list = cores.ToList();
-                        var coreset = new CoreSet
+                        if (count > 0)
                         {
-                            Code = code,
-                            Cores = list
-                        };
-                        coresets.Add(coreset);
+                            var cores = FixedConfinedBuilder.LoadCores(br, count, flag);
+                            var list = cores.ToList();
+                            var coreset = new CoreSet
+                            {
+                                Code = code,
+                                Cores = list
+                            };
+                            coresets.Add(coreset);
+                            LogWriteLine("done ({0} cores loaded)", count);
+                        }
+                        else
+                        {
+                            LogWriteLine("ignored.");
+                        }
                     }
                 }
             }
             return coresets;
         }
 
-        public static List<DistanceEntry> GetOrderedSquareDistances(List<CoreSet> coresets)
+        public static List<DistanceEntry> GetOrderedSquareDistances(List<CoreSet> coresets, TextWriter logger=null)
         {
             var list = new List<DistanceEntry>();
+
+            if (logger != null)
+            {
+                logger.Write("Analyses distances...");
+            }
+            
             for (var i = 0; i < coresets.Count - 1; i++)
             {
                 var cs1 = coresets[i].Cores;
@@ -136,6 +155,12 @@ namespace SecurityAccess.MultiTapMethod
                 }
             }
             list.Sort();
+
+            if (logger != null)
+            {
+                logger.WriteLine("done");
+            }
+
             return list;
         }
 
@@ -209,7 +234,12 @@ namespace SecurityAccess.MultiTapMethod
         {
             var similars = new HashSet<Similar>();
             var codeToSimilar = new Dictionary<string, Similar>();
+
+            LogWriteLine("Classifying...");
+
             Classify(coresets, orderedDistances, quit, similars, codeToSimilar);
+
+            LogWriteLine("Classification done.");
 
             var descFilePath = Path.Combine(similarsDir, "_info.txt");
 
@@ -218,6 +248,7 @@ namespace SecurityAccess.MultiTapMethod
                 var i = 1;
                 foreach (var sim in similars)
                 {
+                    LogWrite("Saving similar set {0}...", i);
                     var fn = string.Format("{0}.dat", i);
                     var path = Path.Combine(similarsDir, fn);
                     var fccm = new FixedConfinedCoreManager();
@@ -231,13 +262,15 @@ namespace SecurityAccess.MultiTapMethod
                     fccm.UpdateCoreCoeffs();
                     builder.Save(path, flag);
                     i++;
+                    LogWriteLine("done");
                 }
             }
         }
 
         public void Classify(List<CoreSet> coresets,
             IList<DistanceEntry> orderedDistances, Predicate<DistanceEntry> quit,
-            ISet<Similar> similars, IDictionary<string, Similar> codeToSimilar)
+            ISet<Similar> similars, IDictionary<string, Similar> codeToSimilar, 
+            TextWriter logger = null)
         {
             // init similars
             similars.Clear();
@@ -300,6 +333,38 @@ namespace SecurityAccess.MultiTapMethod
                         Count = count
                     };
                 }
+            }
+        }
+
+        private void LogWrite(string msg)
+        {
+            if (Logger != null)
+            {
+                Logger.Write(msg);
+            }
+        }
+
+        private void LogWrite(string fmt, params object[] args)
+        {
+            if (Logger != null)
+            {
+                Logger.Write(fmt, args);
+            }
+        }
+
+        private void LogWriteLine(string msg)
+        {
+            if (Logger != null)
+            {
+                Logger.WriteLine(msg);
+            }
+        }
+
+        private void LogWriteLine(string fmt, params object[] args)
+        {
+            if (Logger != null)
+            {
+                Logger.WriteLine(fmt, args);
             }
         }
 
