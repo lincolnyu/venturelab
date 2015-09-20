@@ -12,33 +12,40 @@ namespace GaussianCore.Classification
         {
             if (cl2.Count < cl1.Count)
             {
-                return GetSquareDistanceOrderd(cl2, cl1);
+                return GetDistanceSmallListFirst(cl2, cl1);
             }
             else
             {
-                return GetSquareDistanceOrderd(cl1, cl2);
+                return GetDistanceSmallListFirst(cl1, cl2);
             }
         }
-
-        private static double GetSquareDistanceOrderd(IList<ICore> cl1, IList<ICore> cl2)
+        
+        /// <summary>
+        ///  
+        /// </summary>
+        /// <param name="cl1"></param>
+        /// <param name="cl2"></param>
+        /// <returns></returns>
+        private static double GetDistanceSmallListFirst(IList<ICore> cl1, IList<ICore> cl2)
         {
             var res = 0.0;
             foreach (var c1 in cl1)
             {
                 var minD = double.MaxValue;
-                double a = 0;
                 foreach (var c2 in cl2)
                 {
-                    a = Math.Min(c1.Weight, c2.Weight);
-                    var d = c1.GetNormalisedSquareDistance(c2);
-                    var nd = d / a; // TODO maybe it should be other nonlinear function of d and a
-                    if (d < minD)
+                    var w = Math.Min(c1.Weight, c2.Weight);
+                    var threshold = minD * w;
+                    var d = c1.GetQuanbenDistance(c2, threshold);
+                    if (d < threshold)
                     {
-                        minD = d;
+                        // TODO maybe it should be other nonlinear function of d and a
+                        minD = d/w;
                     }
                 }
                 res += minD;
             }
+            // normalise about weight
             var maxWeight = Math.Max(cl1.Max(x => x.Weight), cl2.Max(x => x.Weight));
             res *= maxWeight;
             res /= cl1.Count;
@@ -46,26 +53,29 @@ namespace GaussianCore.Classification
         }
 
         /// <summary>
-        ///  Returns the square distance between two cores noramlised by dividing 
-        ///  the number of compoenents times the weight into it
+        ///  Returns the quanben distance between two cores
+        ///  early quits if it's set to be bigger than the specified value
+        ///  (in which case the returned the value would be a value no less than
+        ///   the specified value but not necessarily the actual distance)
+        ///  the cores are assumed to have same length
         /// </summary>
         /// <param name="c1"></param>
         /// <param name="c2"></param>
-        /// <returns></returns>
-        public static double GetNormalisedSquareDistance(this ICore c1, ICore c2)
+        /// <param name="quit">The threshold above which an early quit is triggered</param>
+        /// <returns>The quanben distance no greater than quit</returns>
+        public static double GetQuanbenDistance(this ICore c1, ICore c2,
+            double quit = double.MaxValue)
         {
-            var sumNum = 0.0;
-            var sumDenom = 0.0;
+            var result = 0.0;
             var count = c1.CentersInput.Count;
-            
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < count && result < quit; i++)
             {
                 var d = c1.CentersInput[i] - c2.CentersInput[i];
-                sumNum += d * d;
                 var s = c1.CentersInput[i] + c2.CentersInput[i];
-                sumDenom += s * s;
+                var v = d / s;
+                result += v;
             }
-            return sumNum / sumDenom;
+            return result;
         }
 
         #endregion
