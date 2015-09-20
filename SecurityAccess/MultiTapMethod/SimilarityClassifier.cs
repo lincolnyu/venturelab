@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System;
 using GaussianCore.Generic;
+using QLogger;
 
 namespace SecurityAccess.MultiTapMethod
 {
@@ -44,11 +45,11 @@ namespace SecurityAccess.MultiTapMethod
 
             public CoreSet CoreSet2 { get; set; }
 
-            public double SquareDistance { get; set; }
+            public double Distance { get; set; }
 
             public int CompareTo(DistanceEntry other)
             {
-                return SquareDistance.CompareTo(other.SquareDistance);
+                return Distance.CompareTo(other.Distance);
             }
         }
 
@@ -62,10 +63,9 @@ namespace SecurityAccess.MultiTapMethod
 
         #region Constructors
 
-        public SimilarityClassifier(string statisticsDir, TextWriter logger = null)
+        public SimilarityClassifier(string statisticsDir)
         {
             StatisticsDir = statisticsDir;
-            Logger = logger;
         }
 
         #endregion
@@ -76,7 +76,7 @@ namespace SecurityAccess.MultiTapMethod
 
         public ISet<Similar> Similars { get; private set; } = new HashSet<Similar>();
 
-        public TextWriter Logger { get; private set; }
+        public PerformanceLogger Logger { get; private set; } = new PerformanceLogger();
 
         #endregion
 
@@ -92,7 +92,6 @@ namespace SecurityAccess.MultiTapMethod
             var files = dir.GetFiles();
 
             var coresets = new List<CoreSet>();
-
             foreach (var file in files.Where(f => f.Extension.ToLower().Equals(".dat")).OrderBy(x=>x.Name))
             {
                 string code, dummy;
@@ -100,7 +99,7 @@ namespace SecurityAccess.MultiTapMethod
                 {
                     continue;
                 }
-                LogWrite("Loading code {0}...", code);
+                Logger.Write("Loading code {0}...", code);
                 using (var fs = file.OpenRead())
                 {
                     using (var br = new BinaryReader(fs))
@@ -118,11 +117,11 @@ namespace SecurityAccess.MultiTapMethod
                                 Cores = list
                             };
                             coresets.Add(coreset);
-                            LogWriteLine("done ({0} cores loaded)", count);
+                            Logger.WriteLine("done ({0} cores loaded)", count);
                         }
                         else
                         {
-                            LogWriteLine("ignored.");
+                            Logger.WriteLine("ignored.");
                         }
                     }
                 }
@@ -130,24 +129,20 @@ namespace SecurityAccess.MultiTapMethod
             return coresets;
         }
 
-        public static List<DistanceEntry> GetOrderedSquareDistances(List<CoreSet> coresets, TextWriter logger=null)
+        public List<DistanceEntry> GetOrderedSquareDistances(List<CoreSet> coresets)
         {
             var list = new List<DistanceEntry>();
 
-            if (logger != null)
-            {
-                logger.WriteLine("Analyses distances...");
-            }
-            
+            Logger.WriteLine("Analyses distances...");
+
+            var outb = Logger.InplaceWrite(0, "Getting distance between ");
+            var b = 0;
             for (var i = 0; i < coresets.Count - 1; i++)
             {
                 var cs1 = coresets[i].Cores;
                 for (var j = i + 1; j < coresets.Count; j++)
                 {
-                    if (logger != null)
-                    {
-                        logger.Write("Get distance between {0} and {1}...", i, j);
-                    }
+                    b = Logger.InplaceWrite(b, "{0} and {1}...", i, j);
 
                     var cs2 = coresets[j].Cores;
                     var sd = cs1.GetSquareDistance(cs2);
@@ -155,21 +150,13 @@ namespace SecurityAccess.MultiTapMethod
                     {
                         CoreSet1 = coresets[i],
                         CoreSet2 = coresets[j],
-                        SquareDistance = sd
+                        Distance = sd
                     });
-
-                    if (logger != null)
-                    {
-                        logger.WriteLine("done");
-                    }
                 }
             }
             list.Sort();
 
-            if (logger != null)
-            {
-                logger.WriteLine("Distance analysis done");
-            }
+            Logger.InplaceWriteLine(outb + b, "Distance analysis done");
 
             return list;
         }
@@ -184,9 +171,9 @@ namespace SecurityAccess.MultiTapMethod
         public void GetDistanceMetrics(IList<DistanceEntry> dists, out double meanDistance,
             out double minDistance, out double maxDistance)
         {
-            minDistance = Math.Sqrt(dists.Select(x => x.SquareDistance).Min());
-            maxDistance = Math.Sqrt(dists.Select(x => x.SquareDistance).Max());
-            meanDistance = dists.Select(x => Math.Sqrt(x.SquareDistance)).Average();
+            minDistance = Math.Sqrt(dists.Select(x => x.Distance).Min());
+            maxDistance = Math.Sqrt(dists.Select(x => x.Distance).Max());
+            meanDistance = dists.Select(x => Math.Sqrt(x.Distance)).Average();
         }
 
         /// <summary>
@@ -245,11 +232,11 @@ namespace SecurityAccess.MultiTapMethod
             var similars = new HashSet<Similar>();
             var codeToSimilar = new Dictionary<string, Similar>();
 
-            LogWriteLine("Classifying...");
+            Logger.WriteLine("Classifying...");
 
             Classify(coresets, orderedDistances, quit, similars, codeToSimilar);
 
-            LogWriteLine("Classification done.");
+            Logger.WriteLine("Classification done.");
 
             var descFilePath = Path.Combine(similarsDir, "_info.txt");
 
@@ -258,21 +245,27 @@ namespace SecurityAccess.MultiTapMethod
                 var i = 1;
                 foreach (var sim in similars)
                 {
-                    LogWrite("Saving similar set {0}...", i);
+                    Logger.WriteLine("Processing similar set {0} (with {1} coresets)...", i, sim.CoreSets.Count);
                     var fn = string.Format("{0}.dat", i);
                     var path = Path.Combine(similarsDir, fn);
                     var fccm = new FixedConfinedCoreManager();
                     var builder = new FixedConfinedBuilder(fccm);
+                    var b = 0;
                     foreach (var cs in sim.CoreSets)
                     {
+                        b = Logger.InplaceWrite(b, "Processing coreset {0} (with {1} cores)", cs.Code, cs.Cores.Count);
                         builder.BuildFromCoreSet(cs.Cores, true, false);
                         // <code>:<similar set index>:<num of cores the code contributes>
                         descf.WriteLine("{0}:{1}:{2}", cs.Code, i, cs.Cores.Count);
                     }
+                    Logger.InplaceWriteLine(b, "done");
+                    Logger.WriteStart("Updating core coeffs ({0} cores)...", fccm.Cores.Count);
                     fccm.UpdateCoreCoeffs();
+                    Logger.WriteLineEnd("done.");
+                    Logger.WriteStart("Saving similar set {0}...", i);
                     builder.Save(path, flag);
+                    Logger.WriteLineEnd("done.");
                     i++;
-                    LogWriteLine("done");
                 }
             }
         }
@@ -343,38 +336,6 @@ namespace SecurityAccess.MultiTapMethod
                         Count = count
                     };
                 }
-            }
-        }
-
-        private void LogWrite(string msg)
-        {
-            if (Logger != null)
-            {
-                Logger.Write(msg);
-            }
-        }
-
-        private void LogWrite(string fmt, params object[] args)
-        {
-            if (Logger != null)
-            {
-                Logger.Write(fmt, args);
-            }
-        }
-
-        private void LogWriteLine(string msg)
-        {
-            if (Logger != null)
-            {
-                Logger.WriteLine(msg);
-            }
-        }
-
-        private void LogWriteLine(string fmt, params object[] args)
-        {
-            if (Logger != null)
-            {
-                Logger.WriteLine(fmt, args);
             }
         }
 

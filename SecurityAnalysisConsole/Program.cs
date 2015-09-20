@@ -21,7 +21,7 @@ namespace SecurityAnalysisConsole
 
             public bool Quit(SimilarityClassifier.DistanceEntry de)
             {
-                var d = Math.Sqrt(de.SquareDistance);
+                var d = Math.Sqrt(de.Distance);
                 return d > SimilarThreshold;
             }
         }
@@ -43,11 +43,13 @@ namespace SecurityAnalysisConsole
         static void ClassifyNew(string statisticsDir, string similarsDir)
         {
             Console.WriteLine("Preparing classification...");
-            var classifier = new SimilarityClassifier(statisticsDir, Console.Out);
-            var csets = classifier.GetCoreSets();
-            var sdl = SimilarityClassifier.GetOrderedSquareDistances(csets, Console.Out);
+            var classifier = new SimilarityClassifier(statisticsDir);
+            classifier.Logger.Writers.Add(Console.Out);
 
-            var cq = new ClassifierQuitter(0.2);
+            var csets = classifier.GetCoreSets();
+            var sdl = classifier.GetOrderedSquareDistances(csets);
+
+            var cq = new ClassifierQuitter(0.1);
             classifier.Classify(csets, sdl, cq.Quit, similarsDir);
         }
 

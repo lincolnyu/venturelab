@@ -19,13 +19,14 @@ namespace GaussianCore.Classification
                 return GetDistanceSmallListFirst(cl1, cl2);
             }
         }
-        
+
         /// <summary>
-        ///  
+        ///  Returnst the distnace between <paramref name="cl1"/> and <paramref name="cl2"/>
+        ///  with <paramref name="cl1"/> having no less cores than <paramref name="cl2"/>
         /// </summary>
-        /// <param name="cl1"></param>
-        /// <param name="cl2"></param>
-        /// <returns></returns>
+        /// <param name="cl1">The first core collection</param>
+        /// <param name="cl2">The second core colleciton</param>
+        /// <returns>The distance</returns>
         private static double GetDistanceSmallListFirst(IList<ICore> cl1, IList<ICore> cl2)
         {
             var res = 0.0;
@@ -40,7 +41,7 @@ namespace GaussianCore.Classification
                     if (d < threshold)
                     {
                         // TODO maybe it should be other nonlinear function of d and a
-                        minD = d/w;
+                        minD = d / w;
                     }
                 }
                 res += minD;
@@ -48,7 +49,7 @@ namespace GaussianCore.Classification
             // normalise about weight
             var maxWeight = Math.Max(cl1.Max(x => x.Weight), cl2.Max(x => x.Weight));
             res *= maxWeight;
-            res /= cl1.Count;
+            res /= cl1.Count * cl1[0].CentersInput.Count;
             return res;
         }
 
@@ -72,6 +73,8 @@ namespace GaussianCore.Classification
             {
                 var d = c1.CentersInput[i] - c2.CentersInput[i];
                 var s = c1.CentersInput[i] + c2.CentersInput[i];
+                d *= d;
+                s *= s;
                 var v = d / s;
                 result += v;
             }

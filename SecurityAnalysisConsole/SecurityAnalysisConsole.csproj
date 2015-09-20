@@ -65,6 +65,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\qlogger\QLogger\QLogger.csproj">
+      <Project>{124E7226-5154-4A8C-B4A1-BDAEBA8C1973}</Project>
+      <Name>QLogger</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GaussianCore\GaussianCore.csproj">
       <Project>{9d0958a4-1609-4022-83aa-b6f876cb3d01}</Project>
       <Name>GaussianCore</Name>
@@ -90,7 +94,8 @@
   <PropertyGroup>
     <PostBuildEvent>copy $(TargetPath) \\seagate-central\public\documents\sac
 copy $(TargetDir)SecurityAccess.dll \\seagate-central\public\documents\sac
-copy $(TargetDir)GaussianCore.dll \\seagate-central\public\documents\sac</PostBuildEvent>
+copy $(TargetDir)GaussianCore.dll \\seagate-central\public\documents\sac
+copy $(TargetDir)QLogger.dll \\seagate-central\public\documents\sac</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

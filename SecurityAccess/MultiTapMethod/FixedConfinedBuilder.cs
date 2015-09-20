@@ -75,7 +75,6 @@ namespace SecurityAccess.MultiTapMethod
             {
                 CoreManager.Cores.Clear();
             }
-
             foreach (var core in cores.OfType<GaussianConfinedCore>())
             {
                 CoreManager.Cores.Add(core);
