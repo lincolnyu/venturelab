@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GaussianCore.Classification
 {
@@ -30,7 +32,10 @@ namespace GaussianCore.Classification
         private static double GetDistanceSmallListFirst(IList<ICore> cl1, IList<ICore> cl2)
         {
             var res = 0.0;
-            foreach (var c1 in cl1)
+
+            var lockObj = new object();
+
+            Parallel.ForEach(cl1, c1 =>
             {
                 var minD = double.MaxValue;
                 foreach (var c2 in cl2)
@@ -44,8 +49,13 @@ namespace GaussianCore.Classification
                         minD = d / w;
                     }
                 }
-                res += minD;
-            }
+
+                lock(lockObj)
+                {
+                    res += minD;
+                }
+            });
+
             // normalise about weight
             var maxWeight = Math.Max(cl1.Max(x => x.Weight), cl2.Max(x => x.Weight));
             res *= maxWeight;
