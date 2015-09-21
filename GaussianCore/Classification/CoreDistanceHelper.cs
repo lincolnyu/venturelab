@@ -78,11 +78,19 @@ namespace GaussianCore.Classification
             double quit = double.MaxValue)
         {
             var result = 0.0;
-            var count = c1.CentersInput.Count;
-            for (var i = 0; i < count && result < quit; i++)
+            for (var i = 0; i < c1.CentersInput.Count && result < quit; i++)
             {
                 var d = c1.CentersInput[i] - c2.CentersInput[i];
                 var s = c1.CentersInput[i] + c2.CentersInput[i];
+                d *= d;
+                s *= s;
+                var v = d / s;
+                result += v;
+            }
+            for(var i = 0; i < c1.CentersOutput.Count && result < quit; i++)
+            {
+                var d = c1.CentersOutput[i] - c2.CentersOutput[i];
+                var s = c1.CentersOutput[i] + c2.CentersOutput[i];
                 d *= d;
                 s *= s;
                 var v = d / s;
