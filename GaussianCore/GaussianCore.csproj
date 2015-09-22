@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classification\CoreAlphabeticComparer.cs" />
+    <Compile Include="Classification\DigiDistanceClassifier.cs" />
     <Compile Include="Classification\CoreDistanceHelper.cs" />
     <Compile Include="Generic\CoreGeometryHelper.cs" />
     <Compile Include="Generic\FixedConfinedCoreManager.cs" />
