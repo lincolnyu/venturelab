@@ -50,7 +50,7 @@ namespace GaussianCore.Classification
         /// <param name="ndintol">normalised with Math.Sqrt(sqdist / n)</param>
         /// <param name="ndouttol"></param>
         /// <returns></returns>
-        public static double[][] GetWeights(IList<CodeCoreList> codeCoreLists, double ndintol, double ndouttol)
+        public static double[][] GetWeights(IList<CodeCoreList> codeCoreLists, double ndintol, double ndouttol, double weightbase)
         {
             var res = new double[codeCoreLists.Count - 1][];
             for (var i = 0; i < codeCoreLists.Count - 1; i++)
@@ -58,23 +58,23 @@ namespace GaussianCore.Classification
                 res[i] = new double[codeCoreLists.Count - i - 1];
                 for (var j = i + 1; j < codeCoreLists.Count; j++)
                 {
-                    var w = GetWeight(codeCoreLists[i], codeCoreLists[j], ndintol, ndouttol);
+                    var w = GetWeight(codeCoreLists[i], codeCoreLists[j], ndintol, ndouttol, weightbase);
                     res[i][j - i - 1] = w;
                 }
             }
             return res;
         }
 
-        public static double GetWeight(CodeCoreList ccl1, CodeCoreList ccl2, double ndintol, double ndouttol)
+        public static double GetWeight(CodeCoreList ccl1, CodeCoreList ccl2, double ndintol, double ndouttol, double weightbase)
         {
             if (ccl2.Cores.Count <ccl1.Cores.Count)
             {
-                return GetWeightSmallFirst(ccl2, ccl1, ndintol, ndouttol);
+                return GetWeightSmallFirst(ccl2, ccl1, ndintol, ndouttol, weightbase);
             }
-            return GetWeightSmallFirst(ccl1, ccl2, ndintol, ndouttol);
+            return GetWeightSmallFirst(ccl1, ccl2, ndintol, ndouttol, weightbase);
         }
 
-        public static double GetWeightSmallFirst(CodeCoreList ccl1, CodeCoreList ccl2, double ndintol, double ndouttol)
+        public static double GetWeightSmallFirst(CodeCoreList ccl1, CodeCoreList ccl2, double ndintol, double ndouttol, double weightbase)
         {
             var inputLen = ccl1.Cores[0].Core.CentersInput.Count;
             var outputLen = ccl1.Cores[0].Core.CentersOutput.Count;
@@ -91,7 +91,7 @@ namespace GaussianCore.Classification
                     point = ChangePoint(point, ndin, ndout, ndintol, ndouttol);
                 }
             }
-            return Math.Pow(2, point);
+            return Math.Pow(weightbase, point);
         }
 
         public static double ChangePoint(double point, double ndin, double ndout,
