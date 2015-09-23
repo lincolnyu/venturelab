@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,15 +9,43 @@ namespace GaussianCore.Classification
     {
         #region Methods
 
-        public static double GetSquareDistance(this IList<ICore> cl1, IList<ICore> cl2)
+        public static double GetInputSquareDistance(this ICore core1, ICore core2)
+        {
+            var sqd = 0.0;
+            for (var i = 0; i < core1.CentersInput.Count; i++)
+            {
+                var c1 = core1.CentersInput[i];
+                var c2 = core2.CentersInput[i];
+                var d = c2 - c1;
+                d *= d;
+                sqd += d;
+            }
+            return sqd;
+        }
+
+        public static double GetOutputSquareDistance(this ICore core1, ICore core2)
+        {
+            var sqd = 0.0;
+            for (var i = 0; i < core1.CentersOutput.Count; i++)
+            {
+                var c1 = core1.CentersOutput[i];
+                var c2 = core2.CentersOutput[i];
+                var d = c2 - c1;
+                d *= d;
+                sqd += d;
+            }
+            return sqd;
+        }
+
+        public static double GetQuanbenDistance(this IList<ICore> cl1, IList<ICore> cl2)
         {
             if (cl2.Count < cl1.Count)
             {
-                return GetDistanceSmallListFirst(cl2, cl1);
+                return GetQuanbenDistanceSmallFirst(cl2, cl1);
             }
             else
             {
-                return GetDistanceSmallListFirst(cl1, cl2);
+                return GetQuanbenDistanceSmallFirst(cl1, cl2);
             }
         }
 
@@ -29,7 +56,7 @@ namespace GaussianCore.Classification
         /// <param name="cl1">The first core collection</param>
         /// <param name="cl2">The second core colleciton</param>
         /// <returns>The distance</returns>
-        private static double GetDistanceSmallListFirst(IList<ICore> cl1, IList<ICore> cl2)
+        private static double GetQuanbenDistanceSmallFirst(IList<ICore> cl1, IList<ICore> cl2)
         {
             var res = 0.0;
 

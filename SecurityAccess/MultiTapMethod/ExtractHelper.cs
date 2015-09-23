@@ -1,5 +1,6 @@
 ﻿using SecurityAccess.Asx;
 using SecurityAccess.MultiTapMethod;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -169,80 +170,103 @@ namespace SecurityAccess
             return sp;
         }
 
+        public static double GetLogarithm(double v, double refval)
+        {
+            var res = (Math.Log(v) - Math.Log(refval)) / Math.Log(2);
+            return res;
+        }
+
         public static void Write(StatisticPoint p, TextWriter tw)
         {
-            var a = 1 / p.P1C;
-            var b = 1 / p.V1;
             tw.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},"
                 + "{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27}",
-                p.P1O * a, p.P1H * a, p.P1L * a, p.P2 * a, p.P3 * a, p.P4 * a, p.P5 * a, p.P10 * a,
-                p.P20 * a, p.P65 * a, p.P130 * a, p.P260 * a, p.P520 * a, p.P1300 * a,
-                p.V2 * b, p.V3 * b, p.V4 * b, p.V5 * b, p.V10 * b, p.V20 * b, p.V65 * b, p.V260 * b,
-                p.FP1 * a, p.FP2 * a, p.FP5 * a, p.FP10 * a, p.FP20 * a, p.FP65 * a);
+                GetLogarithm(p.P1O, p.P1C),
+                GetLogarithm(p.P1H, p.P1C),
+                GetLogarithm(p.P1L, p.P1C),
+                GetLogarithm(p.P2, p.P1C),
+                GetLogarithm(p.P3, p.P1C),
+                GetLogarithm(p.P4, p.P1C),
+                GetLogarithm(p.P5, p.P1C),
+                GetLogarithm(p.P10, p.P1C),
+                GetLogarithm(p.P20, p.P1C),
+                GetLogarithm(p.P65, p.P1C),
+                GetLogarithm(p.P130, p.P1C),
+                GetLogarithm(p.P260, p.P1C),
+                GetLogarithm(p.P520, p.P1C),
+                GetLogarithm(p.P1300, p.P1C),
+                GetLogarithm(p.V2, p.V1),
+                GetLogarithm(p.V3, p.V1),
+                GetLogarithm(p.V4, p.V1),
+                GetLogarithm(p.V5, p.V1),
+                GetLogarithm(p.V10, p.V1),
+                GetLogarithm(p.V20, p.V1),
+                GetLogarithm(p.V65, p.V1),
+                GetLogarithm(p.V260, p.V1),
+                GetLogarithm(p.FP1, p.P1C),
+                GetLogarithm(p.FP2, p.P1C),
+                GetLogarithm(p.FP5, p.P1C),
+                GetLogarithm(p.FP10, p.P1C),
+                GetLogarithm(p.FP20, p.P1C),
+                GetLogarithm(p.FP65, p.P1C));
         }
 
         private static void Write(StatisticPoint p, BinaryWriter bw)
         {
-            var a = 1 / p.P1C;
-            var b = 1 / p.V1;
+            bw.Write(GetLogarithm(p.P1O, p.P1C));
+            bw.Write(GetLogarithm(p.P1H, p.P1C));
+            bw.Write(GetLogarithm(p.P1L, p.P1C));
+            bw.Write(GetLogarithm(p.P2, p.P1C));
+            bw.Write(GetLogarithm(p.P3, p.P1C));
+            bw.Write(GetLogarithm(p.P4, p.P1C));
+            bw.Write(GetLogarithm(p.P5, p.P1C));
+            bw.Write(GetLogarithm(p.P10, p.P1C));
+            bw.Write(GetLogarithm(p.P20, p.P1C));
+            bw.Write(GetLogarithm(p.P65, p.P1C));
+            bw.Write(GetLogarithm(p.P130, p.P1C));
+            bw.Write(GetLogarithm(p.P260, p.P1C));
+            bw.Write(GetLogarithm(p.P520, p.P1C));
+            bw.Write(GetLogarithm(p.P1300, p.P1C));
+            bw.Write(GetLogarithm(p.V2, p.V1));
+            bw.Write(GetLogarithm(p.V3, p.V1));
+            bw.Write(GetLogarithm(p.V4, p.V1));
+            bw.Write(GetLogarithm(p.V5, p.V1));
+            bw.Write(GetLogarithm(p.V10, p.V1));
+            bw.Write(GetLogarithm(p.V20, p.V1));
+            bw.Write(GetLogarithm(p.V65, p.V1));
+            bw.Write(GetLogarithm(p.V260, p.V1));
 
-            bw.Write(p.P1O * a);
-            bw.Write(p.P1H * a);
-            bw.Write(p.P1L * a);
-            bw.Write(p.P2 * a);
-            bw.Write(p.P3 * a);
-            bw.Write(p.P4 * a);
-            bw.Write(p.P5 * a);
-            bw.Write(p.P10 * a);
-            bw.Write(p.P20 * a);
-            bw.Write(p.P65 * a);
-            bw.Write(p.P130 * a);
-            bw.Write(p.P260 * a);
-            bw.Write(p.P520 * a);
-            bw.Write(p.P1300 * a);
-            bw.Write(p.V2 * b);
-            bw.Write(p.V3 * b);
-            bw.Write(p.V4 * b);
-            bw.Write(p.V5 * b);
-            bw.Write(p.V10 * b);
-            bw.Write(p.V20 * b);
-            bw.Write(p.V65 * b);
-            bw.Write(p.V260 * b);
-
-            bw.Write(p.FP1 * a);
-            bw.Write(p.FP2 * a);
-            bw.Write(p.FP5 * a);
-            bw.Write(p.FP10 * a);
-            bw.Write(p.FP20 * a);
-            bw.Write(p.FP65 * a);
+            bw.Write(GetLogarithm(p.FP1, p.P1C));
+            bw.Write(GetLogarithm(p.FP2, p.P1C));
+            bw.Write(GetLogarithm(p.FP5, p.P1C));
+            bw.Write(GetLogarithm(p.FP10, p.P1C));
+            bw.Write(GetLogarithm(p.FP20, p.P1C));
+            bw.Write(GetLogarithm(p.FP65, p.P1C));
         }
 
         public static void GenerateInput(this StatisticPoint p, IList<double> input)
         {
-            var a = 1 / p.P1C;
-            var b = 1 / p.V1;
-            input[0] = p.P1O * a;
-            input[1] = p.P1H * a;
-            input[2] = p.P1L * a;
-            input[3] = p.P2 * a;
-            input[4] = p.P3 * a;
-            input[5] = p.P4 * a;
-            input[6] = p.P5 * a;
-            input[7] = p.P10* a;
-            input[8] = p.P20 * a;
-            input[9] = p.P65 * a;
-            input[10] = p.P130 * a;
-            input[11] = p.P260 * a;
-            input[12] = p.P520 * a;
-            input[13] = p.P1300 * a;
-            input[14] = p.V2 * b;
-            input[15] = p.V3 * b;
-            input[16] = p.V4 * b;
-            input[17] = p.V5 * b;
-            input[18] = p.V10 * b;
-            input[19] = p.V20 * b;
-            input[20] = p.V65 * b;
-            input[21] = p.V260 * b;
+            input[0] = GetLogarithm(p.P1O, p.P1C);
+            input[1] = GetLogarithm(p.P1H, p.P1C);
+            input[2] = GetLogarithm(p.P1L, p.P1C);
+            input[3] = GetLogarithm(p.P2, p.P1C);
+            input[4] = GetLogarithm(p.P3, p.P1C);
+            input[5] = GetLogarithm(p.P4, p.P1C);
+            input[6] = GetLogarithm(p.P5, p.P1C);
+            input[7] = GetLogarithm(p.P10, p.P1C);
+            input[8] = GetLogarithm(p.P20, p.P1C);
+            input[9] = GetLogarithm(p.P65, p.P1C);
+            input[10] = GetLogarithm(p.P130, p.P1C);
+            input[11] = GetLogarithm(p.P260, p.P1C);
+            input[12] = GetLogarithm(p.P520, p.P1C);
+            input[13] = GetLogarithm(p.P1300, p.P1C);
+            input[14] = GetLogarithm(p.V2, p.V1);
+            input[15] = GetLogarithm(p.V3, p.V1);
+            input[16] = GetLogarithm(p.V4, p.V1);
+            input[17] = GetLogarithm(p.V5, p.V1);
+            input[18] = GetLogarithm(p.V10, p.V1);
+            input[19] = GetLogarithm(p.V20, p.V1);
+            input[20] = GetLogarithm(p.V65, p.V1);
+            input[21] = GetLogarithm(p.V260, p.V1);
         }
 
         public static void ProcessFiles(this string srcDir, string dstDir,

@@ -41,7 +41,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classification\CoreAlphabeticComparer.cs" />
-    <Compile Include="Classification\DigiDistanceClassifier.cs" />
+    <Compile Include="Classification\CoreExtension.cs" />
+    <Compile Include="Classification\CoreInputMeanComparer.cs" />
+    <Compile Include="Classification\DigioClassifier.cs" />
     <Compile Include="Classification\CoreDistanceHelper.cs" />
     <Compile Include="Generic\CoreGeometryHelper.cs" />
     <Compile Include="Generic\FixedConfinedCoreManager.cs" />

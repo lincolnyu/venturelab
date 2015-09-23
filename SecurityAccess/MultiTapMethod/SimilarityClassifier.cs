@@ -145,7 +145,7 @@ namespace SecurityAccess.MultiTapMethod
                     b = Logger.InplaceWrite(b, "{0} and {1}...", i, j);
 
                     var cs2 = coresets[j].Cores;
-                    var sd = cs1.GetSquareDistance(cs2);
+                    var sd = cs1.GetQuanbenDistance(cs2);
                     list.Add(new DistanceEntry
                     {
                         CoreSet1 = coresets[i],
