@@ -2,10 +2,16 @@
 
 namespace GaussianCore.Classification
 {
+    /// <summary>
+    ///  Compare cores by input then output
+    /// </summary>
     public class CoreAlphabeticComparer : IComparer<ICore>
     {
         #region Properties
 
+        /// <summary>
+        ///  Singleton
+        /// </summary>
         public static CoreAlphabeticComparer Instance { get; private set; } = new CoreAlphabeticComparer();
 
         #endregion
@@ -14,6 +20,12 @@ namespace GaussianCore.Classification
 
         #region IComparer<ICore> members
 
+        /// <summary>
+        ///  Compares two cores first by input sequence then by output
+        /// </summary>
+        /// <param name="x">The first core</param>
+        /// <param name="y">The second core</param>
+        /// <returns>The comparison indicator</returns>
         public int Compare(ICore x, ICore y)
         {
             for (var i = 0; i < x.CentersInput.Count; i++)

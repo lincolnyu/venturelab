@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Asx\DigioClassifyHelper.cs" />
     <Compile Include="Asx\FileReorganiser.cs" />
     <Compile Include="Asx\HistoryHelper.cs" />
     <Compile Include="Asx\DailyStockEntry.cs" />

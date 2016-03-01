@@ -69,6 +69,12 @@ namespace SecurityAnalysisConsole
         }
 
 
+        static void PrintWeightsToCsv(string statisticsDir, string csv)
+        {
+            DigioClassifyHelper.PrintWeightsToCsv(statisticsDir, csv, 0.1, true, Console.Out);
+        }
+
+
         /// <summary>
         ///  Prepare current data for prediction analysis
         /// </summary>
@@ -103,14 +109,15 @@ namespace SecurityAnalysisConsole
                 switch (subcmd)
                 {
                     case "-reorganise":
-                        // args[1]: src, args[2]: dst
+                        // args[1]: by-date dir, args[2]: by-code dir
                         ReorganiseFiles(args[1], args[2], false);
                         break;
                     case "-reorganise-inc":
-                        // args[1]: src, args[2]: dst
+                        // args[1]: by-date dir, args[2]: by-code dir
                         ReorganiseFiles(args[1], args[2], true);
                         break;
                     case "-suck-txt":
+                        // args[1]: source time-series file directory, args[2]: target static point directory
                         SuckIntoStatistics(args[1], args[2], true);
                         break;
                     case "-suck":
@@ -122,9 +129,9 @@ namespace SecurityAnalysisConsole
                     case "-classify-inc":
                         ClassifyInc(args[1], args[2]);
                         break;
-
-
-
+                    case "-weights":
+                        PrintWeightsToCsv(args[1], args[2]);
+                        break;
                     #region Naive prediction:...
                     case "-build-fc-sel":
                         {

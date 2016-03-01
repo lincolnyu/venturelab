@@ -39,9 +39,9 @@ namespace GaussianCore.Sample2D
         {
             InitBufs(MainPictureBox.Width, MainPictureBox.Height);
 
-            _cm = CreateFixedSphericCores(100);
+            //_cm = CreateFixedSphericCores(100);
             //_cm = CreateVariableSphericCores(100);
-            //_cm = CreateFixedConfinedCores(100);
+            _cm = CreateFixedConfinedCores(100);
             //_cm = CreateVariableConfinedCores(100);
 
             Redraw();

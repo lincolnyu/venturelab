@@ -20,16 +20,16 @@ namespace GaussianCore.Generic
 
         #region ICore members
 
+        /// <summary>
+        ///  centers of components of input
+        /// </summary>
+        public IList<double> CentersInput { get; }
 
-        public IList<double> CentersInput
-        {
-            get;
-        }
+        /// <summary>
+        ///  centers of components of output
+        /// </summary>
+        public IList<double> CentersOutput { get; }
 
-        public IList<double> CentersOutput
-        {
-            get;
-        }
 
         #endregion
 
@@ -42,9 +42,12 @@ namespace GaussianCore.Generic
         /// </summary>
         public double[] L { get; set; }
 
-        public double Weight { get; set; } = 1;
+        /// <summary>
+        ///  1/Sqrt(Abs(L0*L1*...))
+        /// </summary>
+        public double InvLCoeff { get; private set; }
 
-        public double InvLCoeff { get; set; }
+        public abstract double Weight { get; set; }
 
         #endregion
 
@@ -66,7 +69,8 @@ namespace GaussianCore.Generic
                 d *= L[i];
                 s += d;
             }
-            return Weight * a * Math.Exp(b * s);
+            // note weight is provided by A(x)
+            return a * Math.Exp(b * s);
         }
 
         public void UpdateInvLCoeff()
@@ -76,7 +80,10 @@ namespace GaussianCore.Generic
             {
                 invl *= l;
             }
-            if (invl < 0) invl = -invl;
+            if (invl < 0)
+            {
+                invl = -invl;
+            }
             InvLCoeff = 1 / Math.Sqrt(invl);
         }
 
