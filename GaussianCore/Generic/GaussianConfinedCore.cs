@@ -23,6 +23,9 @@ namespace GaussianCore.Generic
 
         public double Alpha { get; internal set; } = 5;
 
+        /// <summary>
+        ///  The weight designated to this c
+        /// </summary>
         public override double Weight { get; set; } = 1;
 
         #endregion

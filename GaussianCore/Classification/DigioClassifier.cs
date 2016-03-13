@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using GaussianCore.Helpers;
 
 namespace GaussianCore.Classification
 {
-    public static class DigioClassifier
+    public class DigioClassifier
     {
         #region Nested types
 
@@ -67,11 +67,7 @@ namespace GaussianCore.Classification
 
         #endregion
 
-        #region Properties
-
-        #endregion
-
-        #region Methods
+        #region Fields
 
         /// <summary>
         ///  returns the weight from the weight table. the weight table is organised as below
@@ -80,91 +76,248 @@ namespace GaussianCore.Classification
         ///     (2,3), (2,4), ...
         ///     ...
         /// </summary>
-        /// <param name="weights">The weight table</param>
-        /// <param name="i">The index of the first core list in the core list list</param>
-        /// <param name="j">The index of the second core list in the core list list</param>
-        /// <returns>The weight</returns>
-        public static double GetWeight(this double[][] weights, int i, int j)
+        private readonly List<List<DigioClassifyInfo>> _weights = new List<List<DigioClassifyInfo>>();
+
+        #endregion
+
+        #region Properties
+
+        public IList<CodeCoreList> CoreLists { get; private set; }
+
+        public IList<string> Codes
+        {
+            get { return CoreLists?.Select(x => x.Code).ToArray(); }
+        }
+
+        public double InputTolerance { get; set; }
+
+        public TextWriter Logger { get; set; }
+
+        #endregion
+
+        #region Methods
+
+        public double GetWeight(int i, int j)
         {
             if (i < j)
             {
-                return weights[i][j - i - 1];
+                return _weights[i][j - i - 1].Score;
             }
-            else if (j < i)
+            if (i > j)
             {
-                return weights[j][i - j - 1];
+                return _weights[j][i - j - 1].Score;
             }
-            else
-            {
-                throw new ArgumentException("Getting weight between two identical core lists");
-            }
+            return 1;
         }
 
-
-        /// <summary>
-        ///  returns the weight table between core lists
-        /// </summary>
-        /// <param name="codeCoreLists">The core lists</param>
-        /// <param name="inputTol">normalised with Math.Sqrt(sqdist / n)</param>
-        /// <returns>
-        ///  The weight table in the following format
-        ///    (0,1), (0,2), (0,3), (0,4), ...
-        ///           (1,2), (1,3), (1,4), ...
-        ///                  (2,3), (2,4), ...
-        ///                          ...
-        /// </returns>
-        public static double[][] GetWeights(this IList<CodeCoreList> codeCoreLists, double inputTol, TextWriter logWriter = null)
+        public void ReCreate(IList<CodeCoreList> codeCoreLists)
         {
-            var res = new double[codeCoreLists.Count - 1][];
+            CoreLists = codeCoreLists;
+            _weights.ReAlloc(codeCoreLists.Count - 1);
             for (var i = 0; i < codeCoreLists.Count - 1; i++)
             {
-                if (logWriter != null)
-                {
-                    logWriter.WriteLine($"Getting weights for row {i + 1}/{codeCoreLists.Count - 1}...");
-                }
-                res[i] = new double[codeCoreLists.Count - i + 1];
+                Logger?.WriteLine($"Getting weights for row {i + 1}/{codeCoreLists.Count - 1}...");
+                var row = new List<DigioClassifyInfo>(codeCoreLists.Count - i + 1);
                 for (var j = i + 1; j < codeCoreLists.Count; j++)
                 {
-                    var w = GetWeight(codeCoreLists[i], codeCoreLists[j], inputTol);
-                    res[i][j - i - 1] = w;
+                    var w = GetWeight(codeCoreLists[i], codeCoreLists[j], InputTolerance);
+                    row.Add(w);
                 }
+                _weights.Add(row);
             }
-            return res;
         }
 
-        public static double[][] GetWeightsParallel(this IList<CodeCoreList> codeCoreLists, double inputTol, TextWriter logWriter = null)
+        public void ReCreateParallel(IList<CodeCoreList> codeCoreLists)
         {
-            var res = new double[codeCoreLists.Count - 1][];
+            CoreLists = codeCoreLists;
+            _weights.ReAllocAndInit(codeCoreLists.Count - 1);
             var startTime = DateTime.Now;
             var totalCoreCount = 0;
             var coresSoFar = 0;
-            if (logWriter != null)
+            if (Logger != null)
             {
                 totalCoreCount = codeCoreLists.Sum(x => x.Cores.Count);
             }
-            Parallel.For(0, codeCoreLists.Count-1, i =>
+            Parallel.For(0, codeCoreLists.Count - 1, i =>
             {
-                res[i] = new double[codeCoreLists.Count - i + 1];
+                _weights[i] = new List<DigioClassifyInfo>(codeCoreLists.Count - i + 1);
                 for (var j = i + 1; j < codeCoreLists.Count; j++)
                 {
-                    var w = GetWeight(codeCoreLists[i], codeCoreLists[j], inputTol);
-                    res[i][j - i - 1] = w;
+                    var w = GetWeight(codeCoreLists[i], codeCoreLists[j], InputTolerance);
+                    _weights[i].Add(w);
                 }
-                if (logWriter != null && codeCoreLists[i].Cores.Count > 0)
+                if (Logger != null && codeCoreLists[i].Cores.Count > 0)
                 {
-                    lock (logWriter)
+                    lock (Logger)
                     {
                         var c1 = codeCoreLists[i].Cores.Count;
                         coresSoFar += c1;
                         var time = DateTime.Now;
                         var elapsed = time - startTime;
-                        var r = (double)coresSoFar/totalCoreCount;
+                        var r = (double)coresSoFar / totalCoreCount;
                         var expected = TimeSpan.FromSeconds(elapsed.TotalSeconds / r);
-                        logWriter.WriteLine($"Got weights {r*100:.00}% complete; time: {elapsed.TotalSeconds:0}/{expected.TotalSeconds-elapsed.TotalSeconds:0}/{expected.TotalSeconds:0} (secs)");
+                        Logger.WriteLine($"Got weights {r * 100:.00}% complete; time: {elapsed.TotalSeconds:0}/{expected.TotalSeconds - elapsed.TotalSeconds:0}/{expected.TotalSeconds:0} (secs)");
                     }
                 }
             });
-            return res;
+        }
+        
+        public void Update(IList<CodeCoreList> corelists, IList<int> toAdd)
+        {
+            CoreLists = corelists;
+            if (toAdd == null)
+            {
+                toAdd = new int[] {};
+            }
+            if (toAdd.Count > 0)
+            {
+                var newCount = _weights.Count + toAdd.Count;
+                // rows
+                foreach (var i in toAdd)
+                {
+                    var items = new List<DigioClassifyInfo>();
+                    for (var j = i + 1; j < newCount; j++)
+                    {
+                        var w = GetWeight(corelists[i], corelists[j], InputTolerance);
+                        items.Add(w);
+                    }
+                    _weights.Insert(i, items);
+                }
+                // TODO test this...
+                // colums
+                var ki = 0;
+                for (var i = 0; i < _weights.Count; i++)
+                {
+                    var row = _weights[i];
+                    var k = ki;
+                    for (; toAdd[k] < i + 1; k++) ;
+                    ki = k;
+                    for (var j = i + 1; j < _weights.Count+1; j++)
+                    {
+                        if (toAdd[k] == j)
+                        {
+                            var w = GetWeight(corelists[i], corelists[j], InputTolerance);
+                            row.Insert(j - i - 1, w);
+                            k++;
+                        }
+                    }
+                }
+            }
+           
+            // TODO existing ones
+            var k1 = 0;
+            for (var i = 0; i < _weights.Count; i++)
+            {
+                if (k1 < toAdd.Count && i == toAdd[k1])
+                {
+                    k1++;
+                    continue;
+                }
+                var k2 = k1;
+                for (var j = i + 1; j < _weights.Count + 1; j++)
+                {
+                    if (k2 < toAdd.Count && j == toAdd[k2])
+                    {
+                        k2++;
+                        continue;
+                    }
+                    Update(_weights[i][j - i - 1], corelists[i], corelists[j]);
+                }
+            }
+
+        }
+
+        private void Update(DigioClassifyInfo dci, CodeCoreList ccl1, CodeCoreList ccl2)
+        {
+            if (ccl2.Cores.Count < ccl1.Cores.Count)
+            {
+                UpdateWeightSmallFirst(dci, ccl2, ccl1, InputTolerance);
+            }
+            else
+            {
+                UpdateWeightSmallFirst(dci, ccl1, ccl2, InputTolerance);
+            }
+        }
+
+        public void SetCoreLists(IList<CodeCoreList> ccl)
+        {
+            CoreLists = ccl;
+        }
+
+        public void Save(string savePath)
+        {
+            using (var f = new FileStream(savePath, FileMode.Create))
+            using (var bw = new BinaryWriter(f))
+            {
+                bw.Write(Codes.Count);
+                foreach (var t in Codes)
+                {
+                    bw.Write(t);
+                }
+                foreach (var t in _weights.SelectMany(row => row))
+                {
+                    t.WriteToBinary(bw);
+                }
+            }
+        }
+
+        public void Load(string loadPath)
+        {
+            using (var f = new FileStream(loadPath, FileMode.Open))
+            using (var br = new BinaryReader(f))
+            {
+                var len = br.ReadInt32();
+                _weights.ReAllocAndInit(len-1);
+                for (var i = 0; i < len - 1; i++)
+                {
+                    _weights[i] = new List<DigioClassifyInfo>(len - i - 1);
+                    for (var j = 0; j < len - i - 1; j++)
+                    {
+                        _weights[i].Add(DigioClassifyInfo.ReadFromBinary(br));
+                    }
+                }
+            }
+        }
+
+        public static void UpdateWeightSmallFirst(DigioClassifyInfo dci, CodeCoreList ccl1, CodeCoreList ccl2,
+            double inputTol)
+        {
+            if (dci.EndOfOne == ccl1.Cores.Count && dci.EndOfTwo == ccl2.Cores.Count)
+            {
+                // no need to update
+                return;
+            }
+            var inputLen = ccl1.Cores[0].Core.CentersInput.Count;
+            var outputLen = ccl1.Cores[0].Core.CentersOutput.Count;
+            // TODO UPDATE...
+            var scoreSum = 0.0;
+            var scoreCount = 0;
+            for (var i = 0; i < ccl1.Cores.Count; i++)
+            {
+                var c = ccl1.Cores[i];
+                var ccl2SearchRange = (i < dci.EndOfOne)
+                    ? ccl2.Cores.GetRange(dci.EndOfTwo, ccl2.Cores.Count - dci.EndOfTwo)
+                    : ccl2.Cores;
+                var cs2 = Search(c, ccl2SearchRange, inputTol);
+                var countSubtotal = 0;
+                foreach (var c2 in cs2)
+                {
+                    var din = c2.DistanceIndicator; // this shouldn't be normailsed with length
+                    var dout = c.Core.GetOutputAbsDistance(c2.Core);
+                    var ndin = din / inputLen;
+                    var ndout = dout / outputLen;
+                    var score = GetScore(ndin, ndout);
+                    scoreSum += score;
+                    countSubtotal++;
+                }
+                scoreCount += countSubtotal > 0 ? countSubtotal : 1; // at least increment it so the score won't be overly high
+            }
+            var newScoreSum = dci.Score*dci.Count;// old sum
+            dci.Count += scoreCount;
+            newScoreSum += scoreSum;
+            dci.Score = newScoreSum/ dci.Count;
+            dci.EndOfTwo = ccl1.Cores.Count;
+            dci.EndOfOne = ccl2.Cores.Count;
         }
 
         /// <summary>
@@ -174,7 +327,7 @@ namespace GaussianCore.Classification
         /// <param name="ccl2"></param>
         /// <param name="inputTol"></param>
         /// <returns></returns>
-        public static double GetWeight(CodeCoreList ccl1, CodeCoreList ccl2, double inputTol)
+        public static DigioClassifyInfo GetWeight(CodeCoreList ccl1, CodeCoreList ccl2, double inputTol)
         {
             if (ccl2.Cores.Count < ccl1.Cores.Count)
             {
@@ -183,7 +336,7 @@ namespace GaussianCore.Classification
             return GetWeightSmallFirst(ccl1, ccl2, inputTol);
         }
 
-        public static double GetWeightParallel(CodeCoreList ccl1, CodeCoreList ccl2, double inputTol)
+        public static DigioClassifyInfo GetWeightParallel(CodeCoreList ccl1, CodeCoreList ccl2, double inputTol)
         {
             if (ccl2.Cores.Count < ccl1.Cores.Count)
             {
@@ -192,11 +345,11 @@ namespace GaussianCore.Classification
             return GetWeightSmallFirstParallel(ccl1, ccl2, inputTol);
         }
 
-        public static double GetWeightSmallFirst(CodeCoreList ccl1, CodeCoreList ccl2, double inputTol)
+        public static DigioClassifyInfo GetWeightSmallFirst(CodeCoreList ccl1, CodeCoreList ccl2, double inputTol)
         {
             if (ccl1.Cores.Count == 0)
             {
-                return 0;
+                return DigioClassifyInfo.Default;
             }
             var inputLen = ccl1.Cores[0].Core.CentersInput.Count;
             var outputLen = ccl1.Cores[0].Core.CentersOutput.Count;
@@ -205,9 +358,9 @@ namespace GaussianCore.Classification
             foreach (var c in ccl1.Cores)
             {
                 // find a match in the second code base don ndintol
-                var c2s = Search(c, ccl2, inputTol);
+                var cs2 = Search(c, ccl2.Cores, inputTol);
                 var countSubtotal = 0;
-                foreach (var c2 in c2s)
+                foreach (var c2 in cs2)
                 {
                     var din = c2.DistanceIndicator; // this shouldn't be normailsed with length
                     var dout = c.Core.GetOutputAbsDistance(c2.Core);
@@ -221,9 +374,8 @@ namespace GaussianCore.Classification
             }
             if (scoreSum < 0) scoreSum = 0;
             var scoreMean = scoreCount > 0 ? scoreSum / scoreCount : 0;
-            return scoreMean;
+            return new DigioClassifyInfo(scoreMean, scoreCount, ccl1.Cores.Count, ccl2.Cores.Count);
         }
-
 
         /// <summary>
         ///  Get the weight (correlation) between two core lists
@@ -232,44 +384,44 @@ namespace GaussianCore.Classification
         /// <param name="ccl2"></param>
         /// <param name="inputTol"></param>
         /// <returns></returns>
-        public static double GetWeightSmallFirstParallel(CodeCoreList ccl1, CodeCoreList ccl2, double inputTol)
+        public static DigioClassifyInfo GetWeightSmallFirstParallel(CodeCoreList ccl1, CodeCoreList ccl2, double inputTol)
         {
             if (ccl1.Cores.Count == 0)
             {
-                return 0;
+                return DigioClassifyInfo.Default;
             }
             var inputLen = ccl1.Cores[0].Core.CentersInput.Count;
             var outputLen = ccl1.Cores[0].Core.CentersOutput.Count;
             var scoreSum = 0.0;
             var scoreCount = 0;
             Parallel.ForEach(ccl1.Cores, () => default(SubtotalObject), (c, loopState, local) =>
-             {
-                 // find a match in the second code base don ndintol
-                 var c2s = Search(c, ccl2, inputTol);
-                 double scoreSubtotal = 0;
-                 int countSubtotal = 0;
-                 foreach (var c2 in c2s)
-                 {
-                     var din = c2.DistanceIndicator; // this shouldn't be normailsed with length
-                     var dout = c.Core.GetOutputAbsDistance(c2.Core);
-                     var ndin = din / inputLen;
-                     var ndout = dout / outputLen;
-                     var score = GetScore(ndin, ndout);
-                     scoreSubtotal += score;
-                     countSubtotal++;
-                 }
-                 return new SubtotalObject { ScoreSubtotal = scoreSubtotal, CountSubtotal = countSubtotal };
-             }, (x) =>
-             {
-                 lock (ccl1)
-                 {
-                     scoreSum += x.ScoreSubtotal;
-                     scoreCount += x.CountSubtotal;
-                 }
-             });
+            {
+                // find a match in the second code base don ndintol
+                var cs2 = Search(c, ccl2.Cores, inputTol);
+                double scoreSubtotal = 0;
+                int countSubtotal = 0;
+                foreach (var c2 in cs2)
+                {
+                    var din = c2.DistanceIndicator; // this shouldn't be normailsed with length
+                    var dout = c.Core.GetOutputAbsDistance(c2.Core);
+                    var ndin = din/inputLen;
+                    var ndout = dout/outputLen;
+                    var score = GetScore(ndin, ndout);
+                    scoreSubtotal += score;
+                    countSubtotal++;
+                }
+                return new SubtotalObject {ScoreSubtotal = scoreSubtotal, CountSubtotal = countSubtotal};
+            }, x =>
+            {
+                lock (ccl1)
+                {
+                    scoreSum += x.ScoreSubtotal;
+                    scoreCount += x.CountSubtotal;
+                }
+            });
             if (scoreSum < 0) scoreSum = 0;
             var scoreMean = scoreCount > 0 ? scoreSum / scoreCount : 0;
-            return scoreMean;
+            return new DigioClassifyInfo(scoreMean, scoreCount, ccl1.Cores.Count, ccl2.Cores.Count);
         }
 
         private static double GetScore(double ndin, double ndout)
@@ -286,39 +438,17 @@ namespace GaussianCore.Classification
         }
 
         /// <summary>
-        ///  
-        /// </summary>
-        /// <param name="point"></param>
-        /// <param name="ndin"></param>
-        /// <param name="ndout"></param>
-        /// <param name="ndintol"></param>
-        /// <param name="ndouttol"></param>
-        /// <param name="inremain"></param>
-        /// <returns></returns>
-        public static double ChangePoint(double point, double ndin, double ndout,
-            double ndintol, double ndouttol, double inremain = 0.8)
-        {
-            var k = Math.Log(2) / (ndouttol * ndouttol);
-            var a = Math.Exp(-k * ndout * ndout) - 1;
-
-            var b = (inremain - 1) * ndin / ndintol;
-            var delta = a * b ;
-            point += delta;
-            return point;
-        }
-
-        /// <summary>
         ///  Find matches of <paramref name="ce"/> in <paramref name="ccl"/> with square
-        ///  distance within the tolerance of <paramref name="ndintol"/>
+        ///  distance within the tolerance of <paramref name="inputTol"/>
         /// </summary>
         /// <param name="ce">The core to find matches for</param>
         /// <param name="ccl">The corelist</param>
         /// <param name="inputTol">tolerance of input mean absolute difference</param>
         /// <returns>All cores in the core list that satisfies criteria</returns>
-        public static IEnumerable<CoreExtensionAndDist> Search(CoreExtension ce, CodeCoreList ccl, double inputTol)
+        public static IEnumerable<CoreExtensionAndDist> Search(CoreExtension ce, List<CoreExtension> ccl, double inputTol)
         {
             // get to the one in ccl.Cores that's most promising (potentially closest to ce)
-            var index = ccl.Cores.BinarySearch(ce, CoreInputMeanComparer.Instance);
+            var index = ccl.BinarySearch(ce, CoreInputMeanComparer.Instance);
             if (index < 0)
             {
                 index = -index-1;
@@ -326,19 +456,19 @@ namespace GaussianCore.Classification
 
             var inputLen = ce.Core.CentersInput.Count;
             var inputTolSum = inputTol * inputLen;
-            for (var i = Math.Min(index, ccl.Cores.Count - 1); i >= 0; i--)
+            for (var i = Math.Min(index, ccl.Count - 1); i >= 0; i--)
             {
-                var d = ce.Core.GetInputAbsDistance(ccl.Cores[i].Core);
+                var d = ce.Core.GetInputAbsDistance(ccl[i].Core);
                 if (d <= inputTolSum)
                 {
                     // it satisfies the requirement
-                    yield return new CoreExtensionAndDist(ccl.Cores[i], d);
+                    yield return new CoreExtensionAndDist(ccl[i], d);
                 }
                 else
                 {
                     // for square distance, it uses a1^2+a2^2+...+aN^2 >= (a1+a2+...+aN)^2 / N
                     // for absolute distance, it uses |a1|+|a2|+...+|aN| >= |a1+a2+...aN|
-                    var ss = ce.Core.GetInputDifferenceAbs(ccl.Cores[i].Core);
+                    var ss = ce.Core.GetInputDifferenceAbs(ccl[i].Core);
                     if (ss > inputTolSum)
                     {
                         // no need to search, no more items beyond this can satisfy the requirement
@@ -347,18 +477,18 @@ namespace GaussianCore.Classification
                 }
             }
 
-            for (var i = index + 1; i < ccl.Cores.Count; i++)
+            for (var i = index + 1; i < ccl.Count; i++)
             {
-                var d = ce.Core.GetInputAbsDistance(ccl.Cores[i].Core);
+                var d = ce.Core.GetInputAbsDistance(ccl[i].Core);
                 if (d <= inputTolSum)
                 {
                     // it satisfies the requirement
-                    yield return new CoreExtensionAndDist(ccl.Cores[i], d);
+                    yield return new CoreExtensionAndDist(ccl[i], d);
                 }
                 else
                 {
                     // this uses a1^2+a2^2+...+aN^2 >= (a1+a2+...+aN)^2 / N
-                    var ss = ce.Core.GetInputDifferenceAbs(ccl.Cores[i].Core);
+                    var ss = ce.Core.GetInputDifferenceAbs(ccl[i].Core);
                     if (ss > inputTolSum)
                     {
                         // no need to search, no more items beyond this can satisfy the requirement
@@ -366,15 +496,6 @@ namespace GaussianCore.Classification
                     }
                 }
             }
-        }
-
-        public static IEnumerable<CoreExtensionAndDist> Search (ICore core, CodeCoreList ccl, double ndintol)
-        {
-            var n = core.CentersInput.Count;
-            var meanTolerance = Math.Sqrt(n) * ndintol;
-            var coreSum = core.CentersInput.Sum();
-            var ce = new CoreExtension { Core = core, InputSum = coreSum };
-            return Search(ce, ccl, ndintol);
         }
 
         #endregion

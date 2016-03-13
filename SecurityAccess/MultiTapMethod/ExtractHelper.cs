@@ -1,13 +1,12 @@
-﻿using GaussianCore;
-using GaussianCore.Generic;
-using SecurityAccess.Asx;
-using SecurityAccess.MultiTapMethod;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using GaussianCore;
+using GaussianCore.Generic;
+using SecurityAccess.Asx;
 
-namespace SecurityAccess
+namespace SecurityAccess.MultiTapMethod
 {
     /// <summary>
     ///  extracts statistic points from raw stock data.

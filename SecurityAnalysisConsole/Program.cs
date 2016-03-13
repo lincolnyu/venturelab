@@ -1,5 +1,4 @@
 ﻿using System;
-using SecurityAccess;
 using SecurityAccess.Asx;
 using SecurityAccess.MultiTapMethod;
 using GaussianCore.Generic;
@@ -35,7 +34,7 @@ namespace SecurityAnalysisConsole
         static void SuckIntoStatistics(string byCodeDir, string statisticsDir, 
             bool exportTxtToo)
         {
-            ExtractHelper.ProcessFiles(byCodeDir, statisticsDir,
+            byCodeDir.ProcessFiles(statisticsDir,
                 exportTxtToo ? ExtractHelper.ExportModes.Both : ExtractHelper.ExportModes.Binary,
                 Console.Out);
         }
@@ -71,7 +70,8 @@ namespace SecurityAnalysisConsole
 
         static void PrintWeightsToCsv(string statisticsDir, string csv)
         {
-            DigioClassifyHelper.PrintWeightsToCsv(statisticsDir, csv, 0.1, true, Console.Out);
+            var dc = DigioClassifyHelper.GetNewDigioClassifier(statisticsDir, 0.1, 0, 1, true, Console.Out);
+            dc.PrintWeightsToCsv(csv);            
         }
 
 

@@ -62,6 +62,7 @@ namespace GaussianCore.Generic
             });
         }
 
+/*
         private void GetMeanMinSquareDistance(out double[] sqdilist, out double[] sqdolist)
         {
             var sqditable = new double[Cores.Count][];
@@ -144,6 +145,7 @@ namespace GaussianCore.Generic
                 sqdolist[k] = mean;
             }
         }
+*/
 
         private void GetMaxMinSquareDistance(out double[] sqdilist, out double[] sqdolist)
         {
