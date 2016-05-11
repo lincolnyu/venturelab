@@ -7,9 +7,6 @@ using GaussianCore.Helpers;
 
 namespace GaussianCore.Classification
 {
-    /// <summary>
-    ///  Non-directional weight provider
-    /// </summary>
     public class DigioClassifier
     {
         #region Nested types
@@ -17,7 +14,7 @@ namespace GaussianCore.Classification
         /// <summary>
         ///  A list of cores with the same code
         /// </summary>
-        public class CodeCoreList : IComparable<CodeCoreList>
+        public class CodeCoreList
         {
             /// <summary>
             ///  The code the cores share
@@ -27,16 +24,7 @@ namespace GaussianCore.Classification
             /// <summary>
             ///  The list of cores
             /// </summary>
-            public List<CoreExtension> Cores { get; } = new List<CoreExtension>();
-
-            #region IComparable<CodeCoreList> members
-
-            public int CompareTo(CodeCoreList other)
-            {
-                return string.Compare(Code, other.Code, StringComparison.Ordinal);
-            }
-
-            #endregion
+            public List<CoreExtension> Cores { get; private set; } = new List<CoreExtension>();
 
             /// <summary>
             ///  Sort the cores by mean value of input 
@@ -67,7 +55,7 @@ namespace GaussianCore.Classification
             /// <summary>
             ///  Could be square distance or distance or other, up to the user
             /// </summary>
-            public double DistanceIndicator { get; }
+            public double DistanceIndicator { get; private set; }
         }
 
         private struct SubtotalObject
@@ -90,25 +78,16 @@ namespace GaussianCore.Classification
         /// </summary>
         private readonly List<List<DigioClassifyInfo>> _weights = new List<List<DigioClassifyInfo>>();
 
-        private List<string> _codes;
-        private List<CodeCoreList> _codeLists;
-
         #endregion
 
         #region Properties
 
-        public IList<CodeCoreList> CoreLists
-        {
-            get { return _codeLists; }
-            private set
-            {
-                _codeLists = value as List<CodeCoreList>?? value.ToList();
-                _codeLists.Sort();
-                _codes = null;
-            }
-        }
+        public IList<CodeCoreList> CoreLists { get; private set; }
 
-        public List<string> Codes => _codes ?? (_codes = CoreLists?.Select(x => x.Code).ToList());
+        public IList<string> Codes
+        {
+            get { return CoreLists?.Select(x => x.Code).ToArray(); }
+        }
 
         public double InputTolerance { get; set; }
 
@@ -131,7 +110,7 @@ namespace GaussianCore.Classification
             return 1;
         }
 
-        public void ReCreate(List<CodeCoreList> codeCoreLists)
+        public void ReCreate(IList<CodeCoreList> codeCoreLists)
         {
             CoreLists = codeCoreLists;
             _weights.ReAlloc(codeCoreLists.Count - 1);
@@ -211,10 +190,7 @@ namespace GaussianCore.Classification
                 {
                     var row = _weights[i];
                     var k = ki;
-                    for (; toAdd[k] < i + 1; k++)
-                    {
-                        // empty loop, nothing to be done here
-                    }
+                    for (; toAdd[k] < i + 1; k++) ;
                     ki = k;
                     for (var j = i + 1; j < _weights.Count+1; j++)
                     {
@@ -439,7 +415,6 @@ namespace GaussianCore.Classification
             {
                 lock (ccl1)
                 {
-                    // ReSharper disable once AccessToModifiedClosure
                     scoreSum += x.ScoreSubtotal;
                     scoreCount += x.CountSubtotal;
                 }

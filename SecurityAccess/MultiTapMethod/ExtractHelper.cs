@@ -29,6 +29,7 @@ namespace SecurityAccess.MultiTapMethod
         /// <summary>
         ///  Converts raw sequences to statistic model model (points)
         /// </summary>
+        /// <param name="dir">The directory the files are in</param>
         /// <param name="data">Time series data in chronical order (oldest first)</param>
         /// <param name="start">number of days from the first one that is late enough to make 
         /// statistic point to the day to start the processing with; 0 means starts from that first possible day</param>
@@ -492,7 +493,7 @@ namespace SecurityAccess.MultiTapMethod
                     // NOTE it's fc - i/o only compatible
                     if (!append)
                     {
-                  //      bw.Write((uint)FixedConfinedBuilder.Flags.InputOutputOnly);
+                        bw.Write((uint)FixedConfinedBuilder.Flags.InputOutputOnly);
                         // place holder for counter
                         bw.Write(0);
                     }

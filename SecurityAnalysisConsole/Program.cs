@@ -3,13 +3,28 @@ using SecurityAccess.Asx;
 using SecurityAccess.MultiTapMethod;
 using GaussianCore.Generic;
 using System.IO;
-using System.Linq;
-using GaussianCore.Classification;
+using System.Collections.Generic;
 
 namespace SecurityAnalysisConsole
 {
     class Program
     {
+        class ClassifierQuitter
+        {
+            public double SimilarThreshold { get; set; }
+
+            public ClassifierQuitter(double similarThreshold)
+            {
+                SimilarThreshold = similarThreshold;
+            }
+
+            public bool Quit(SimilarityClassifier.DistanceEntry de)
+            {
+                var d = Math.Sqrt(de.Distance);
+                return d > SimilarThreshold;
+            }
+        }
+
         static void ReorganiseFiles(string byDateDir, string byCodeDir, bool append = false)
         {
             var fr = new FileReorganiser(byDateDir, byCodeDir, Console.Out, append);
@@ -23,6 +38,35 @@ namespace SecurityAnalysisConsole
                 exportTxtToo ? ExtractHelper.ExportModes.Both : ExtractHelper.ExportModes.Binary,
                 Console.Out);
         }
+
+        static void ClassifyNew(string statisticsDir, string similarsDir)
+        {
+            Console.WriteLine("Preparing classification...");
+            var classifier = new SimilarityClassifier(statisticsDir);
+            classifier.Logger.Writers.Add(Console.Out);
+
+            var csets = classifier.GetCoreSets();
+            var sdl = classifier.GetOrderedSquareDistances(csets);
+
+            var cq = new ClassifierQuitter(0.1);
+            classifier.Classify(csets, sdl, cq.Quit, similarsDir);
+        }
+
+        static void ClassifyInc(string statisticsDir, string similarsDir)
+        {
+            var classifier = new SimilarityClassifier(statisticsDir);
+            classifier.ClassifyInc(similarsDir);
+        }
+
+        static FixedConfinedBuilder BuildFixedConfined(IList<string> codes, string srcDir, string savePath)
+        {
+            var coreManager = new FixedConfinedCoreManager();
+            var builder = new FixedConfinedBuilder(coreManager);
+            builder.BuildFromBinary(srcDir, codes);
+            builder.Save(savePath);
+            return builder;
+        }
+
 
         static void PrintWeightsToCsv(string statisticsDir, string csv)
         {
@@ -47,36 +91,14 @@ namespace SecurityAnalysisConsole
             }
         }
 
-        static void Predict(string code, string dcPath, string rawDir, TextWriter tw)
-        {
-            var sfs = rawDir.GetStockFiles();
-            var required = StatisticPoint.FirstCentralDay + 1;
-            var dses = sfs.GetDailyEntriesLast(code, required);
-            var input = dses.ToList().SuckOnlyInput(StatisticPoint.FirstCentralDay);
-            var fccm = new FixedConfinedCoreManager();
-            var dc = new DigioClassifier();
-            // TODO populate dc.CoreLists
-            dc.Load(dcPath);
-            fccm.Build(dc, code);
-            var prediction = fccm.Predict(input);
-            prediction.Export(tw);
-        }
-
-        static void Predict(string code, string dcPath, string historyPath, string inputPath, TextWriter tw)
+        static void Predict(string dataPath, string historyPath, string inputPath, TextWriter tw)
         {
             var input = PredictHelper.GetInputAsStaticPoint(historyPath, inputPath);
-            var fccm = new FixedConfinedCoreManager();
-            var dc = new DigioClassifier();
-            // TODO populate dc.CoreLists
-            dc.Load(dcPath);
-            fccm.Build(dc, code);
-            var prediction = fccm.Predict(input);
+            var coreManager = new FixedConfinedCoreManager();
+            var builder = new FixedConfinedBuilder(coreManager);
+            builder.Load(dataPath);
+            var prediction = coreManager.Predict(input);
             prediction.Export(tw);
-        }
-
-        private static void GenerateBatchFiles()
-        {
-            throw new NotImplementedException();
         }
 
         static void Main(string[] args)
@@ -86,12 +108,9 @@ namespace SecurityAnalysisConsole
                 var subcmd = args[0].ToLower();
                 switch (subcmd)
                 {
-                    case "-genbatches":
-                        GenerateBatchFiles();
-                        break;
                     case "-reorganise":
                         // args[1]: by-date dir, args[2]: by-code dir
-                        ReorganiseFiles(args[1], args[2]);
+                        ReorganiseFiles(args[1], args[2], false);
                         break;
                     case "-reorganise-inc":
                         // args[1]: by-date dir, args[2]: by-code dir
@@ -104,9 +123,35 @@ namespace SecurityAnalysisConsole
                     case "-suck":
                         SuckIntoStatistics(args[1], args[2], false);
                         break;
+                    case "-classify":
+                        ClassifyNew(args[1], args[2]);
+                        break;
+                    case "-classify-inc":
+                        ClassifyInc(args[1], args[2]);
+                        break;
                     case "-weights":
                         PrintWeightsToCsv(args[1], args[2]);
                         break;
+                    #region Naive prediction:...
+                    case "-build-fc-sel":
+                        {
+                            var codes = FixedConfinedBuilder.LoadCodeSelection(args[1]);
+                            var builder = BuildFixedConfined(codes, args[2], args[3]);
+                            if (args.Length > 4)
+                            {
+                                builder.ExportToText(args[4]);
+                            }
+                            break;
+                        }
+                    case "-build-fc":
+                        {
+                            var builder = BuildFixedConfined(new[] { args[1] }, args[2], args[3]);
+                            if (args.Length > 4)
+                            {
+                                builder.ExportToText(args[4]);
+                            }
+                            break;
+                        }
                     case "-prepare":
                         PreparePredict(args[1], args[2], args[3]);
                         break;
@@ -121,6 +166,7 @@ namespace SecurityAnalysisConsole
                             Predict(args[1], args[2], null, Console.Out);
                         }
                         break;
+                        #endregion
                 }
             }
             catch (Exception e)
