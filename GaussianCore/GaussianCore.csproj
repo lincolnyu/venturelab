@@ -40,25 +40,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classification\CoreAlphabeticComparer.cs" />
     <Compile Include="Classification\CoreExtension.cs" />
     <Compile Include="Classification\CoreInputMeanComparer.cs" />
     <Compile Include="Classification\DigioClassifier.cs" />
     <Compile Include="Classification\CoreDistanceHelper.cs" />
-    <Compile Include="Generic\CoreGeometryHelper.cs" />
+    <Compile Include="Classification\DigioClassifyInfo.cs" />
+    <Compile Include="Classification\DigioCoreBuilder.cs" />
     <Compile Include="Generic\FixedConfinedCoreManager.cs" />
     <Compile Include="Generic\GaussianConfinedCore.cs" />
     <Compile Include="Generic\GenericCore.cs" />
     <Compile Include="Generic\GenericCoreManager.cs" />
-    <Compile Include="Generic\VariableConfinedCoreManager.cs" />
+    <Compile Include="Helpers\ListHelper.cs" />
     <Compile Include="ICore.cs" />
     <Compile Include="ICoreManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Spheric\Component.cs" />
-    <Compile Include="Spheric\Core.cs" />
-    <Compile Include="Spheric\FixedCoreManager.cs" />
-    <Compile Include="Spheric\GaussianCoreManager.cs" />
-    <Compile Include="Spheric\VariableCoreManager.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -21,7 +21,12 @@ namespace GaussianCore.Generic
         /// </summary>
         public double[] K { get; }
 
-        public int Alpha { get; internal set; } = 5;
+        public double Alpha { get; internal set; } = 5;
+
+        /// <summary>
+        ///  The weight designated to this c
+        /// </summary>
+        public override double Weight { get; set; } = 1;
 
         #endregion
 
@@ -32,13 +37,7 @@ namespace GaussianCore.Generic
         public override double A(IList<double> inputs)
         {
             var a = C(inputs);
-            var l = 1.0;
-            for (var i = 0; i < L.Length; i++)
-            {
-                l *= L[i];
-            }
-            l = Math.Sqrt(Math.Abs(l));
-            a *= l; // to counteract the output coefficients
+            a *= Weight;
             return a;
         }
 
@@ -50,6 +49,11 @@ namespace GaussianCore.Generic
 
         #endregion
 
+        /// <summary>
+        ///  
+        /// </summary>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
         private double C(IList<double> inputs)
         {
             var s = 0.0;

@@ -40,19 +40,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Asx\DigioClassifyHelper.cs" />
     <Compile Include="Asx\FileReorganiser.cs" />
     <Compile Include="Asx\HistoryHelper.cs" />
     <Compile Include="Asx\DailyStockEntry.cs" />
     <Compile Include="Asx\InterpolationHelper.cs" />
     <Compile Include="Asx\IOutputFile.cs" />
     <Compile Include="Asx\SingleReorganiseHelper.cs" />
-    <Compile Include="MultiTapMethod\FixedConfinedBuilder.cs" />
+    <Compile Include="Helpers\ByDateFileHelper.cs" />
     <Compile Include="MultiTapMethod\IDictioanry.cs" />
     <Compile Include="MultiTapMethod\Prediction.cs" />
     <Compile Include="MultiTapMethod\PredictHelper.cs" />
     <Compile Include="MultiTapMethod\StatisticPoint.cs" />
     <Compile Include="MultiTapMethod\ExtractHelper.cs" />
-    <Compile Include="MultiTapMethod\SimilarityClassifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

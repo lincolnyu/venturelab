@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -47,6 +48,11 @@ namespace SecurityAccess.Asx
 
         #region Methods
 
+        /// <summary>
+        ///  returns a list of raw data file (files named by date containing all stock data on that day)
+        /// </summary>
+        /// <param name="srcDir">The folder that contains such files</param>
+        /// <returns>The list of all such files in ascending order by name (therefore date)</returns>
         public static IEnumerable<FileInfo> GetStockFiles(this string srcDir)
         {
             var dir = new DirectoryInfo(srcDir);
@@ -61,14 +67,15 @@ namespace SecurityAccess.Asx
 
         public static IEnumerable<DailyStockEntry> GetDailyEntries(this IEnumerable<FileInfo> srcFiles, string code)
         {
-            foreach (var file in srcFiles)
-            {
-                var dses = file.FullName.ReadDailyStockEntries().Where(x=>x.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
-                foreach (var dse in dses)
-                {
-                    yield return dse;
-                }
-            }
+            return srcFiles.SelectMany(file => file.FullName.ReadDailyStockEntries().Where(x=>x.Code.Equals(code, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        public static IEnumerable<DailyStockEntry> GetDailyEntriesLast(this IEnumerable<FileInfo> srcFiles, string code,
+            int lastCount)
+        {
+            var rev = srcFiles.Reverse();
+            var res = rev.GetDailyEntries(code).Reverse();
+            return res.TakeWhile(e => --lastCount > 0);
         }
 
         /// <summary>

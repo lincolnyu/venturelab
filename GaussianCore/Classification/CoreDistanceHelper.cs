@@ -9,6 +9,76 @@ namespace GaussianCore.Classification
     {
         #region Methods
 
+        /// <summary>
+        ///  Returns the absolute distance between the inputs of the two cores
+        /// </summary>
+        /// <param name="core1">The first core</param>
+        /// <param name="core2">The second core</param>
+        /// <returns>The distance</returns>
+        public static double GetInputAbsDistance(this ICore core1, ICore core2)
+        {
+            var absd = 0.0;
+            for (var i = 0; i < core1.CentersInput.Count; i++)
+            {
+                var c1 = core1.CentersInput[i];
+                var c2 = core2.CentersInput[i];
+                var d = Math.Abs(c2 - c1);
+                absd += d;
+            }
+            return absd;
+        }
+
+        /// <summary>
+        ///  Returns the absolute distance between the outputs of the two cores
+        /// </summary>
+        /// <param name="core1">The first core</param>
+        /// <param name="core2">The second core</param>
+        /// <returns>The distance</returns>
+        public static double GetOutputAbsDistance(this ICore core1, ICore core2)
+        {
+            var absd = 0.0;
+            for (var i = 0; i < core1.CentersOutput.Count; i++)
+            {
+                var c1 = core1.CentersOutput[i];
+                var c2 = core2.CentersOutput[i];
+                var d = Math.Abs(c2 - c1);
+                absd += d;
+            }
+            return absd;
+        }
+
+        /// <summary>
+        ///  Returns the mean absolute distance between the inputs of the two cores
+        /// </summary>
+        /// <param name="core1">The first core</param>
+        /// <param name="core2">The second core</param>
+        /// <returns>The distance</returns>
+        public static double GetInputMeanAbsDistance(this ICore core1, ICore core2)
+        {
+            var d = core1.GetInputAbsDistance(core2);
+            d /= core1.CentersInput.Count;
+            return d;
+        }
+
+        /// <summary>
+        ///  Returns the mean absolute distance between the outputs of the two cores
+        /// </summary>
+        /// <param name="core1"></param>
+        /// <param name="core2"></param>
+        /// <returns></returns>
+        public static double GetOutputMeanAbsDistance(this ICore core1, ICore core2)
+        {
+            var d = core1.GetOutputAbsDistance(core2);
+            d /= core1.CentersOutput.Count;
+            return d;
+        }
+
+        /// <summary>
+        ///  Returns the euclidian square distance of inputs between two cores 
+        /// </summary>
+        /// <param name="core1">The first core</param>
+        /// <param name="core2">The second core</param>
+        /// <returns>The square distance</returns>
         public static double GetInputSquareDistance(this ICore core1, ICore core2)
         {
             var sqd = 0.0;
@@ -23,6 +93,48 @@ namespace GaussianCore.Classification
             return sqd;
         }
 
+        public static double GetInputDifferenceAbs(this ICore core1, ICore core2)
+        {
+            var sumd = 0.0;
+            for (var i = 0; i < core1.CentersInput.Count; i++)
+            {
+                var c1 = core1.CentersInput[i];
+                var c2 = core2.CentersInput[i];
+                var d = c2 - c1;
+                sumd += d;
+            }
+            return Math.Abs(sumd);
+        }
+
+        /// <summary>
+        ///  returns the square of the sum of difference between each input component pair
+        /// </summary>
+        /// <param name="core1">The first core</param>
+        /// <param name="core2">The second core</param>
+        /// <returns>The square of the sum of the difference</returns>
+        /// <remarks>
+        ///  Note the inequality: 
+        ///   a1^2+a2^2+...+aN^2 >= (a1+a2+...+aN)^2 / N
+        /// </remarks>
+        public static double GetInputDifferenceSquare(this ICore core1, ICore core2)
+        {
+            var sumd = 0.0;
+            for (var i = 0; i < core1.CentersInput.Count; i++)
+            {
+                var c1 = core1.CentersInput[i];
+                var c2 = core2.CentersInput[i];
+                var d = c2 - c1;
+                sumd += d;
+            }
+            return sumd*sumd;
+        }
+
+        /// <summary>
+        ///  returns the square of the sum of difference between each output component pair
+        /// </summary>
+        /// <param name="core1">The first core</param>
+        /// <param name="core2">The second core</param>
+        /// <returns>The square of the sum of the difference</returns>
         public static double GetOutputSquareDistance(this ICore core1, ICore core2)
         {
             var sqd = 0.0;
@@ -36,6 +148,7 @@ namespace GaussianCore.Classification
             }
             return sqd;
         }
+
 
         public static double GetQuanbenDistance(this IList<ICore> cl1, IList<ICore> cl2)
         {

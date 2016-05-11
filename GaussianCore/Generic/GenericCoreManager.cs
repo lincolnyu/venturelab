@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GaussianCore.Generic
 {
@@ -32,13 +33,7 @@ namespace GaussianCore.Generic
 
         public double GetIntensity(IList<double> inputs, IList<double> outputs)
         {
-            var sum = 0.0;
-            foreach (var core in this)
-            {
-                var i = core.GetIntensity(inputs, outputs);
-                sum += i;
-            }
-            return sum;
+            return this.Sum(core => core.GetIntensity(inputs, outputs));
         }
 
         public double GetExpectedY(IList<double> inputs, int k)
@@ -47,7 +42,7 @@ namespace GaussianCore.Generic
             var num = 0.0;
             foreach (var core in this)
             {
-                var a = core.A(inputs) * core.Weight * core.InvLCoeff;
+                var a = core.A(inputs) * core.InvLCoeff;
                 if (a >= EpsilonY)
                 {
                     var b = core.B(inputs);
@@ -66,7 +61,7 @@ namespace GaussianCore.Generic
             var num = 0.0;
             foreach (var core in this)
             {
-                var a = core.A(inputs) * core.Weight * core.InvLCoeff;
+                var a = core.A(inputs) * core.InvLCoeff;
                 if (a >= EpsilonSquareY)
                 {
                     var b = core.B(inputs);
@@ -83,6 +78,8 @@ namespace GaussianCore.Generic
         }
         
         #endregion
+
+        public abstract void AddCore(GenericCore core);
 
         #endregion
     }

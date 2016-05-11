@@ -1,6 +1,8 @@
 ﻿using SecurityAccess.Asx;
 using System;
+using System.IO;
 using System.Linq;
+using SecurityAccess.Helpers;
 
 namespace SecurityAccess.MultiTapMethod
 {
@@ -8,6 +10,60 @@ namespace SecurityAccess.MultiTapMethod
     {
         #region Methods
 
+        public static StatisticPoint GetInputAt(string code, DateTime firstDay, 
+            string byDateDir, string byCodeDir)
+        {
+            var len = StatisticPoint.FirstCentralDay + 1;
+            // gets from code file first if it can as it only requires to read one file
+            // it's assumed the by code file most likely contains date no later than the earlist of the history files
+            var codeFilePath = Path.Combine(byCodeDir, code + ".txt");
+            var fromCode = codeFilePath.ReadDailyStockEntries().Where(x => x.Date >= firstDay)
+                .Take(len);
+            var fcList = fromCode.ToList();
+            if (fcList.Count >= len)
+            {
+                // we've got all we need
+                return fcList.GetRange(0, len).SuckOnlyInput(0);
+            }
+            string dayStr;
+            if (fcList.Count > 0)
+            {
+                var first = fcList.First().Date;
+                if (first > firstDay)
+                {
+                    // see if by date has possibly any earlier data
+                    var firstDayStr = firstDay.DateToString();
+                    var readtoDayStr = first.DateToString();
+                    var dir1 = new DirectoryInfo(byDateDir);
+                    var front = dir1.GetStockEntriesFromDate(code, firstDayStr)
+                        .TakeWhile(x => x.Date.CompareTo(readtoDayStr) < 0);
+                    fcList = front.Concat(fcList).ToList();
+                    if (fcList.Count >= len)
+                    {
+                        return fcList.GetRange(0, len).SuckOnlyInput(0);
+                    }
+                }
+                var last = fcList.Last().Date.AddDays(1);
+                dayStr = last.DateToString();
+            }
+            else
+            {
+                dayStr = firstDay.DateToString();
+            }
+            var shortfall = len - fcList.Count;
+            // gets the rest from the by date file
+            var dir = new DirectoryInfo(byDateDir);
+            var append = dir.GetStockEntriesFromDate(code, dayStr).Take(shortfall);
+            fcList = fcList.Concat(append).ToList();
+            return fcList.Count < len ? null : fcList.SuckOnlyInput(0);
+        }
+
+        /// <summary>
+        ///  Returns the point that represents the current loaded from files
+        /// </summary>
+        /// <param name="historyPath">The path to the history</param>
+        /// <param name="inputPath">The input path that extends the history if any</param>
+        /// <returns>The current point based on which predict value is to be calculated</returns>
         public static StatisticPoint GetInputAsStaticPoint(string historyPath, string inputPath = null)
         {
             var required = StatisticPoint.FirstCentralDay + 1;

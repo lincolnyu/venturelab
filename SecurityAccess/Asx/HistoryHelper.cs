@@ -60,15 +60,24 @@ namespace SecurityAccess.Asx
 
         public static string DateToString(this DateTime date)
         {
-            return string.Format("{0:0000}{1:00}{2:00}", date.Year, date.Month, date.Day);
+            return $"{date.Year:0000}{date.Month:00}{date.Day:00}";
         }
 
         public static string GetOutputFileName(this string dir, string code)
         {
-            var fn = string.Format("{0}.txt", code);
+            var fn = $"{code}.txt";
             return Path.Combine(dir, fn);
         }
 
+        /// <summary>
+        ///  Reads entries from stock sequence file and put them in the cyclic buffer
+        /// </summary>
+        /// <param name="fn">The file to read from</param>
+        /// <param name="buffer">The buffer</param>
+        /// <param name="bufferStart">The start of the buffer</param>
+        /// <param name="bufferEnd">The end of the buffer</param>
+        /// <param name="i">current point the data is written to</param>
+        /// <returns>number of days read</returns>
         public static int ReadDailyStockEntriesToBuffer(this string fn, 
             DailyStockEntry[] buffer, int bufferStart, int bufferEnd, ref int i)
         {
@@ -104,40 +113,47 @@ namespace SecurityAccess.Asx
         ///  Reads dse sequence from the specified file (normally a by date raw file but
         ///  it doesn't have to, as far as it uses the standard format)
         /// </summary>
-        /// <param name="fn"></param>
-        /// <returns></returns>
+        /// <param name="fn">The file</param>
+        /// <returns>The ordered list of entries read from the file</returns>
         public static IEnumerable<DailyStockEntry> ReadDailyStockEntries(this string fn)
         {
-            DailyStockEntry data = new DailyStockEntry();
             using (var sr = new StreamReader(fn))
             {
-                while (!sr.EndOfStream)
-                {
-                    var line = sr.ReadLine();
-                    if (line.ReadDailyStockEntry(data))
-                    {
-                        yield return data;
-                        data = new DailyStockEntry();
-                    }
-                }
+                return sr.ReadDailyStockEntries();
             }
         }
 
-        public static bool ReadDailyStockEntry(this string line, DailyStockEntry dse)
+        public static IEnumerable<DailyStockEntry> ReadDailyStockEntries(this StreamReader sr)
+        {
+            while (!sr.EndOfStream)
+            {
+                var line = sr.ReadLine();
+                var data = line.ReadDailyStockEntry();
+                if (data != null)
+                {
+                    yield return data;
+                }
+            }
+        } 
+
+        public static DailyStockEntry ReadDailyStockEntry(this string line)
         {
             var columns = line.Split(',');
             if (columns.Length != 7)
             {
-                return false;
+                return null;
             }
-            dse.Code = columns[0];
-            dse.Date = columns[1].StringToDate();
-            dse.Open = double.Parse(columns[2]);
-            dse.High = double.Parse(columns[3]);
-            dse.Low = double.Parse(columns[4]);
-            dse.Close = double.Parse(columns[5]);
-            dse.Volume = double.Parse(columns[6]);
-            return true;
+            var dse = new DailyStockEntry
+            {
+                Code = columns[0],
+                Date = columns[1].StringToDate(),
+                Open = double.Parse(columns[2]),
+                High = double.Parse(columns[3]),
+                Low = double.Parse(columns[4]),
+                Close = double.Parse(columns[5]),
+                Volume = double.Parse(columns[6])
+            };
+            return dse;
         }
 
         public static void WriteDailyStockEntry(this StreamWriter output, DailyStockEntry dse)
@@ -150,8 +166,7 @@ namespace SecurityAccess.Asx
             DateTime date, double open, double high, double low, double close, double volume)
         {
             var dateStr = date.DateToString();
-            var line = string.Format("{0},{1},{2},{3},{4},{5},{6}", code,
-                dateStr, open, high, low, close, volume);
+            var line = $"{code},{dateStr},{open},{high},{low},{close},{volume}";
             output.WriteLine(line);
         }
 
@@ -165,8 +180,7 @@ namespace SecurityAccess.Asx
            DateTime date, double open, double high, double low, double close, double volume)
         {
             var dateStr = date.DateToString();
-            var line = string.Format("{0},{1},{2},{3},{4},{5}", code,
-                dateStr, open, high, low, close, volume);
+            var line = $"{code},{dateStr},{open},{high},{low},{close},{volume}";
             await output.WriteLineAsync(line);
         }
 

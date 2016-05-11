@@ -1,14 +1,15 @@
-﻿using SecurityAccess.Asx;
-using SecurityAccess.MultiTapMethod;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using GaussianCore;
+using GaussianCore.Generic;
+using SecurityAccess.Asx;
 
-namespace SecurityAccess
+namespace SecurityAccess.MultiTapMethod
 {
     /// <summary>
-    ///  extracts statistic point from raw stock data.
+    ///  extracts statistic points from raw stock data.
     /// </summary>
     public static class ExtractHelper
     {
@@ -26,18 +27,17 @@ namespace SecurityAccess
         #region Methods
 
         /// <summary>
-        ///  Sucks data and creates model
+        ///  Converts raw sequences to statistic model model (points)
         /// </summary>
-        /// <param name="dir">The directory the files are in</param>
-        /// <param name="data">data in chronical order (oldest first)</param>
-        /// <param name="start">days from the first one that is late enough to make 
-        /// statistic point to the day to start the processing with</param>
+        /// <param name="data">Time series data in chronical order (oldest first)</param>
+        /// <param name="start">number of days from the first one that is late enough to make 
+        /// statistic point to the day to start the processing with; 0 means starts from that first possible day</param>
         /// <param name="interval">interval in number of days</param>
         /// <param name="count">total number of statistic point to try to extract</param>
-        public static IEnumerable<StatisticPoint> Suck(this IList<DailyStockEntry> data, int start, int interval, 
+        public static IEnumerable<StatisticPoint> Suck(this IList<DailyStockEntry> data, int start, int interval,
             int count = int.MaxValue)
         {
-            for (var i = StatisticPoint.FirstCentralDay + start; count > 0 
+            for (var i = StatisticPoint.FirstCentralDay + start; count > 0
                 && i < data.Count - StatisticPoint.MinDistToEnd; i++, count--)
             {
                 var sp = data.SuckOne(i);
@@ -46,6 +46,39 @@ namespace SecurityAccess
             }
         }
 
+        public static IEnumerable<ICore> LoadCores(BinaryReader br, int count, int start = 0, int step = 1)
+        {
+            const int inputLen = 22;
+            const int outputLen = 6;
+            const int chunkSize = sizeof(double) * (inputLen + outputLen);
+            var offset = start * chunkSize;
+            var stride = (step - 1) * chunkSize;
+            br.BaseStream.Position = offset;
+            for (var i = 0; i < count && br.BaseStream.Position  < br.BaseStream.Length; i++)
+            {
+                var core = new GaussianConfinedCore(22, 6);
+                for (var j = 0; j < 22; j++)
+                {
+                    core.CentersInput[j] = br.ReadDouble();
+                }
+                for (var j = 0; j < 6; j++)
+                {
+                    core.CentersOutput[j] = br.ReadDouble();
+                }
+                yield return core;
+                if (step > 1)
+                {
+                    br.BaseStream.Position += stride;
+                }
+            }
+        }
+        
+        /// <summary>
+        ///  Sucks only the input part
+        /// </summary>
+        /// <param name="data">Time series data in chronical order (oldest first)</param>
+        /// <param name="start">The starting point relative to the start of the time series</param>
+        /// <returns>The static point (which has only the input part updated by this method)</returns>
         public static StatisticPoint SuckOnlyInput(this IList<DailyStockEntry> data, int start)
         {
             var sp = new StatisticPoint();
@@ -132,9 +165,15 @@ namespace SecurityAccess
             return sp;
         }
 
+        /// <summary>
+        ///  Process one data point
+        /// </summary>
+        /// <param name="data">The time series</param>
+        /// <param name="start">The offset to the natural start of the time series</param>
+        /// <returns></returns>
         public static StatisticPoint SuckOne(this IList<DailyStockEntry> data, int start)
         {
-            var sp = data.SuckOnlyInput(start);   
+            var sp = data.SuckOnlyInput(start);
 
             // future prices
 
@@ -170,12 +209,23 @@ namespace SecurityAccess
             return sp;
         }
 
+        /// <summary>
+        ///  returns the logarithm of the input relative to the reverence value:
+        /// </summary>
+        /// <param name="v">The input</param>
+        /// <param name="refval">The reference value</param>
+        /// <returns>The logarithmic result</returns>
         public static double GetLogarithm(double v, double refval)
         {
             var res = (Math.Log(v) - Math.Log(refval)) / Math.Log(2);
             return res;
         }
 
+        /// <summary>
+        ///  Writes the specified static point to the textual file
+        /// </summary>
+        /// <param name="p">The static point to write</param>
+        /// <param name="tw">The textual stream to write to</param>
         public static void Write(StatisticPoint p, TextWriter tw)
         {
             tw.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},"
@@ -210,6 +260,11 @@ namespace SecurityAccess
                 GetLogarithm(p.FP65, p.P1C));
         }
 
+        /// <summary>
+        ///  Writes a static point to binarya file
+        /// </summary>
+        /// <param name="p">The point</param>
+        /// <param name="bw">The binary stream</param>
         private static void Write(StatisticPoint p, BinaryWriter bw)
         {
             bw.Write(GetLogarithm(p.P1O, p.P1C));
@@ -243,6 +298,11 @@ namespace SecurityAccess
             bw.Write(GetLogarithm(p.FP65, p.P1C));
         }
 
+        /// <summary>
+        ///  generates the logarithmic input from data point (which contains original levels) for prediction
+        /// </summary>
+        /// <param name="p">The data point</param>
+        /// <param name="input">The logarithmic input</param>
         public static void GenerateInput(this StatisticPoint p, IList<double> input)
         {
             input[0] = GetLogarithm(p.P1O, p.P1C);
@@ -269,13 +329,11 @@ namespace SecurityAccess
             input[21] = GetLogarithm(p.V260, p.V1);
         }
 
-        public static void ProcessFiles(this string srcDir, string dstDir,
-            ExportModes mode = ExportModes.Binary, TextWriter logWriter = null)
+        public static IDictionary<string, int> GetLengths(string statisticsDir)
         {
-            var srcDirInfo = new DirectoryInfo(srcDir);
-            var srcFiles = srcDirInfo.GetFiles();
-
-            var infoFile = Path.Combine(dstDir, "_info.txt");
+            // The info file that contains the descriptions of existing data point files
+            // mainly the number of existing data points of each data point file
+            var infoFile = Path.Combine(statisticsDir, "_info.txt");
             var lengths = new Dictionary<string, int>();
             if (File.Exists(infoFile))
             {
@@ -291,6 +349,36 @@ namespace SecurityAccess
                     }
                 }
             }
+            return lengths;
+        }
+
+        public static void UpdateLengthFile(string statisticsDir, IDictionary<string, int> lengths)
+        {
+            var infoFile = Path.Combine(statisticsDir, "_info.txt");
+            using (var sw = new StreamWriter(infoFile))
+            {
+                foreach (var kvp in lengths)
+                {
+                    sw.WriteLine("{0}:{1}", kvp.Key, kvp.Value);
+                }
+            }
+        }
+
+
+        /// <summary>
+        ///  main entry that starts the process of converting the raw time-series data to data points
+        /// </summary>
+        /// <param name="srcDir">The source directory where all the time-series data is kept</param>
+        /// <param name="dstDir">The target directory where data point files are kept</param>
+        /// <param name="mode">binary, textual or both</param>
+        /// <param name="logWriter">The writer that writes log file if needed</param>
+        public static void ProcessFiles(this string srcDir, string dstDir,
+            ExportModes mode = ExportModes.Binary, TextWriter logWriter = null)
+        {
+            var srcDirInfo = new DirectoryInfo(srcDir);
+            var srcFiles = srcDirInfo.GetFiles();
+
+            var lengths = GetLengths(dstDir);
 
             foreach (var srcFile in srcFiles.OrderBy(x => x.Name))
             {
@@ -338,17 +426,18 @@ namespace SecurityAccess
                 lengths[code] = len + count;
             }
 
-            using (var sw = new StreamWriter(infoFile))
-            {
-                foreach (var kvp in lengths)
-                {
-                    sw.WriteLine("{0}:{1}", kvp.Key, kvp.Value);
-                }
-            }
+            UpdateLengthFile(dstDir, lengths);
 
             logWriter.WriteLine("All processed.");
         }
 
+        /// <summary>
+        ///  gets the static points from the file startign from the specified offset (specified number
+        ///  of possible data points)
+        /// </summary>
+        /// <param name="srcPath">The file that contains time-series data</param>
+        /// <param name="start">The starting data point</param>
+        /// <returns>The points</returns>
         private static IEnumerable<StatisticPoint> GetStatisticPoints(string srcPath, int start)
         {
             var entries = srcPath.ReadDailyStockEntries().ToList();
@@ -357,6 +446,13 @@ namespace SecurityAccess
             return statisticPoints;
         }
 
+        /// <summary>
+        ///  writes the data points to textual file
+        /// </summary>
+        /// <param name="statisticPoints">The data points</param>
+        /// <param name="dstPath">The path to the textual file</param>
+        /// <param name="append">If it is to append to the file</param>
+        /// <returns>The number of points written</returns>
         public static int ExportText(this IEnumerable<StatisticPoint> statisticPoints, string dstPath, 
             bool append)
         {
@@ -367,6 +463,13 @@ namespace SecurityAccess
             }
         }
 
+        /// <summary>
+        ///  Writes the data points to binary file
+        /// </summary>
+        /// <param name="statisticPoints">The data points</param>
+        /// <param name="dstPath">The path to the textual file</param>
+        /// <param name="append">If it is to append to the file</param>
+        /// <returns>The number of points written</returns>
         public static int ExportBinary(this IEnumerable<StatisticPoint> statisticPoints, string dstPath, bool append)
         {
             int originalCount = 0;
@@ -389,7 +492,7 @@ namespace SecurityAccess
                     // NOTE it's fc - i/o only compatible
                     if (!append)
                     {
-                        bw.Write((uint)FixedConfinedBuilder.Flags.InputOutputOnly);
+                  //      bw.Write((uint)FixedConfinedBuilder.Flags.InputOutputOnly);
                         // place holder for counter
                         bw.Write(0);
                     }
@@ -404,6 +507,14 @@ namespace SecurityAccess
             }
         }
 
+        /// <summary>
+        ///  Exports the data points to both binary and text files
+        /// </summary>
+        /// <param name="statisticPoints">The data points</param>
+        /// <param name="datPath">The binary file</param>
+        /// <param name="txtPath">The text file</param>
+        /// <param name="append">whether to append</param>
+        /// <returns>The number of data points written</returns>
         public static int ExportBinaryAndText(this IEnumerable<StatisticPoint> statisticPoints, 
             string datPath, string txtPath, bool append)
         {
@@ -421,11 +532,11 @@ namespace SecurityAccess
         }
 
         /// <summary>
-        ///  Writes a sequence of points in order to text
+        ///  Writes data points to text file
         /// </summary>
-        /// <param name="points"></param>
-        /// <param name="tw"></param>
-        /// <returns></returns>
+        /// <param name="points">The data points</param>
+        /// <param name="tw">The text to write to</param>
+        /// <returns>The number of points written</returns>
         public static int Write(this IEnumerable<StatisticPoint> points, TextWriter tw)
         {
             var count = 0;
@@ -437,6 +548,12 @@ namespace SecurityAccess
             return count;
         }
 
+        /// <summary>
+        /// Writes data points to binary file
+        /// </summary>
+        /// <param name="points">The data points</param>
+        /// <param name="bw">The binary file to write to</param>
+        /// <returns>The number of points written</returns>
         public static int Write(this IEnumerable<StatisticPoint> points, BinaryWriter bw)
         {
             var count = 0;
@@ -448,6 +565,13 @@ namespace SecurityAccess
             return count;
         }
 
+        /// <summary>
+        ///  Writes data points to both text and binary file
+        /// </summary>
+        /// <param name="points">The data points</param>
+        /// <param name="bw">The binary file to write to</param>
+        /// <param name="tw">The text to write to</param>
+        /// <returns>The number of points written</returns>
         public static int Write(this IEnumerable<StatisticPoint> points, BinaryWriter bw, TextWriter tw)
         {
             var count = 0;

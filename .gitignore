@@ -3,12 +3,13 @@
 ################################################################################
 
 *.suo
-/GaussianCore/bin/Debug
-/GaussianCore/obj/Debug
+/GaussianCore/bin
+/GaussianCore/obj
 /GaussianCore.Sample2D/bin/Debug
 /GaussianCore.Sample2D/obj/Debug
-/SecurityAccess/bin/Debug
-/SecurityAccess/obj/Debug
-/SecurityAnalysisConsole/bin/Debug
-/SecurityAnalysisConsole/obj/Debug
+/SecurityAccess/bin
+/SecurityAccess/obj
+/SecurityAnalysisConsole/bin
+/SecurityAnalysisConsole/obj
 *.user
+
