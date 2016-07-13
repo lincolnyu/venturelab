@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1C47208E-8F5E-41A9-A4B7-325877C1A136}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VentureLab</RootNamespace>
+    <AssemblyName>VentureLab</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Asx\DailyEntry.cs" />
+    <Compile Include="Asx\Expectation.cs" />
+    <Compile Include="Asx\SampleAccessor.cs" />
+    <Compile Include="Helpers\AsxSamplingHelper.cs" />
+    <Compile Include="Asx\Stock.cs" />
+    <Compile Include="Asx\StockManager.cs" />
+    <Compile Include="Asx\StockPoint.cs" />
+    <Compile Include="Helpers\AsxFileHelper.cs" />
+    <Compile Include="Helpers\DistanceHelper.cs" />
+    <Compile Include="Helpers\HashingHelper.cs" />
+    <Compile Include="Prediction\IPredictor.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QbClustering\AbsStrainAdapter.cs" />
+    <Compile Include="QbClustering\SimpleScorer.cs" />
+    <Compile Include="QbClustering\IScorer.cs" />
+    <Compile Include="QbClustering\SqrStrainAdapter.cs" />
+    <Compile Include="QbClustering\IStrain.cs" />
+    <Compile Include="QbClustering\Strain.cs" />
+    <Compile Include="QbClustering\StrainAdapter.cs" />
+    <Compile Include="QbClustering\StrainPair.cs" />
+    <Compile Include="QbClustering\IStrainPoint.cs" />
+    <Compile Include="QbClustering\StrainsHelper.cs" />
+    <Compile Include="QbClustering\ScoreTable.cs" />
+    <Compile Include="QbGaussianMethod\Cores\IWeightedCore.cs" />
+    <Compile Include="QbGaussianMethod\Helpers\ConfinedGaussian.cs" />
+    <Compile Include="QbGaussianMethod\Cores\ICore.cs" />
+    <Compile Include="QbGaussianMethod\Cores\GaussianRegulatedCore.cs" />
+    <Compile Include="QbGaussianMethod\Cores\IPoint.cs" />
+    <Compile Include="QbGaussianMethod\Cores\IPointFactory.cs" />
+    <Compile Include="QbGaussianMethod\Helpers\Generic.cs" />
+    <Compile Include="QbGaussianMethod\Cores\Point.cs" />
+    <Compile Include="QbGaussianMethod\Predictors\ConfinedGaussianPredictor.cs" />
+    <Compile Include="QbGaussianMethod\Predictors\GenericPredictor.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

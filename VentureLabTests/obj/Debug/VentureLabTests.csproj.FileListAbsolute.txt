@@ -1,10 +1,8 @@
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureLabTests.exe.config
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureLabTests.exe
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureLabTests.pdb
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\obj\Debug\VentureLabTests.csprojResolveAssemblyReference.cache
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\obj\Debug\VentureLabTests.exe
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\obj\Debug\VentureLabTests.pdb
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\bin\Debug\SecurityAccess.dll
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\bin\Debug\GaussianCore.dll
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\bin\Debug\SecurityAccess.pdb
-C:\Users\yiwei.yu\Source\Repos\venturelab\VentureLabTests\bin\Debug\GaussianCore.pdb
+C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\bin\Debug\VentureLabTests.dll
+C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\bin\Debug\VentureLabTests.pdb
+C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\bin\Debug\VentureLab.dll
+C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\bin\Debug\VentureLab.pdb
+C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\obj\Debug\VentureLabTests.csprojResolveAssemblyReference.cache
+C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\obj\Debug\VentureLabTests.dll
+C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\obj\Debug\VentureLabTests.pdb
