@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace VentureLab.Asx
 {
@@ -27,6 +28,19 @@ namespace VentureLab.Asx
                 Data.Insert(index, de);
             }
             return true;
+        }
+
+        public int GetIndex(DateTime date)
+        {
+            var dummy = new DailyEntry { Date = date.Date };
+            var index = Data.BinarySearch(dummy);
+            return index;
+        }
+
+        public int GetInsertIndex(DateTime date)
+        {
+            var index = GetIndex(date);
+            return index >= 0 ? index : -index - 1;
         }
     }
 }

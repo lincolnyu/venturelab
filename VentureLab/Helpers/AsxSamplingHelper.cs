@@ -7,13 +7,18 @@ namespace VentureLab.Helpers
 {
     public static class AsxSamplingHelper
     {
-        public static IEnumerable<IStrainPoint> Sample(this IPointFactory pointFactory,
-            IList<DailyEntry> data, int start, int end, int interval)
+        public static SampleAccessor CreateSampleAccessor(this IPointFactory pointFactory)
+        {
+            var point = (IStrainPoint)pointFactory.Create();
+            var sa = new SampleAccessor(point);
+            return sa;
+        }
+
+        public static IEnumerable<IStrainPoint> Sample(this IPointFactory pointFactory, IList<DailyEntry> data, int start, int end, int interval)
         {
             for (var i = start; i < end; i += interval)
             {
-                var point = (IStrainPoint)pointFactory.Create();
-                var sa = new SampleAccessor(point);
+                var sa = pointFactory.CreateSampleAccessor();
                 sa.SampleOne(data, i);
                 yield return sa.StrainPoint;
             }
@@ -30,7 +35,7 @@ namespace VentureLab.Helpers
             start = SampleAccessor.DaysBefore;
             end = len - SampleAccessor.DaysAfter;
         }
-
+        
         public static void SampleOne(this SampleAccessor sa, IList<DailyEntry> data, int day0)
         {
             sa.SampleOneInput(data, day0);

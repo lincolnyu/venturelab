@@ -1,10 +1,10 @@
-﻿using System;
-
-namespace VentureLab.QbClustering
+﻿namespace VentureLab.QbClustering
 {
     public class SimpleScorer : IScorer
     {
-        public SimpleScorer(double inputDiffTolerance, double outputDiffNormalizer, double outputPenalty = 2)
+        public const double DefaultOutputPenalty = 2;
+
+        public SimpleScorer(double inputDiffTolerance, double outputDiffNormalizer, double outputPenalty = DefaultOutputPenalty)
         {
             InputDiffTolerance = inputDiffTolerance;
             OutputDiffNormalizer = outputDiffNormalizer;

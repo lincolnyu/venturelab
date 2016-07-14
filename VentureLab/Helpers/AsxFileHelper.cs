@@ -60,20 +60,25 @@ namespace VentureLab.Helpers
             }
         }
 
-        public static bool IsAsxDateFile(string fileName, out DateTime date)
+        public static bool TryParseCompactDateString(string dateStr, out DateTime date)
         {
-            var fnwoext = Path.GetFileNameWithoutExtension(fileName);
             date = default(DateTime);
-            if (fnwoext.Length != 8) return false;
-            var yrstr = fnwoext.Substring(0, 4);
-            var mthstr = fnwoext.Substring(4, 2);
-            var daystr = fnwoext.Substring(6, 2);
+            if (dateStr == null || dateStr.Length != 8) return false;
+            var yrstr = dateStr.Substring(0, 4);
+            var mthstr = dateStr.Substring(4, 2);
+            var daystr = dateStr.Substring(6, 2);
             int yr, mth, day;
             if (!int.TryParse(yrstr, out yr)) return false;
             if (!int.TryParse(mthstr, out mth)) return false;
             if (!int.TryParse(daystr, out day)) return false;
             date = new DateTime(yr, mth, day);
             return true;
+        }
+
+        public static bool IsAsxDateFile(string fileName, out DateTime date)
+        {
+            var fnwoext = Path.GetFileNameWithoutExtension(fileName);
+            return TryParseCompactDateString(fnwoext, out date);
         }
 
         private static bool TryParseLine(string line, out string code, out DailyEntry de)

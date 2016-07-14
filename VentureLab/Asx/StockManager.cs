@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using VentureLab.Helpers;
 using VentureLab.QbClustering;
 using VentureLab.QbGaussianMethod.Cores;
@@ -10,21 +12,58 @@ namespace VentureLab.Asx
     {
         public delegate ScoreTable GetScoresMethod(IList<IStrain> strains, StrainAdapter adapter, IScorer scorer);
 
+        public delegate void LoadStrainCallback(IPointFactory pointFactory, StockItem stockItem);
+
         public class StockItem : Strain
         {
             public StockItem(Stock stock)
             {
                 Stock = stock;
             }
+
             public Stock Stock { get; }
 
             public Dictionary<StockItem, double> Weights = new Dictionary<StockItem, double>();
 
+            public SampleAccessor SampleInput(IPointFactory pointFactory, int index)
+            {
+                var sa = pointFactory.CreateSampleAccessor();
+                sa.SampleOneInput(Stock.Data, index);
+                return sa;
+            }
+
             public void LoadStrain(IPointFactory pointFactory, int interval = 1)
             {
-                int start, end;
-                AsxSamplingHelper.GetStartAndEnd(Stock.Data.Count, out start, out end);
-                Points = pointFactory.Sample(Stock.Data, start, end, interval).ToList();
+                int firstIndex, lastIndex;
+                AsxSamplingHelper.GetStartAndEnd(Stock.Data.Count, out firstIndex, out lastIndex);
+                Points = pointFactory.Sample(Stock.Data, firstIndex, lastIndex, interval).ToList();
+            }
+
+            public void LoadStrain(IPointFactory pointFactory, DateTime start, DateTime end, int interval = 1)
+            {
+                int firstIndex, lastIndex;
+                AsxSamplingHelper.GetStartAndEnd(Stock.Data.Count, out firstIndex, out lastIndex);
+                var startIndex = Stock.GetInsertIndex(start);
+                var endIndex = Stock.GetInsertIndex(end);
+                startIndex = Math.Max(firstIndex, startIndex);
+                endIndex = Math.Min(lastIndex, endIndex);
+                if (startIndex < endIndex)
+                {
+                    Points = pointFactory.Sample(Stock.Data, startIndex, endIndex, interval).ToList();
+                }
+            }
+
+            public void LoadStrain(IPointFactory pointFactory, int startToFirst, int count, int interval = 1)
+            {
+                int firstIndex, lastIndex;
+                AsxSamplingHelper.GetStartAndEnd(Stock.Data.Count, out firstIndex, out lastIndex);
+                var startIndex = firstIndex + startToFirst;
+                var endIndex = startIndex + (count - 1) * interval + 1;
+                endIndex = Math.Min(lastIndex, endIndex);
+                if (startIndex < endIndex)
+                {
+                    Points = pointFactory.Sample(Stock.Data, startIndex, endIndex, interval).ToList();
+                }
             }
         }
 
@@ -40,6 +79,23 @@ namespace VentureLab.Asx
             }
             return stockItem.Stock.Add(de);
         }
+
+        public void ReloadStrains(IPointFactory pointFactory) => ReloadStrains(pointFactory, DefaultLoadStrainCallback);
+
+        public void ReloadStrainsParallel(IPointFactory pointFactory) => ReloadStrainsParallel(pointFactory, DefaultLoadStrainCallback);
+
+        public void ReloadStrains(IPointFactory pointFactory, LoadStrainCallback lscb) 
+        {
+            foreach (var strain in Items.Values)
+            {
+                lscb(pointFactory, strain);
+            }
+        }
+
+        public void ReloadStrainsParallel(IPointFactory pointFactory, LoadStrainCallback lscb) => Parallel.ForEach(Items.Values, strain =>
+           lscb(pointFactory, strain));
+
+        public static void DefaultLoadStrainCallback(IPointFactory pointFactory, StockItem stockItem) => stockItem.LoadStrain(pointFactory);
 
         public void UpdateScoreTable(StrainAdapter adapter, IScorer scorer)
         {

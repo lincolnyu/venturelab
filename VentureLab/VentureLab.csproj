@@ -46,10 +46,11 @@
     <Compile Include="Helpers\AsxSamplingHelper.cs" />
     <Compile Include="Asx\Stock.cs" />
     <Compile Include="Asx\StockManager.cs" />
-    <Compile Include="Asx\StockPoint.cs" />
+    <Compile Include="Asx\GaussianStockPoint.cs" />
     <Compile Include="Helpers\AsxFileHelper.cs" />
     <Compile Include="Helpers\DistanceHelper.cs" />
     <Compile Include="Helpers\HashingHelper.cs" />
+    <Compile Include="Prediction\IPointManager.cs" />
     <Compile Include="Prediction\IPredictor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QbClustering\AbsStrainAdapter.cs" />
