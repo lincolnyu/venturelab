@@ -8,7 +8,6 @@ using static VentureLab.Asx.StockManager;
 using System.IO;
 using VentureLab.Helpers;
 using VentureLab.QbClustering;
-using VentureLab.QbGaussianMethod.Cores;
 using VentureLab.Prediction;
 
 namespace VentureLabDrills
