@@ -89,6 +89,8 @@ namespace VentureLab.Helpers
             if (segs.Length != 7) return false;
             code = segs[0];
             double open, close, low, high, vol;
+            DateTime date;
+            if (!TryParseCompactDateString(segs[1], out date)) return false;
             if (!double.TryParse(segs[2], out open)) return false;
             if (!double.TryParse(segs[3], out high)) return false;
             if (!double.TryParse(segs[4], out low)) return false;
@@ -100,9 +102,15 @@ namespace VentureLab.Helpers
                 Close = close,
                 Low = low,
                 High = high,
-                Volume = vol
+                Volume = vol,
+                Date = date
             };
             return true;
+        }
+
+        private static bool TryParseCompactDateString(string v, out object dt)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 using VentureLab.Helpers;
 using VentureLab.QbClustering;
 using VentureLab.QbGaussianMethod.Cores;
+using static VentureLab.QbClustering.StrainsHelper;
 
 namespace VentureLab.Asx
 {
     public class StockManager
     {
-        public delegate ScoreTable GetScoresMethod(IList<IStrain> strains, StrainAdapter adapter, IScorer scorer);
+        public delegate ScoreTable GetScoresMethod(IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null);
 
         public delegate void LoadStrainCallback(IPointFactory pointFactory, StockItem stockItem);
 
@@ -76,6 +77,7 @@ namespace VentureLab.Asx
             {
                 var stock = new Stock(code);
                 stockItem = new StockItem(stock);
+                Items.Add(code, stockItem);
             }
             return stockItem.Stock.Add(de);
         }
@@ -97,21 +99,22 @@ namespace VentureLab.Asx
 
         public static void DefaultLoadStrainCallback(IPointFactory pointFactory, StockItem stockItem) => stockItem.LoadStrain(pointFactory);
 
-        public void UpdateScoreTable(StrainAdapter adapter, IScorer scorer)
+        public void UpdateScoreTable(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
         {
-            UpdateScoreTable(adapter, scorer, StrainsHelper.GetScores);
+            UpdateScoreTable(adapter, scorer, StrainsHelper.GetScores, reportProgress);
         }
 
-        public void UpdateScoreTableParallel(StrainAdapter adapter, IScorer scorer)
+        public void UpdateScoreTableParallel(StrainAdapter adapter, IScorer scorer,
+            ReportGetScoresProgress reportProgress = null)
         {
-            UpdateScoreTable(adapter, scorer, StrainsHelper.GetScoresParallel);
+            UpdateScoreTable(adapter, scorer, StrainsHelper.GetScoresParallel, reportProgress);
         }
 
-        private void UpdateScoreTable(StrainAdapter adapter, IScorer scorer, GetScoresMethod getScores)
+        private void UpdateScoreTable(StrainAdapter adapter, IScorer scorer, GetScoresMethod getScores, ReportGetScoresProgress reportProgress)
         {
             var strainList = Items.Values.Cast<IStrain>().ToList();
             adapter.UpdatePointsIndicators(strainList);
-            var scoreTable = getScores(strainList, adapter, scorer);
+            var scoreTable = getScores(strainList, adapter, scorer, reportProgress);
             foreach (var item in Items.Values)
             {
                 item.Weights.Clear();

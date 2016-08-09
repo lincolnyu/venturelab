@@ -9,6 +9,7 @@ using System.IO;
 using VentureLab.Helpers;
 using VentureLab.QbClustering;
 using VentureLab.Prediction;
+using VentureLabDrills.Output;
 
 namespace VentureLabDrills
 {
@@ -16,29 +17,50 @@ namespace VentureLabDrills
     {
         private delegate int GetItemIndexCallback(StockItem item);
 
+        private static MyLogger Logger;
+
         static void Main(string[] args)
         {
-            if (args.Contains("-h"))
+            if (args.Contains("--help"))
             {
                 PrintHelp();
                 return;
             }
+            InitLogWithDisplayLevel(args);
             StockManager stockManager;
             IPointManager pointManager;
+            Logger.WriteLine(MyLogger.Levels.Verbose, "Warming up...");
             if (!WarmUp(args, out stockManager, out pointManager))
             {
+                Logger.WriteLine(MyLogger.Levels.Error, "The program failed to warm up.");
                 return;
             }
+            Logger.WriteLine(MyLogger.Levels.Verbose, "Warmed up.");
             var code = args.GetSwitchValue("--predict");
             var dateStr = args.GetSwitchValue("--predictdate");
-            if (code != null)
+            if (code != null && dateStr != null)
             {
                 Predict(stockManager, pointManager, code, dateStr);
             }
             else
             {
+                Logger.WriteLine(MyLogger.Levels.Info, "Prediction session started");
                 PredictionSession(stockManager, pointManager);
             }
+        }
+
+        private static void InitLogWithDisplayLevel(string[] args)
+        {
+            MyLogger.Levels displayLevel = MyLogger.Levels.Warning;
+            if (args.Contains("--displaylevel=verbose"))
+            {
+                displayLevel = MyLogger.Levels.Verbose;
+            }
+            else if (args.Contains("--displaylevel=error"))
+            {
+                displayLevel = MyLogger.Levels.Error;
+            }
+            Logger = new MyLogger(displayLevel);
         }
 
         private static void PredictionSession(StockManager stockManager, IPointManager pointManager)
@@ -52,6 +74,7 @@ namespace VentureLabDrills
                 Predict(stockManager, pointManager, code, dateStr);
                 Console.Write("Continue? (Y/n)");
                 var k = Console.ReadKey(false);
+                Console.WriteLine();
                 if (char.ToUpper(k.KeyChar) == 'N')
                 {
                     break;
@@ -209,13 +232,18 @@ namespace VentureLabDrills
             if (parallel)
             {
                 stockManager.ReloadStrainsParallel(pointManager);
-                stockManager.UpdateScoreTableParallel(adapter, scorer);
+                stockManager.UpdateScoreTableParallel(adapter, scorer, ReportGetScoresProgress);
             }
             else
             {
                 stockManager.ReloadStrains(pointManager);
-                stockManager.UpdateScoreTable(adapter, scorer);
+                stockManager.UpdateScoreTable(adapter, scorer, ReportGetScoresProgress);
             }
+        }
+
+        private static void ReportGetScoresProgress(int done, int total)
+        {
+            Logger.InplaceWrite(MyLogger.Levels.Info, $"{done}/{total} scores done.");
         }
 
         private static void PrintHelp()
@@ -225,6 +253,7 @@ namespace VentureLabDrills
             Console.WriteLine($"VentureLab (Ver {appver})");
             Console.WriteLine("Usage: ");
             Console.WriteLine($"  {appname} -i <input folder> [--from <inclusive starting date>] [--to <exclusive ending date>]");
+            Console.WriteLine("     [--displaylevel={error|warning|verbose}] ");
             Console.WriteLine($"  {appname} --help");
         }
     }
