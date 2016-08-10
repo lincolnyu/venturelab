@@ -50,6 +50,7 @@
     <Compile Include="Helpers\AsxFileHelper.cs" />
     <Compile Include="Helpers\DistanceHelper.cs" />
     <Compile Include="Helpers\HashingHelper.cs" />
+    <Compile Include="Helpers\ScoreTableHelper.cs" />
     <Compile Include="Prediction\IPointManager.cs" />
     <Compile Include="Prediction\IPredictor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -76,12 +76,26 @@ namespace VentureLabDrills.Output
             writer.WriteFormat(true, fmt, args);
         }
 
+        public void LocateInplaceWrite()
+        {
+            var writer = (InplaceWriter)InplaceDisplayer.Writer;
+            writer.RememberCursor();
+        }
+
         public void InplaceWrite(Levels level, string msg)
         {
             var writer = (InplaceWriter)InplaceDisplayer.Writer;
             if (!writer.CanRefreshNow()) return;
+            writer.RestoreCursor();
             writer.WriteFormat(true, msg);
             writer.UpdateLastRefreshTime();
+        }
+
+        public void InplaceWriteLine(Levels level)
+        {
+            var writer = (InplaceWriter)InplaceDisplayer.Writer;
+            if (!writer.CanRefreshNow()) return;
+            writer.WriteLine("", true);
         }
     }
 }

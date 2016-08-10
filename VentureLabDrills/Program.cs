@@ -228,17 +228,43 @@ namespace VentureLabDrills
             }
             var scorer = new SimpleScorer(inputThr, outputThr, outputPenalty);
             pointManager = new GaussianStockPoint.Manager();
-            var parallel = args.Contains("-p");
-            if (parallel)
+            string loadTable;
+            ScoreTable st;
+            if ((loadTable = args.GetSwitchValue("--loadScoreTable")) != null)
             {
-                stockManager.ReloadStrainsParallel(pointManager);
-                stockManager.UpdateScoreTableParallel(adapter, scorer, ReportGetScoresProgress);
+                st = new ScoreTable();
+                using (var sr = new StreamReader(loadTable))
+                {
+                    st.Load(stockManager, sr);
+                }
             }
             else
             {
-                stockManager.ReloadStrains(pointManager);
-                stockManager.UpdateScoreTable(adapter, scorer, ReportGetScoresProgress);
+                var parallel = args.Contains("-p");
+                Logger.LocateInplaceWrite();
+                if (parallel)
+                {
+                    stockManager.ReloadStrainsParallel(pointManager);
+                    st = stockManager.GetScoreTableParallel(adapter, scorer, ReportGetScoresProgress);
+                }
+                else
+                {
+                    stockManager.ReloadStrains(pointManager);
+                    st = stockManager.GetScoreTable(adapter, scorer, ReportGetScoresProgress);
+                }
+                Logger.InplaceWriteLine(MyLogger.Levels.Info);
+                string saveTable;
+                if ((saveTable = args.GetSwitchValue("--saveScoreTable")) != null)
+                {
+                    Logger.Write(MyLogger.Levels.Info, $"Saving score table to file {saveTable}...");
+                    using (var sw = new StreamWriter(saveTable))
+                    {
+                        st.Save(sw);
+                    }
+                    Logger.WriteLine(MyLogger.Levels.Info, "done.");
+                }
             }
+            stockManager.SetScoreTableToItems(st);
         }
 
         private static void ReportGetScoresProgress(int done, int total)

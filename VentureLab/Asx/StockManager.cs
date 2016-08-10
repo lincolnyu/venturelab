@@ -99,22 +99,28 @@ namespace VentureLab.Asx
 
         public static void DefaultLoadStrainCallback(IPointFactory pointFactory, StockItem stockItem) => stockItem.LoadStrain(pointFactory);
 
-        public void UpdateScoreTable(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
+        public ScoreTable GetScoreTable(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
         {
-            UpdateScoreTable(adapter, scorer, StrainsHelper.GetScores, reportProgress);
+            var scoreTable = GetScoreTable(adapter, scorer, StrainsHelper.GetScores, reportProgress);
+            return scoreTable;
         }
 
-        public void UpdateScoreTableParallel(StrainAdapter adapter, IScorer scorer,
-            ReportGetScoresProgress reportProgress = null)
+        public ScoreTable GetScoreTableParallel(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
         {
-            UpdateScoreTable(adapter, scorer, StrainsHelper.GetScoresParallel, reportProgress);
+            var scoreTable = GetScoreTable(adapter, scorer, StrainsHelper.GetScoresParallel, reportProgress);
+            return scoreTable;
         }
 
-        private void UpdateScoreTable(StrainAdapter adapter, IScorer scorer, GetScoresMethod getScores, ReportGetScoresProgress reportProgress)
+        private ScoreTable GetScoreTable(StrainAdapter adapter, IScorer scorer, GetScoresMethod getScores, ReportGetScoresProgress reportProgress)
         {
             var strainList = Items.Values.Cast<IStrain>().ToList();
             adapter.UpdatePointsIndicators(strainList);
             var scoreTable = getScores(strainList, adapter, scorer, reportProgress);
+            return scoreTable;
+        }
+
+        public void SetScoreTableToItems(ScoreTable scoreTable)
+        {
             foreach (var item in Items.Values)
             {
                 item.Weights.Clear();
