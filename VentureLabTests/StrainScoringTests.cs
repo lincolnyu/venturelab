@@ -38,6 +38,14 @@ namespace VentureLabTests
         private delegate IEnumerable<double> GenerateSequenceCallback(int numSamples);
         private delegate IEnumerable<double> GenerateVolumeCallback(int numDays);
 
+        private const double inputAbsThr = SampleAccessor.InputCount * 0.1;
+        private const double outputAbsThr = SampleAccessor.OutputCount * 0.1;
+        private const double outputAbsNormalizer = 1.0 / inputAbsThr;
+
+        private readonly static double inputSqrThr = Math.Sqrt(SampleAccessor.InputCount) * 0.1;
+        private readonly static double outputSqrThr = Math.Sqrt(SampleAccessor.OutputCount) * 0.1;
+        private readonly static double outputSqrNormalizer = 1.0 / inputSqrThr;
+
         private class Generator
         {
             public Generator(GenerateSequenceCallback gscb, GenerateVolumeCallback gvcb)
@@ -63,7 +71,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, RandomGenerator).ToList();
             var adapter = AbsStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputAbsThr, outputAbsNormalizer);
             var stfs = GetStrainScoresFullSearch(strains, adapter, scorer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScores(adapter, scorer);
@@ -89,7 +97,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, RandomGenerator).ToList();
             var adapter = SqrStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputSqrThr, outputSqrNormalizer);
             var stfs = GetStrainScoresFullSearch(strains, adapter, scorer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScores(adapter, scorer);
@@ -114,7 +122,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, SineGenerator).ToList();
             var adapter = AbsStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputAbsThr, outputAbsNormalizer);
             var stfs = GetStrainScoresFullSearch(strains, adapter, scorer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScores(adapter, scorer);
@@ -139,7 +147,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, SineGenerator).ToList();
             var adapter = SqrStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputSqrThr, outputSqrNormalizer);
             var stfs = GetStrainScoresFullSearch(strains, adapter, scorer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScores(adapter, scorer);
@@ -168,7 +176,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, RandomGenerator).ToList();
             var adapter = AbsStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputAbsThr, outputAbsNormalizer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScores(adapter, scorer);
         }
@@ -178,7 +186,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, RandomGenerator).ToList();
             var adapter = AbsStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputAbsThr, outputAbsNormalizer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScoresParallel(adapter, scorer);
         }
@@ -188,7 +196,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, RandomGenerator).ToList();
             var adapter = AbsStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputAbsThr, outputAbsNormalizer);
             var stfs = GetStrainScoresFullSearch(strains, adapter, scorer);
         }
 
@@ -198,7 +206,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, RandomGenerator).ToList();
             var adapter = SqrStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputSqrThr, outputSqrNormalizer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScores(adapter, scorer);
         }
@@ -208,7 +216,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, RandomGenerator).ToList();
             var adapter = SqrStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputSqrThr, outputSqrNormalizer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScoresParallel(adapter, scorer);
         }
@@ -218,7 +226,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, RandomGenerator).ToList();
             var adapter = SqrStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputSqrThr, outputSqrNormalizer);
             var stfs = GetStrainScoresFullSearch(strains, adapter, scorer);
         }
 
@@ -227,7 +235,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, SineGenerator).ToList();
             var adapter = AbsStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputAbsThr, outputAbsNormalizer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScores(adapter, scorer);
         }
@@ -237,7 +245,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, SineGenerator).ToList();
             var adapter = AbsStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputAbsThr, outputAbsNormalizer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScoresParallel(adapter, scorer);
         }
@@ -247,7 +255,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, SineGenerator).ToList();
             var adapter = AbsStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputAbsThr, outputAbsNormalizer);
             var stfs = GetStrainScoresFullSearch(strains, adapter, scorer);
         }
 
@@ -256,7 +264,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, SineGenerator).ToList();
             var adapter = SqrStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputSqrThr, outputSqrNormalizer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScores(adapter, scorer);
         }
@@ -266,7 +274,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, SineGenerator).ToList();
             var adapter = SqrStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputSqrThr, outputSqrNormalizer);
             adapter.UpdatePointsIndicators(strains);
             var stsmart = strains.GetScoresParallel(adapter, scorer);
         }
@@ -276,7 +284,7 @@ namespace VentureLabTests
         {
             var strains = GenerateStrains(20, SineGenerator).ToList();
             var adapter = SqrStrainAdapter.Instance;
-            var scorer = new SimpleScorer(0.2, 0.1);
+            var scorer = new SimpleScorer(inputSqrThr, outputSqrNormalizer);
             var stfs = GetStrainScoresFullSearch(strains, adapter, scorer);
         }
 

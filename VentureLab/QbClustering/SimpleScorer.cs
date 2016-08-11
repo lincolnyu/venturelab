@@ -33,7 +33,7 @@
             if (mdo < 1) return 1;
             if (mdo > OutputPenalty) return -1;
             var d = (OutputPenalty + 1) / (OutputPenalty - 1);
-            var k = -2.0 / (OutputPenalty + 1);
+            var k = -2.0 / (OutputPenalty - 1);
             return k * mdo + d;
         }
     }

@@ -199,7 +199,8 @@ namespace VentureLabDrills
         {
             var adapterStr = args.GetSwitchValue("--adapter");
             StrainAdapter adapter;
-            if (adapterStr == "abs")
+            var isAbs = adapterStr == "abs";
+            if (isAbs)
             {
                 adapter = AbsStrainAdapter.Instance;
             }
@@ -210,8 +211,8 @@ namespace VentureLabDrills
             var inputThrStr = args.GetSwitchValue("--inputthr");
             var outputThrStr = args.GetSwitchValue("--outputthr");
             var outputPenaltyStr = args.GetSwitchValue("--outputpenalty");
-            const double defaultInputThr = 0.1;
-            const double defaultOutputThr = 0.1;
+            double defaultInputThr = 0.1 * (isAbs ? SampleAccessor.InputCount : Math.Sqrt(SampleAccessor.InputCount));
+            double defaultOutputThr = 0.1 * (isAbs ? SampleAccessor.OutputCount : Math.Sqrt(SampleAccessor.OutputCount));
             double inputThr, outputThr;
             if (!double.TryParse(inputThrStr, out inputThr))
             {
@@ -226,7 +227,7 @@ namespace VentureLabDrills
             {
                 outputPenalty = SimpleScorer.DefaultOutputPenalty;
             }
-            var scorer = new SimpleScorer(inputThr, outputThr, outputPenalty);
+            var scorer = new SimpleScorer(inputThr, 1.0/outputThr, outputPenalty);
             pointManager = new GaussianStockPoint.Manager();
             string loadTable;
             ScoreTable st;
