@@ -227,30 +227,40 @@ namespace VentureLabDrills
             {
                 outputPenalty = SimpleScorer.DefaultOutputPenalty;
             }
+
             var scorer = new SimpleScorer(inputThr, 1.0/outputThr, outputPenalty);
             pointManager = new GaussianStockPoint.Manager();
-            string loadTable;
+            var parallel = args.Contains("-p");
+            if (parallel)
+            {
+                stockManager.ReloadStrainsParallel(pointManager);
+            }
+            else
+            {
+                stockManager.ReloadStrains(pointManager);
+            }
+
             ScoreTable st;
+            string loadTable;
             if ((loadTable = args.GetSwitchValue("--loadScoreTable")) != null)
             {
+                Logger.Write(MyLogger.Levels.Info, $"Loading score table from file {loadTable}...");
                 st = new ScoreTable();
                 using (var sr = new StreamReader(loadTable))
                 {
                     st.Load(stockManager, sr);
                 }
+                Logger.WriteLine(MyLogger.Levels.Info, "done.");
             }
             else
             {
-                var parallel = args.Contains("-p");
                 Logger.LocateInplaceWrite();
                 if (parallel)
                 {
-                    stockManager.ReloadStrainsParallel(pointManager);
                     st = stockManager.GetScoreTableParallel(adapter, scorer, ReportGetScoresProgress);
                 }
                 else
                 {
-                    stockManager.ReloadStrains(pointManager);
                     st = stockManager.GetScoreTable(adapter, scorer, ReportGetScoresProgress);
                 }
                 Logger.InplaceWriteLine(MyLogger.Levels.Info);

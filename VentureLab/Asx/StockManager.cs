@@ -143,7 +143,7 @@ namespace VentureLab.Asx
         /// <returns>The related points</returns>
         public IEnumerable<IPoint> PreparePrediction(StockItem stock)
         {
-            foreach (var kvp in stock.Weights)
+            foreach (var kvp in stock.Weights.Where(x => x.Value > 0))
             {
                 var relitem = kvp.Key;
                 var weight = kvp.Value;
