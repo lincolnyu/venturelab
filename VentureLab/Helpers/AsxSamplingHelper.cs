@@ -68,61 +68,98 @@ namespace VentureLab.Helpers
             sa.P5 = d5.Close;
             sa.V5 = d5.Volume;
 
+            double pmean = 0;
+            double vmean = 0;
+
             int j;
             var sum = 0.0;
             var vsum = 0.0;
             for (j = 0; j < 10; j++)
             {
-                sum += data[day0 - j].Close;
-                vsum += data[day0 - j].Volume;
+                sum += GetClose(data, day0, j, ref pmean);
+                vsum += GetVolume(data, day0, j, ref vmean);
             }
             sa.P10 = sum / 10;
             sa.V10 = vsum / 10;
 
             for (; j < 20; j++)
             {
-                sum += data[day0 - j].Close;
-                vsum += data[day0 - j].Volume;
+                sum += GetClose(data, day0, j, ref pmean);
+                vsum += GetVolume(data, day0, j, ref vmean);
             }
             sa.P20 = sum / 20;
             sa.V20 = vsum / 20;
 
             for (; j < 65; j++)
             {
-                sum += data[day0 - j].Close;
-                vsum += data[day0 - j].Volume;
+                sum += GetClose(data, day0, j, ref pmean);
+                vsum += GetVolume(data, day0, j, ref vmean);
             }
             sa.P65 = sum / 65;
             sa.V65 = vsum / 65;
 
             for (; j < 130; j++)
             {
-                sum += data[day0 - j].Close;
-                vsum += data[day0 - j].Volume;
+                sum += GetClose(data, day0, j, ref pmean);
+                vsum += GetVolume(data, day0, j, ref vmean);
             }
             sa.P130 = sum / 130;
 
             for (; j < 260; j++)
             {
-                sum += data[day0 - j].Close;
-                vsum += data[day0 - j].Volume;
+                sum += GetClose(data, day0, j, ref pmean);
+                vsum += GetVolume(data, day0, j, ref vmean);
             }
             sa.P260 = sum / 260;
             sa.V260 = vsum / 260;
 
             for (; j < 520; j++)
             {
-                sum += data[day0 - j].Close;
+                sum += GetClose(data, day0, j, ref pmean);
             }
             sa.P520 = sum / 520;
 
             for (; j < 1300; j++)
             {
-                sum += data[day0 - j].Close;
+                sum += GetClose(data, day0, j, ref pmean);
             }
             sa.P1300 = sum / 1300;
 
             sa.UpdateInput();
+        }
+
+        private static double GetClose(IList<DailyEntry> entry, int day0,
+            int j, ref double sum)
+        {
+            if (day0 >= j)
+            {
+                var result = entry[day0 - j].Close;
+                sum += result;
+                return result;
+            }
+
+            if (day0 == j-1)
+            {
+                sum /= j;
+            }
+            return sum;
+        }
+
+        private static double GetVolume(IList<DailyEntry> entry, int day0,
+            int j, ref double sum)
+        {
+            if (day0 >= j)
+            {
+                var result = entry[day0 - j].Volume;
+                sum += result;
+                return result;
+            }
+
+            if (day0 == j - 1)
+            {
+                sum /= j;
+            }
+            return sum;
         }
 
         public static void SampleOneOutput(this SampleAccessor sa, IList<DailyEntry> data, int day0)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace VentureLab.QbGaussianMethod.Cores
 {
@@ -17,6 +18,11 @@ namespace VentureLab.QbGaussianMethod.Cores
         ///  Weight
         /// </summary>
         public double Weight { get; set; }
+
+        /// <summary>
+        ///  Normalize the core (before weight applied) based on the precision factors
+        /// </summary>
+        public double Normalizer { get; set; }
 
         public IList<double> K { get; }
 
@@ -43,17 +49,64 @@ namespace VentureLab.QbGaussianMethod.Cores
         public double B(IList<double> x)
         {
             var a = A(x);
-            return Weight * Math.Pow(a, M);
+            return Weight * Normalizer * Math.Pow(a, M);
         }
 
         public void UpdateLp()
         {
-            var prod = 1.0;
-            foreach (var l in L)
+            var prod = Enumerable.Aggregate(L, (a, b) => a * b);
+            Lp = Math.Sqrt(Math.Abs(prod));
+        }
+
+        public void UpdateNormalizer()
+        {
+            // the PI term is omitted as we just want to normalize a constant
+            var ml = M - OutputLength;
+            var lprod = Enumerable.Aggregate(L, (a, b) => a * b);
+            var kprod = Enumerable.Aggregate(K, (a, b) => a * b);
+            Normalizer = Math.Sqrt(Math.Abs(ml * kprod)) * Lp;
+        }
+
+        /// <summary>
+        ///  Use equi-distal method to set the cores
+        /// </summary>
+        /// <param name="cores">The cores</param>
+        public static void SetCoreParameters(ICollection<GaussianRegulatedCore> cores)
+        {
+            var firstCore = cores.First();
+            var outputLen = firstCore.OutputLength;
+            var inputLen = firstCore.InputLength;
+            var m = firstCore.M; // we assume M's are the same
+            var coreCountMin1Sqr = (cores.Count - 1)* (cores.Count - 1);
+            // output
+            for (var i = 0; i < outputLen; i++)
             {
-                prod *= -l;
+                var outputMin = cores.Min(c => c.Output[i]);
+                var outputMax = cores.Max(c => c.Output[i]);
+                var outputSpan = outputMax - outputMin;
+                var l = -coreCountMin1Sqr * Math.Log(2) / (outputSpan * outputSpan);
+                foreach (var c in cores)
+                {
+                    c.L[i] = l;
+                }
             }
-            Lp = Math.Sqrt(prod);
+            // input
+            for (var i = 0; i < inputLen; i++)
+            {
+                var inputMin = cores.Min(c => c.Input[i]);
+                var inputMax = cores.Max(c => c.Input[i]);
+                var inputSpan = inputMax - inputMin;
+                var k = -coreCountMin1Sqr * Math.Log(2) / (m * inputSpan * inputSpan);
+                foreach (var c in cores)
+                {
+                    c.K[i] = k;
+                }
+            }
+            foreach (var c in cores)
+            {
+                c.UpdateLp();
+                c.UpdateNormalizer();
+            }
         }
     }
 }

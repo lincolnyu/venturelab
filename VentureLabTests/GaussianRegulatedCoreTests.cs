@@ -68,6 +68,7 @@ namespace VentureLabTests
                 core.L[i] = GenerateRandomNegPrecision();
             }
             core.UpdateLp();
+            core.UpdateNormalizer();
             return core;
         }
 
