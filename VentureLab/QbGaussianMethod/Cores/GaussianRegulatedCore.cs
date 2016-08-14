@@ -41,6 +41,7 @@ namespace VentureLab.QbGaussianMethod.Cores
             {
                 var d = x[i] - Input[i];
                 var dd = d * d;
+                dd *= K[i];
                 sum += dd;
             }
             return Math.Exp(sum);
@@ -77,14 +78,15 @@ namespace VentureLab.QbGaussianMethod.Cores
             var outputLen = firstCore.OutputLength;
             var inputLen = firstCore.InputLength;
             var m = firstCore.M; // we assume M's are the same
-            var coreCountMin1Sqr = (cores.Count - 1)* (cores.Count - 1);
+            var coreCountFactor = Math.Pow(cores.Count - 1, 2.0 / (inputLen+outputLen) );
+            coreCountFactor *= Math.Log(2.0);
             // output
             for (var i = 0; i < outputLen; i++)
             {
                 var outputMin = cores.Min(c => c.Output[i]);
                 var outputMax = cores.Max(c => c.Output[i]);
                 var outputSpan = outputMax - outputMin;
-                var l = -coreCountMin1Sqr * Math.Log(2) / (outputSpan * outputSpan);
+                var l = -coreCountFactor / (outputSpan * outputSpan);
                 foreach (var c in cores)
                 {
                     c.L[i] = l;
@@ -96,7 +98,7 @@ namespace VentureLab.QbGaussianMethod.Cores
                 var inputMin = cores.Min(c => c.Input[i]);
                 var inputMax = cores.Max(c => c.Input[i]);
                 var inputSpan = inputMax - inputMin;
-                var k = -coreCountMin1Sqr * Math.Log(2) / (m * inputSpan * inputSpan);
+                var k = -coreCountFactor / (m * inputSpan * inputSpan);
                 foreach (var c in cores)
                 {
                     c.K[i] = k;

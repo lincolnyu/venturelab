@@ -1,4 +1,6 @@
-﻿using QLogger.ConsoleHelpers;
+﻿#define SUPPRESS_SCORING
+
+using QLogger.ConsoleHelpers;
 using System.Linq;
 using VentureLab.Asx;
 using System;
@@ -106,9 +108,15 @@ namespace VentureLabDrills
                 Console.WriteLine("Specified stock not found");
                 return;
             }
+#if SUPPRESS_SCORING
+            var points = item.Points.Cast<GaussianRegulatedCore>().ToList();
+            foreach (var p in points) p.Weight = 1;
+#else
             var points = stockManager.PreparePrediction(item).Cast<GaussianRegulatedCore>().ToList();
+#endif
             GaussianRegulatedCore.SetCoreParameters(points);
             var firstPoint = points.FirstOrDefault();
+            DisplayParameters(firstPoint);
             if (firstPoint == null)
             {
                 Console.WriteLine("Specified stock has no statistical points");
@@ -123,12 +131,12 @@ namespace VentureLabDrills
                 return;
             }
             var day0 = item.Stock.Data[index];
-            Console.WriteLine($"Predicting {day0.Date}");
+            Logger.WriteLine(MyLogger.Levels.Info, $"Predicting {day0.Date}");
             var input = item.SampleInput(pointManager, index);
             pointManager.GetExpectedY(y, input.StrainPoint.Input, points);
             pointManager.GetExpectedYY(yy, input.StrainPoint.Input, points);
-            Console.WriteLine("(E[Y], VAR[Y]) = {");
-            var names = new []{ "1D", "2D", "5D", "10D", "20D", "65D" };
+            Logger.WriteLine(MyLogger.Levels.Info, "(E[Y], VAR[Y]) = {");
+            var names = new []{ "+1", "+2", "+5", "+10", "+20", "+65" };
             for (var i = 0; i < y.Length && i < yy.Length; i++)
             {
                 var yi = y[i];
@@ -137,15 +145,31 @@ namespace VentureLabDrills
                 var stdyi = Math.Sqrt(varyi);
                 var yiperc = (Math.Pow(2, yi) - 1) * 100;
                 var pmperc = (Math.Pow(2, stdyi) - 1) * 100;
-                Console.WriteLine($"  {names[0]}: ({yiperc:0.00}%, +/-{pmperc:0.00}%)");
+                Logger.WriteLine(MyLogger.Levels.Info, $"  {names[i]}: ({yiperc:0.00}%, +/-{pmperc:0.00}%)");
             }
-            Console.WriteLine("}");
-            Console.WriteLine("Weights = {");
+            Logger.WriteLine(MyLogger.Levels.Info, "}");
+            Logger.WriteLine(MyLogger.Levels.Verbose, "Weights = {");
             foreach (var kvp in item.Weights.Where(x=>x.Value > 0))
             {
-                Console.WriteLine($"  {kvp.Key.Stock.Code}: {kvp.Value:0.00}");
+                Logger.WriteLine(MyLogger.Levels.Verbose, $"  {kvp.Key.Stock.Code}: {kvp.Value:0.00}");
             }
-            Console.WriteLine("}");
+            Logger.WriteLine(MyLogger.Levels.Verbose, "}");
+        }
+
+        private static void DisplayParameters(GaussianRegulatedCore firstPoint)
+        {
+            Logger.Write(MyLogger.Levels.Verbose, "L = { ");
+            foreach (var l in firstPoint.L)
+            {
+                Logger.Write(MyLogger.Levels.Verbose, $"{l} ");
+            }
+            Logger.WriteLine(MyLogger.Levels.Verbose, "}");
+            Logger.Write(MyLogger.Levels.Verbose, "K = { ");
+            foreach (var k in firstPoint.K)
+            {
+                Logger.Write(MyLogger.Levels.Verbose, $"{k} ");
+            }
+            Logger.WriteLine(MyLogger.Levels.Verbose, "}");
         }
 
         private static int GetLastOne(StockItem item) => item.Stock.Data.Count - 1;
@@ -243,7 +267,7 @@ namespace VentureLabDrills
             }
 
             var scorer = new SimpleScorer(inputThr, 1.0/outputThr, outputPenalty);
-            pointManager = new GaussianStockPoint.Manager();
+            pointManager = new GaussianStockPoint.Manager { M = SampleAccessor.OutputCount };
             var parallel = args.Contains("-p");
             if (parallel)
             {
@@ -253,6 +277,8 @@ namespace VentureLabDrills
             {
                 stockManager.ReloadStrains(pointManager);
             }
+
+#if !SUPPRESS_SCORING
 
             ScoreTable st;
             string loadTable;
@@ -290,6 +316,7 @@ namespace VentureLabDrills
                 }
             }
             stockManager.SetScoreTableToItems(st);
+#endif
         }
 
         private static void ReportGetScoresProgress(int done, int total)
