@@ -119,7 +119,7 @@ namespace VentureLab.Asx
             return scoreTable;
         }
 
-        public void SetScoreTableToItems(ScoreTable scoreTable)
+        public void SetScoreTableToItems(ScoreTable scoreTable, double pressRate = 1.0)
         {
             foreach (var item in Items.Values)
             {
@@ -132,6 +132,26 @@ namespace VentureLab.Asx
                 var score = scoreTable[item1, item2];
                 item1.Weights[item2] = score;
                 item2.Weights[item1] = score;
+            }
+            // cap the cross weights 
+            foreach (var item in Items.Values)
+            {
+                double cap;
+                if (!item.Weights.TryGetValue(item, out cap))
+                {
+                    item.Weights.Clear();
+                    continue;
+                }
+                var others = item.Weights.Where(x => x.Key != item).ToList();
+                var sumOthers = others.Sum(x => x.Value);
+                if (cap * pressRate < sumOthers)
+                {
+                    var press = cap * pressRate / sumOthers;
+                    foreach (var kvp in others)
+                    {
+                        item.Weights[kvp.Key] *= press;
+                    }
+                }
             }
         }
 

@@ -34,6 +34,8 @@ namespace VentureLab.QbGaussianMethod.Cores
 
         public double P => M - OutputLength / 2.0;
 
+        public double S => Weight * Normalizer;
+
         public double A(IList<double> x)
         {
             var sum = 0.0;
@@ -50,7 +52,7 @@ namespace VentureLab.QbGaussianMethod.Cores
         public double B(IList<double> x)
         {
             var a = A(x);
-            return Weight * Normalizer * Math.Pow(a, M);
+            return S * Math.Pow(a, M);
         }
 
         public void UpdateLp()
@@ -62,17 +64,15 @@ namespace VentureLab.QbGaussianMethod.Cores
         public void UpdateNormalizer()
         {
             // the PI term is omitted as we just want to normalize a constant
-            var ml = M - OutputLength;
-            var lprod = Enumerable.Aggregate(L, (a, b) => a * b);
             var kprod = Enumerable.Aggregate(K, (a, b) => a * b);
-            Normalizer = Math.Sqrt(Math.Abs(ml * kprod)) * Lp;
+            Normalizer = Math.Sqrt(Math.Abs(P * kprod)) * Lp;
         }
 
         /// <summary>
         ///  Use equi-distal method to set the cores
         /// </summary>
         /// <param name="cores">The cores</param>
-        public static void SetCoreParameters(ICollection<GaussianRegulatedCore> cores)
+        public static void SetCoreParameters(ICollection<GaussianRegulatedCore> cores, ICollection<GaussianRegulatedCore> originalCores)
         {
             var firstCore = cores.First();
             var outputLen = firstCore.OutputLength;
@@ -83,8 +83,8 @@ namespace VentureLab.QbGaussianMethod.Cores
             // output
             for (var i = 0; i < outputLen; i++)
             {
-                var outputMin = cores.Min(c => c.Output[i]);
-                var outputMax = cores.Max(c => c.Output[i]);
+                var outputMin = originalCores.Min(c => c.Output[i]);
+                var outputMax = originalCores.Max(c => c.Output[i]);
                 var outputSpan = outputMax - outputMin;
                 var l = -coreCountFactor / (outputSpan * outputSpan);
                 foreach (var c in cores)
@@ -95,8 +95,8 @@ namespace VentureLab.QbGaussianMethod.Cores
             // input
             for (var i = 0; i < inputLen; i++)
             {
-                var inputMin = cores.Min(c => c.Input[i]);
-                var inputMax = cores.Max(c => c.Input[i]);
+                var inputMin = originalCores.Min(c => c.Input[i]);
+                var inputMax = originalCores.Max(c => c.Input[i]);
                 var inputSpan = inputMax - inputMin;
                 var k = -coreCountFactor / (m * inputSpan * inputSpan);
                 foreach (var c in cores)

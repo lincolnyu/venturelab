@@ -24,14 +24,14 @@ namespace VentureLab.QbGuassianMethod.Helpers
             foreach (var c in cores)
             {
                 var cy = c.Output;
-                var w = c.Weight / c.Lp;
+                var s = c.S / c.Lp;
                 var ap = Math.Pow(c.A(x), c.P);
-                var wap = w * ap;
+                var sap = s * ap;
                 for (var k = 0; k < zeroedY.Count; k++)
                 {
-                    zeroedY[k] += cy[k] * wap;
+                    zeroedY[k] += cy[k] * sap;
                 }
-                wasum += wap;
+                wasum += sap;
             }
             for (var k = 0; k < zeroedY.Count; k++)
             {
@@ -45,16 +45,16 @@ namespace VentureLab.QbGuassianMethod.Helpers
             foreach (var c in cores)
             {
                 var cy = c.Output;
-                var w = c.Weight / c.Lp;
+                var s = c.S / c.Lp;
                 var a = c.A(x);
                 var ap = Math.Pow(a, c.P);
-                var wap = w * ap;
+                var sap = s * ap;
                 for (var k = 0; k < zeroedY.Count; k++)
                 {
                     var t = cy[k] * cy[k] - 0.5 / (a * c.L[k]);
-                    zeroedY[k] += t * wap;
+                    zeroedY[k] += t * sap;
                 }
-                wasum += wap;
+                wasum += sap;
             }
             for (var k = 0; k < zeroedY.Count; k++)
             {

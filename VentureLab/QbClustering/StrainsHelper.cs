@@ -29,7 +29,10 @@ namespace VentureLab.QbClustering
                 {
                     var strain2 = strains[j];
                     var score = adapter.Score(strain1, strain2, scorer);
-                    scores[strain1, strain2] = score;
+                    if (score > 0)
+                    {
+                        scores[strain1, strain2] = score;
+                    }
                     reportProgress?.Invoke(++count, total);
                 }
             }

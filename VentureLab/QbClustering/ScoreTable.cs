@@ -25,7 +25,9 @@ namespace VentureLab.QbClustering
             get
             {
                 var sp = new StrainPair(a, b);
-                return Data[sp];
+                var val = 0.0;
+                Data.TryGetValue(sp, out val);
+                return val;
             }
             set
             {

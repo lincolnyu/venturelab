@@ -52,7 +52,8 @@ namespace VentureLab.QbClustering
                     totalScore += s;
                 }
             }
-            return totalScore;
+            var minPoints = Math.Min(a.Points.Count, b.Points.Count);
+            return minPoints > 0 ? totalScore / minPoints : 0;
         }
 
         public abstract double GetPointIndicator(IStrainPoint point);

@@ -1,4 +1,4 @@
-﻿#define SUPPRESS_SCORING
+﻿//#define SUPPRESS_SCORING
 
 using QLogger.ConsoleHelpers;
 using System.Linq;
@@ -110,13 +110,16 @@ namespace VentureLabDrills
             }
 #if SUPPRESS_SCORING
             var points = item.Points.Cast<GaussianRegulatedCore>().ToList();
+            var originalPoints = points;
             foreach (var p in points) p.Weight = 1;
 #else
+            var originalPoints = item.Points.Cast<GaussianRegulatedCore>().ToList();
             var points = stockManager.PreparePrediction(item).Cast<GaussianRegulatedCore>().ToList();
 #endif
-            GaussianRegulatedCore.SetCoreParameters(points);
+            GaussianRegulatedCore.SetCoreParameters(points, originalPoints);
             var firstPoint = points.FirstOrDefault();
             DisplayParameters(firstPoint);
+            DisplayWeights(item);
             if (firstPoint == null)
             {
                 Console.WriteLine("Specified stock has no statistical points");
@@ -135,7 +138,7 @@ namespace VentureLabDrills
             var input = item.SampleInput(pointManager, index);
             pointManager.GetExpectedY(y, input.StrainPoint.Input, points);
             pointManager.GetExpectedYY(yy, input.StrainPoint.Input, points);
-            Logger.WriteLine(MyLogger.Levels.Info, "(E[Y], VAR[Y]) = {");
+            Logger.WriteLine(MyLogger.Levels.Info, "Prediction = {");
             var names = new []{ "+1", "+2", "+5", "+10", "+20", "+65" };
             for (var i = 0; i < y.Length && i < yy.Length; i++)
             {
@@ -145,11 +148,16 @@ namespace VentureLabDrills
                 var stdyi = Math.Sqrt(varyi);
                 var yiperc = (Math.Pow(2, yi) - 1) * 100;
                 var pmperc = (Math.Pow(2, stdyi) - 1) * 100;
-                Logger.WriteLine(MyLogger.Levels.Info, $"  {names[i]}: ({yiperc:0.00}%, +/-{pmperc:0.00}%)");
+                Logger.WriteLine(MyLogger.Levels.Info, $"  {names[i]}: {yiperc:0.00}+/-{pmperc:0.00}%");
             }
             Logger.WriteLine(MyLogger.Levels.Info, "}");
+           
+        }
+
+        private static void DisplayWeights(StockItem item, int count = 5)
+        {
             Logger.WriteLine(MyLogger.Levels.Verbose, "Weights = {");
-            foreach (var kvp in item.Weights.Where(x=>x.Value > 0))
+            foreach (var kvp in item.Weights.Where(x => x.Value > 0).OrderByDescending(x=>x.Value).Take(count))
             {
                 Logger.WriteLine(MyLogger.Levels.Verbose, $"  {kvp.Key.Stock.Code}: {kvp.Value:0.00}");
             }
@@ -171,6 +179,7 @@ namespace VentureLabDrills
             }
             Logger.WriteLine(MyLogger.Levels.Verbose, "}");
         }
+        
 
         private static int GetLastOne(StockItem item) => item.Stock.Data.Count - 1;
 

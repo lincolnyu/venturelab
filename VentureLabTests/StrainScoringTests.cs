@@ -320,7 +320,8 @@ namespace VentureLabTests
                     sum += s;
                 }
             }
-            return sum;
+            var minCount = Math.Min(strain1.Points.Count, strain2.Points.Count);
+            return sum / minCount;
         }
 
         private IEnumerable<IStrain> GenerateStrains(int numStrains, Generator generator, int samplesPerDay = 4, int lenMin = SampleAccessor.DaysBefore + SampleAccessor.DaysAfter + 1, int lenMax = SampleAccessor.DaysBefore + SampleAccessor.DaysAfter + 200)
