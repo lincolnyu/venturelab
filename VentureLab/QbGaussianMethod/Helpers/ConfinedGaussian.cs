@@ -25,13 +25,13 @@ namespace VentureLab.QbGuassianMethod.Helpers
             {
                 var cy = c.Output;
                 var s = c.S / c.Lp;
-                var ap = Math.Pow(c.A(x), c.P);
-                var sap = s * ap;
+                var ep = c.E(x, c.P);
+                var sep = s * ep;
                 for (var k = 0; k < zeroedY.Count; k++)
                 {
-                    zeroedY[k] += cy[k] * sap;
+                    zeroedY[k] += cy[k] * sep;
                 }
-                wasum += sap;
+                wasum += sep;
             }
             for (var k = 0; k < zeroedY.Count; k++)
             {
@@ -46,15 +46,15 @@ namespace VentureLab.QbGuassianMethod.Helpers
             {
                 var cy = c.Output;
                 var s = c.S / c.Lp;
-                var a = c.A(x);
-                var ap = Math.Pow(a, c.P);
-                var sap = s * ap;
+                var e = c.E(x, 1);
+                var ep = Math.Pow(e, c.P);
+                var sep = s * ep;
+                var sd = s * Math.Pow(e, c.P - c.N);
                 for (var k = 0; k < zeroedY.Count; k++)
                 {
-                    var t = cy[k] * cy[k] - 0.5 / (a * c.L[k]);
-                    zeroedY[k] += t * sap;
+                    zeroedY[k] += cy[k] * cy[k] * sep - 0.5 * sd / c.L[k];
                 }
-                wasum += sap;
+                wasum += sep;
             }
             for (var k = 0; k < zeroedY.Count; k++)
             {

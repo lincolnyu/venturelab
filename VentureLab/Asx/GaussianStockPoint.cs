@@ -10,11 +10,12 @@ namespace VentureLab.Asx
         public class Manager : ConfinedGaussianPredictor, IPointManager
         {
             public double M { get; set; }
+            public double N { get; set; }
 
-            public IPoint Create() => new GaussianStockPoint(SampleAccessor.InputCount, SampleAccessor.OutputCount, M);
+            public IPoint Create() => new GaussianStockPoint(SampleAccessor.InputCount, SampleAccessor.OutputCount, M, N);
         }
 
-        public GaussianStockPoint(int inputLen, int outputLen, double m, double w = 1) : base(inputLen, outputLen, m, w)
+        public GaussianStockPoint(int inputLen, int outputLen, double m, double n, double w = 1) : base(inputLen, outputLen, m, n, w)
         {
         }
 

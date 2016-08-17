@@ -9,5 +9,9 @@ namespace VentureLab.QbGaussianMethod.Cores
 
         int InputLength { get; }
         int OutputLength { get; }
+
+        double SquareInputDistance(IPoint other);
+        double SquareOutputDistance(IPoint other);
+        double SquareDistance(IPoint other);
     }
 }

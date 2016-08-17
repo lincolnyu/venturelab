@@ -110,13 +110,11 @@ namespace VentureLabDrills
             }
 #if SUPPRESS_SCORING
             var points = item.Points.Cast<GaussianRegulatedCore>().ToList();
-            var originalPoints = points;
             foreach (var p in points) p.Weight = 1;
 #else
-            var originalPoints = item.Points.Cast<GaussianRegulatedCore>().ToList();
             var points = stockManager.PreparePrediction(item).Cast<GaussianRegulatedCore>().ToList();
 #endif
-            GaussianRegulatedCore.SetCoreParameters(points, originalPoints);
+            GaussianRegulatedCore.SetCoreParameters(points);
             var firstPoint = points.FirstOrDefault();
             DisplayParameters(firstPoint);
             DisplayWeights(item);
@@ -276,7 +274,10 @@ namespace VentureLabDrills
             }
 
             var scorer = new SimpleScorer(inputThr, 1.0/outputThr, outputPenalty);
-            pointManager = new GaussianStockPoint.Manager { M = SampleAccessor.OutputCount };
+            pointManager = new GaussianStockPoint.Manager {
+                M = 100,
+                N = 1
+            };
             var parallel = args.Contains("-p");
             if (parallel)
             {

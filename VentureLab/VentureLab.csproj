@@ -71,6 +71,7 @@
     <Compile Include="QbGaussianMethod\Cores\GaussianRegulatedCore.cs" />
     <Compile Include="QbGaussianMethod\Cores\IPoint.cs" />
     <Compile Include="QbGaussianMethod\Cores\IPointFactory.cs" />
+    <Compile Include="QbGaussianMethod\Helpers\CoreGeometryHelper.cs" />
     <Compile Include="QbGaussianMethod\Helpers\Generic.cs" />
     <Compile Include="QbGaussianMethod\Cores\Point.cs" />
     <Compile Include="QbGaussianMethod\Predictors\ConfinedGaussianPredictor.cs" />
