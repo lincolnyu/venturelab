@@ -49,8 +49,11 @@
     <Compile Include="Asx\GaussianStockPoint.cs" />
     <Compile Include="Helpers\AsxFileHelper.cs" />
     <Compile Include="Helpers\DistanceHelper.cs" />
+    <Compile Include="Helpers\Expert.cs" />
     <Compile Include="Helpers\HashingHelper.cs" />
     <Compile Include="Helpers\ScoreTableHelper.cs" />
+    <Compile Include="Helpers\StatisticsHelper.cs" />
+    <Compile Include="Helpers\StockManagerHelper.cs" />
     <Compile Include="Prediction\IPointManager.cs" />
     <Compile Include="Prediction\IPredictor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -72,8 +75,10 @@
     <Compile Include="QbGaussianMethod\Cores\IPoint.cs" />
     <Compile Include="QbGaussianMethod\Cores\IPointFactory.cs" />
     <Compile Include="QbGaussianMethod\Helpers\CoreGeometryHelper.cs" />
+    <Compile Include="QbGaussianMethod\Helpers\GaussianPredictionHelper.cs" />
     <Compile Include="QbGaussianMethod\Helpers\Generic.cs" />
     <Compile Include="QbGaussianMethod\Cores\Point.cs" />
+    <Compile Include="QbGaussianMethod\Helpers\PredictionCommon.cs" />
     <Compile Include="QbGaussianMethod\Predictors\ConfinedGaussianPredictor.cs" />
     <Compile Include="QbGaussianMethod\Predictors\GenericPredictor.cs" />
   </ItemGroup>

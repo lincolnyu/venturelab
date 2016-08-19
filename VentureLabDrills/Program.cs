@@ -1,6 +1,4 @@
-﻿//#define SUPPRESS_SCORING
-
-using QLogger.ConsoleHelpers;
+﻿using QLogger.ConsoleHelpers;
 using System.Linq;
 using VentureLab.Asx;
 using System;
@@ -13,12 +11,14 @@ using VentureLab.QbClustering;
 using VentureLab.Prediction;
 using VentureLabDrills.Output;
 using VentureLab.QbGaussianMethod.Cores;
+using VentureLab.QbGaussianMethod.Helpers;
+using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
 
 namespace VentureLabDrills
 {
     class Program
     {
-        private delegate int GetItemIndexCallback(StockItem item);
+        private static readonly string[] _periodNames = new[] { "+1", "+2", "+5", "+10", "+20", "+65" };
 
         private static MyLogger Logger;
 
@@ -39,8 +39,18 @@ namespace VentureLabDrills
                 return;
             }
             Logger.WriteLine(MyLogger.Levels.Verbose, "Warmed up.");
+            var dateStr = args.GetSwitchValue("--date");
+
+            var expertLenStr = args.GetSwitchValue("--expert");
+            if (expertLenStr != null)
+            {
+                int expLen;
+                int.TryParse(expertLenStr, out expLen);
+                RunExpert(stockManager, pointManager, dateStr, expLen);
+                return;
+            }
+
             var code = args.GetSwitchValue("--predict");
-            var dateStr = args.GetSwitchValue("--predictdate");
             if (code != null && dateStr != null)
             {
                 Predict(stockManager, pointManager, code, dateStr);
@@ -49,6 +59,22 @@ namespace VentureLabDrills
             {
                 Logger.WriteLine(MyLogger.Levels.Info, "Prediction session started");
                 PredictionSession(stockManager, pointManager);
+            }
+        }
+
+        private static void RunExpert(StockManager stockManager, IPointManager pointManager, string dateStr, int expLen)
+        {
+            var list = Expert.Run(stockManager, pointManager, GaussianPredictionHelper.Predict, GetGiicb(dateStr));
+            if (expLen > 0)
+            {
+                list = list.GetRange(0, expLen);
+            }
+            for (var i = 0; i < list.Count; i++)
+            {
+                var item = list[i];
+                Console.WriteLine($"{i + 1}: {item.Item.Stock.Code}");
+                DisplayPrediction(item.Y, item.YY);
+                Console.WriteLine();
             }
         }
 
@@ -70,22 +96,47 @@ namespace VentureLabDrills
         {
             while (true)
             {
-                Console.Write("Code: ");
-                var code = Console.ReadLine();
-                Console.Write("Date (YYYYMMDD): ");
-                var dateStr = Console.ReadLine();
-                Predict(stockManager, pointManager, code, dateStr);
-                Console.Write("Continue? (Y/n)");
+                Console.Write("Options (P - Predict; E - Expert; Q - Quit): ");
                 var k = Console.ReadKey(false);
                 Console.WriteLine();
-                if (char.ToUpper(k.KeyChar) == 'N')
+                var kc = char.ToUpper(k.KeyChar);
+                if (kc == 'N')
                 {
                     break;
+                }
+                switch (kc)
+                {
+                    case 'P':
+                        {
+                            Console.Write("Code: ");
+                            var code = Console.ReadLine();
+                            Console.Write("Date (YYYYMMDD): ");
+                            var dateStr = Console.ReadLine();
+                            Predict(stockManager, pointManager, code, dateStr);
+                            break;
+                        }
+                    case 'E':
+                        {
+                            Console.Write("Top count: ");
+                            var expertLenStr = Console.ReadLine();
+                            int expLen;
+                            int.TryParse(expertLenStr, out expLen);
+                            Console.Write("Date (YYYYMMDD): ");
+                            var dateStr = Console.ReadLine();
+                            RunExpert(stockManager, pointManager, dateStr, expLen);
+                            break;
+                        }
                 }
             }
         }
 
         private static void Predict(StockManager stockManager, IPointManager pointManager, string code, string dateStr)
+        {
+            var cb = GetGiicb(dateStr);
+            Predict(stockManager, pointManager, code, cb);
+        }
+
+        private static GetItemIndexCallback GetGiicb(string dateStr)
         {
             DateTime date;
             GetItemIndexCallback cb;
@@ -97,7 +148,7 @@ namespace VentureLabDrills
             {
                 cb = GetLastOne;
             }
-            Predict(stockManager, pointManager, code, cb);
+            return cb;
         }
 
         private static void Predict(StockManager stockManager, IPointManager pointManager, string code, GetItemIndexCallback giicb)
@@ -125,31 +176,53 @@ namespace VentureLabDrills
             var outputLen = firstPoint.OutputLength;
             var y = new double[outputLen];
             var yy = new double[outputLen];
-            var index = giicb(item);
-            if (index < 0)
+
+            var err = false;
+            var predres = GaussianPredictionHelper.Predict(stockManager, pointManager, item,
+                  x => {
+                      var index = giicb(x);
+                      if (index < 0)
+                      {
+                          err = true;
+                          Console.WriteLine("Couldn't retrieve stock entry");
+                      }
+                      var day0 = item.Stock.Data[index];
+                      Logger.WriteLine(MyLogger.Levels.Info, $"Predicting {day0.Date}");
+                      return index;
+                  }, y, yy);
+            if (err) return;
+
+            if (predres)
             {
-                Console.WriteLine("Couldn't retrieve stock entry");
-                return;
+                Logger.WriteLine(MyLogger.Levels.Info, "Prediction = {");
+                DisplayPrediction(y, yy, 2);
+                Logger.WriteLine(MyLogger.Levels.Info, "}");
             }
-            var day0 = item.Stock.Data[index];
-            Logger.WriteLine(MyLogger.Levels.Info, $"Predicting {day0.Date}");
-            var input = item.SampleInput(pointManager, index);
-            pointManager.GetExpectedY(y, input.StrainPoint.Input, points);
-            pointManager.GetExpectedYY(yy, input.StrainPoint.Input, points);
-            Logger.WriteLine(MyLogger.Levels.Info, "Prediction = {");
-            var names = new []{ "+1", "+2", "+5", "+10", "+20", "+65" };
+            else
+            {
+                Logger.WriteLine(MyLogger.Levels.Info, "Not enough points to be statistically significant");
+            }
+        }
+
+        private static void DisplayPrediction(double[] y, double[] yy, int verticalIndent = -1)
+        {
             for (var i = 0; i < y.Length && i < yy.Length; i++)
             {
                 var yi = y[i];
                 var yyi = yy[i];
-                var varyi = yyi - yi * yi;
-                var stdyi = Math.Sqrt(varyi);
+                var stdyi = StatisticsHelper.GetStandardVariance(yi, yyi);
                 var yiperc = (Math.Pow(2, yi) - 1) * 100;
                 var pmperc = (Math.Pow(2, stdyi) - 1) * 100;
-                Logger.WriteLine(MyLogger.Levels.Info, $"  {names[i]}: {yiperc:0.00}+/-{pmperc:0.00}%");
+                if (verticalIndent >= 0)
+                {
+                    var indent = new string(' ', verticalIndent);
+                    Logger.WriteLine(MyLogger.Levels.Info, $"{indent}{_periodNames[i]}: {yiperc:0.00}+/-{pmperc:0.00}%");
+                }
+                else
+                {
+                    Logger.Write(MyLogger.Levels.Info, $"{_periodNames[i]}: {yiperc:0.00}+/-{pmperc:0.00}%; ");
+                }
             }
-            Logger.WriteLine(MyLogger.Levels.Info, "}");
-           
         }
 
         private static void DisplayWeights(StockItem item, int count = 5)
@@ -167,13 +240,13 @@ namespace VentureLabDrills
             Logger.Write(MyLogger.Levels.Verbose, "L = { ");
             foreach (var l in firstPoint.L)
             {
-                Logger.Write(MyLogger.Levels.Verbose, $"{l} ");
+                Logger.Write(MyLogger.Levels.Verbose, $"{l:0.0000} ");
             }
             Logger.WriteLine(MyLogger.Levels.Verbose, "}");
             Logger.Write(MyLogger.Levels.Verbose, "K = { ");
             foreach (var k in firstPoint.K)
             {
-                Logger.Write(MyLogger.Levels.Verbose, $"{k} ");
+                Logger.Write(MyLogger.Levels.Verbose, $"{k:0.0000} ");
             }
             Logger.WriteLine(MyLogger.Levels.Verbose, "}");
         }
