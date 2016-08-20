@@ -483,7 +483,7 @@ namespace VentureLabDrills
             var remain = _simpleTimeEstimator.Estimate;
             var elapsedstr = elapsed.ToString(@"d\.hh\:mm\:ss");
             var remainstr = remain.ToString(@"d\.hh\:mm");
-            Logger.InplaceWrite(MyLogger.Levels.Info, $"{done}/{total} {itemName} done, ${elapsed} elapsed {remain} remaining.");
+            Logger.InplaceWrite(MyLogger.Levels.Info, $"{done}/{total} {itemName} done, {elapsedstr} elapsed {remainstr} remaining.");
             return true;
         }
 
