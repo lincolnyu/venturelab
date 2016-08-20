@@ -13,17 +13,63 @@ using VentureLabDrills.Output;
 using VentureLab.QbGaussianMethod.Cores;
 using VentureLab.QbGaussianMethod.Helpers;
 using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
+using QLogger.Logging;
 
 namespace VentureLabDrills
 {
     class Program
     {
+        private class PointManagerFactory : IPointManagerFactory
+        {
+            public PointManagerFactory(double m = DefaultM, double n = DefaultN)
+            {
+                M = m;
+                N = n;
+                ReusableManager = (StockPoint.Manager)Create();
+            }
+
+            public double M { get; }
+
+            public double N { get; }
+
+            public StockPoint.Manager ReusableManager { get; }
+
+            #region IPointManagerFactory members
+
+            public IPointManager Create()
+            {
+                var pointManager = new StockPoint.Manager();
+                pointManager.PrepareCoreCreation(M, N);
+                return pointManager;
+            }
+
+            #endregion
+
+            /// <summary>
+            ///  Reset reusable manager as core creator for new sequential prediction
+            /// </summary>
+            /// <returns></returns>
+            public StockPoint.Manager ResetReusableManager()
+            {
+                ReusableManager.PrepareCoreCreation(M, N);
+                return ReusableManager;
+            }
+        }
+
+        private const double DefaultM = 100;
+        private const double DefaultN = 1;
+
+        private static SimpleTimeEstimator _simpleTimeEstimator = new SimpleTimeEstimator();
+
+        private static PointManagerFactory _pointManagerFactory;
+
         private static readonly string[] _periodNames = new[] { "+1", "+2", "+5", "+10", "+20", "+65" };
 
         private static MyLogger Logger;
 
         static void Main(string[] args)
         {
+            _pointManagerFactory = new PointManagerFactory();
             if (args.Contains("--help"))
             {
                 PrintHelp();
@@ -31,9 +77,8 @@ namespace VentureLabDrills
             }
             InitLogWithDisplayLevel(args);
             StockManager stockManager;
-            IPointManager pointManager;
             Logger.WriteLine(MyLogger.Levels.Verbose, "Warming up...");
-            if (!WarmUp(args, out stockManager, out pointManager))
+            if (!WarmUp(args, out stockManager))
             {
                 Logger.WriteLine(MyLogger.Levels.Error, "The program failed to warm up.");
                 return;
@@ -44,27 +89,36 @@ namespace VentureLabDrills
             var expertLenStr = args.GetSwitchValue("--expert");
             if (expertLenStr != null)
             {
+                var pstr = args.GetSwitchValue("-p")?? "1";
+                int pnum = 1;
+                int.TryParse(pstr, out pnum); 
                 int expLen;
                 int.TryParse(expertLenStr, out expLen);
-                RunExpert(stockManager, pointManager, dateStr, expLen);
+                RunExpert(stockManager, dateStr, expLen, pnum);
                 return;
             }
 
             var code = args.GetSwitchValue("--predict");
             if (code != null && dateStr != null)
             {
-                Predict(stockManager, pointManager, code, dateStr);
+                Predict(stockManager, _pointManagerFactory.ReusableManager, code, dateStr);
             }
             else
             {
                 Logger.WriteLine(MyLogger.Levels.Info, "Prediction session started");
-                PredictionSession(stockManager, pointManager);
+                PredictionSession(stockManager, _pointManagerFactory.ReusableManager);
             }
         }
 
-        private static void RunExpert(StockManager stockManager, IPointManager pointManager, string dateStr, int expLen)
+        private static void RunExpert(StockManager stockManager, string dateStr, int expLen, int parallel)
         {
-            var list = Expert.Run(stockManager, pointManager, GaussianPredictionHelper.Predict, GetGiicb(dateStr));
+            Logger.LocateInplaceWrite();
+            _simpleTimeEstimator.Start();
+            var list = parallel > 1?
+                Expert.RunParallel(stockManager, _pointManagerFactory, GaussianPredictionHelper.Predict, GetGiicb(dateStr), ReportExpertProgress, parallel): 
+                Expert.Run(stockManager, _pointManagerFactory.ReusableManager, GaussianPredictionHelper.Predict, GetGiicb(dateStr), ReportExpertProgress);
+            Logger.InplaceWriteLine(MyLogger.Levels.Info);
+
             if (expLen > 0)
             {
                 list = list.GetRange(0, expLen);
@@ -92,7 +146,7 @@ namespace VentureLabDrills
             Logger = new MyLogger(displayLevel);
         }
 
-        private static void PredictionSession(StockManager stockManager, IPointManager pointManager)
+        private static void PredictionSession(StockManager stockManager, StockPoint.Manager pointManager)
         {
             while (true)
             {
@@ -100,7 +154,7 @@ namespace VentureLabDrills
                 var k = Console.ReadKey(false);
                 Console.WriteLine();
                 var kc = char.ToUpper(k.KeyChar);
-                if (kc == 'N')
+                if (kc == 'Q')
                 {
                     break;
                 }
@@ -123,17 +177,21 @@ namespace VentureLabDrills
                             int.TryParse(expertLenStr, out expLen);
                             Console.Write("Date (YYYYMMDD): ");
                             var dateStr = Console.ReadLine();
-                            RunExpert(stockManager, pointManager, dateStr, expLen);
+                            Console.Write("Degree of Parallelism: ");
+                            var pstr = Console.ReadLine();
+                            int pnum = 1;
+                            int.TryParse(pstr, out pnum);
+                            RunExpert(stockManager, dateStr, expLen, pnum);
                             break;
                         }
                 }
             }
         }
 
-        private static void Predict(StockManager stockManager, IPointManager pointManager, string code, string dateStr)
+        private static void Predict(StockManager stockManager, StockPoint.Manager pointManager, string code, string dateStr)
         {
             var cb = GetGiicb(dateStr);
-            Predict(stockManager, pointManager, code, cb);
+            Predict(stockManager, code, cb);
         }
 
         private static GetItemIndexCallback GetGiicb(string dateStr)
@@ -151,7 +209,7 @@ namespace VentureLabDrills
             return cb;
         }
 
-        private static void Predict(StockManager stockManager, IPointManager pointManager, string code, GetItemIndexCallback giicb)
+        private static void Predict(StockManager stockManager, string code, GetItemIndexCallback giicb)
         {
             StockItem item;
             if (!stockManager.Items.TryGetValue(code, out item))
@@ -159,21 +217,27 @@ namespace VentureLabDrills
                 Console.WriteLine("Specified stock not found");
                 return;
             }
+
+            var pointManager = _pointManagerFactory.ResetReusableManager();
+
 #if SUPPRESS_SCORING
-            var points = item.Points.Cast<GaussianRegulatedCore>().ToList();
-            foreach (var p in points) p.Weight = 1;
+            var cores = pointManager.CreateCores(item.Points).Cast< GaussianRegulatedCore>().ToList();
 #else
-            var points = stockManager.PreparePrediction(item).Cast<GaussianRegulatedCore>().ToList();
+            var cores = stockManager.PreparePrediction(item, pointManager).Cast<GaussianRegulatedCore>().ToList();
 #endif
-            GaussianRegulatedCore.SetCoreParameters(points);
-            var firstPoint = points.FirstOrDefault();
+            GaussianRegulatedCore.SetCoreVariables(cores, new[] { pointManager.SharedVariables });
+            var firstPoint = cores.FirstOrDefault();
             DisplayParameters(firstPoint);
             DisplayWeights(item);
             if (firstPoint == null)
             {
-                Console.WriteLine("Specified stock has no statistical points");
+                Logger.WriteLine(MyLogger.Levels.Error, "Specified stock has no statistical points.");
             }
-            var outputLen = firstPoint.OutputLength;
+            else
+            {
+                Logger.WriteLine(MyLogger.Levels.Info, $"Totally {cores.Count} statistical points generated.");
+            }
+            var outputLen = firstPoint.Point.OutputLength;
             var y = new double[outputLen];
             var yy = new double[outputLen];
 
@@ -184,7 +248,7 @@ namespace VentureLabDrills
                       if (index < 0)
                       {
                           err = true;
-                          Console.WriteLine("Couldn't retrieve stock entry");
+                          Logger.WriteLine(MyLogger.Levels.Error, "Couldn't retrieve stock entry.");
                       }
                       var day0 = item.Stock.Data[index];
                       Logger.WriteLine(MyLogger.Levels.Info, $"Predicting {day0.Date}");
@@ -235,16 +299,16 @@ namespace VentureLabDrills
             Logger.WriteLine(MyLogger.Levels.Verbose, "}");
         }
 
-        private static void DisplayParameters(GaussianRegulatedCore firstPoint)
+        private static void DisplayParameters(GaussianRegulatedCore core)
         {
             Logger.Write(MyLogger.Levels.Verbose, "L = { ");
-            foreach (var l in firstPoint.L)
+            foreach (var l in core.Variables.L)
             {
                 Logger.Write(MyLogger.Levels.Verbose, $"{l:0.0000} ");
             }
             Logger.WriteLine(MyLogger.Levels.Verbose, "}");
             Logger.Write(MyLogger.Levels.Verbose, "K = { ");
-            foreach (var k in firstPoint.K)
+            foreach (var k in core.Variables.K)
             {
                 Logger.Write(MyLogger.Levels.Verbose, $"{k:0.0000} ");
             }
@@ -265,12 +329,12 @@ namespace VentureLabDrills
             return cb;
         }
 
-        private static bool WarmUp(string[] args, out StockManager stockManager, out IPointManager pointManager)
+        private static bool WarmUp(string[] args, out StockManager stockManager)
         {
             try
             {
                 stockManager = LoadStocks(args);
-                SetUpStockManager(args, stockManager, out pointManager);
+                SetUpStockManager(args, stockManager);
                 return true;
             }
             catch (Exception e)
@@ -281,7 +345,6 @@ namespace VentureLabDrills
                 Console.WriteLine("Check you command and input or see the following for detailed usage.");
                 PrintHelp();
                 stockManager = null;
-                pointManager = null;
                 return false;
             }
         }
@@ -313,7 +376,7 @@ namespace VentureLabDrills
             return stockManager;
         }
 
-        private static void SetUpStockManager(string[] args, StockManager stockManager, out IPointManager pointManager)
+        private static void SetUpStockManager(string[] args, StockManager stockManager)
         {
             var adapterStr = args.GetSwitchValue("--adapter");
             StrainAdapter adapter;
@@ -347,10 +410,7 @@ namespace VentureLabDrills
             }
 
             var scorer = new SimpleScorer(inputThr, 1.0/outputThr, outputPenalty);
-            pointManager = new GaussianStockPoint.Manager {
-                M = 100,
-                N = 1
-            };
+            var pointManager = _pointManagerFactory.ReusableManager;
             var parallel = args.Contains("-p");
             if (parallel)
             {
@@ -361,8 +421,9 @@ namespace VentureLabDrills
                 stockManager.ReloadStrains(pointManager);
             }
 
-#if !SUPPRESS_SCORING
-
+#if SUPPRESS_SCORING
+            stockManager.SetupDefaultWeights();
+#else
             ScoreTable st;
             string loadTable;
             if ((loadTable = args.GetSwitchValue("--loadScoreTable")) != null)
@@ -404,7 +465,26 @@ namespace VentureLabDrills
 
         private static void ReportGetScoresProgress(int done, int total)
         {
+            ReportProgress(done, total, "scores");
             Logger.InplaceWrite(MyLogger.Levels.Info, $"{done}/{total} scores done.");
+        }
+
+        private static bool ReportExpertProgress(Expert.Result result, int done, int total)
+        {
+            ReportProgress(done, total, "stocks");
+            return true;
+        }
+
+        private static bool ReportProgress(int done, int total, string itemName)
+        {
+            var percentage = (double)done / total;
+            _simpleTimeEstimator.Report(percentage);
+            var elapsed = _simpleTimeEstimator.TotalElapsed;
+            var remain = _simpleTimeEstimator.Estimate;
+            var elapsedstr = elapsed.ToString(@"d\.hh\:mm\:ss");
+            var remainstr = remain.ToString(@"d\.hh\:mm");
+            Logger.InplaceWrite(MyLogger.Levels.Info, $"{done}/{total} {itemName} done, ${elapsed} elapsed {remain} remaining.");
+            return true;
         }
 
         private static void PrintHelp()

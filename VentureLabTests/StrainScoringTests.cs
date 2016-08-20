@@ -20,6 +20,12 @@ namespace VentureLabTests
                 {
                     return new SimpleStrainPoint(SampleAccessor.InputCount, SampleAccessor.OutputCount);
                 }
+
+                public ICore CreateCore(IPoint point)
+                {
+                    throw new NotSupportedException();
+                }
+
                 public static Factory Instance { get; } = new Factory();
             }
 

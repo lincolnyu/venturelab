@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using VentureLab.Asx;
 using VentureLab.Prediction;
 using static VentureLab.Asx.StockManager;
@@ -9,6 +10,8 @@ namespace VentureLab.Helpers
 {
     public static class Expert
     {
+        public delegate bool ReportExpertProgress(Result result, int done, int total);
+
         public class Result
         {
             public Result(int outLen)
@@ -48,19 +51,51 @@ namespace VentureLab.Helpers
             }
         }
 
-        public static List<Result> Run(StockManager stockManager, IPointManager pointManager, PredictDelegate predict, GetItemIndexCallback giicb)
+        public static List<Result> Run(StockManager stockManager, IPointManager pointManager, PredictDelegate predict, GetItemIndexCallback giicb, ReportExpertProgress progress)
         {
             var items = stockManager.Items;
             var outLen = stockManager.GetOutputLength();
             var results = new List<Result>();
+            var count = 0;
             foreach (var item in items)
             {
                 var result = new Result(outLen) { Item = item.Value };
                 predict(stockManager, pointManager, item.Value, giicb, result.Y, result.YY);
                 results.Add(result);
+                if (!progress(result, ++count, items.Count))
+                {
+                    break;
+                }
             }
             results.Sort((a,b)=>a.Score.CompareTo(b.Score));
             return results;
         }
+
+        public static List<Result> RunParallel(StockManager stockManager, IPointManagerFactory pmFactory, PredictDelegate predict, GetItemIndexCallback giicb, ReportExpertProgress progress, int maxDegreeOfParallelism = int.MaxValue)
+        {
+            var items = stockManager.Items;
+            var outLen = stockManager.GetOutputLength();
+            var results = new List<Result>();
+            var count = 0;
+            var options = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
+            Parallel.ForEach(items, options, (item, loopState) =>
+            {
+                var result = new Result(outLen) { Item = item.Value };
+                var pointManager = pmFactory.Create();
+                predict(stockManager, pointManager, item.Value, giicb, result.Y, result.YY);
+                // TODO is List<> thread-safe?
+                lock(results)
+                {
+                    results.Add(result);
+                    if (!progress(result, ++count, items.Count))
+                    {
+                        loopState.Break();
+                    }
+                }
+            });
+            results.Sort((a, b) => a.Score.CompareTo(b.Score));
+            return results;
+        }
+
     }
 }

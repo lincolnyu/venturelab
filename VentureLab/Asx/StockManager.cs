@@ -66,6 +66,15 @@ namespace VentureLab.Asx
                     Points = pointFactory.Sample(Stock.Data, startIndex, endIndex, interval).ToList();
                 }
             }
+
+            /// <summary>
+            ///  Incorrelated uniform weights
+            /// </summary>
+            public void SetupDefaultWeights()
+            {
+                Weights.Clear();
+                Weights[this] = 1;
+            }
         }
 
         public Dictionary<string, StockItem> Items { get; } = new Dictionary<string, StockItem>();
@@ -94,10 +103,17 @@ namespace VentureLab.Asx
             }
         }
 
-        public void ReloadStrainsParallel(IPointFactory pointFactory, LoadStrainCallback lscb) => Parallel.ForEach(Items.Values, strain =>
-           lscb(pointFactory, strain));
+        public void ReloadStrainsParallel(IPointFactory pointFactory, LoadStrainCallback lscb) => Parallel.ForEach(Items.Values, strain => lscb(pointFactory, strain));
 
         public static void DefaultLoadStrainCallback(IPointFactory pointFactory, StockItem stockItem) => stockItem.LoadStrain(pointFactory);
+
+        public void SetupDefaultWeights()
+        {
+            foreach (var item in Items.Values)
+            {
+                item.SetupDefaultWeights();
+            }
+        }
 
         public ScoreTable GetScoreTable(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
         {
@@ -161,16 +177,17 @@ namespace VentureLab.Asx
         /// </summary>
         /// <param name="stock">The stock to predict</param>
         /// <returns>The related points</returns>
-        public IEnumerable<IPoint> PreparePrediction(StockItem stock)
+        public IEnumerable<ICore> PreparePrediction(StockItem stock, ICoreFactory factory)
         {
             foreach (var kvp in stock.Weights.Where(x => x.Value > 0))
             {
                 var relitem = kvp.Key;
                 var weight = kvp.Value;
-                foreach (var p in relitem.Points.Cast<IWeightedCore>())
+                var cores = factory.CreateCores(relitem.Points).Cast<IWeightedCore>();
+                foreach (var core in cores)
                 {
-                    p.Weight = weight;
-                    yield return (IPoint)p;
+                    core.Weight = weight;
+                    yield return core;
                 }
             }
         }

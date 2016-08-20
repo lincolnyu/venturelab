@@ -8,8 +8,8 @@ namespace VentureLab.QbGaussianMethod.Predictors
 {
     public class ConfinedGaussianPredictor : IPredictor
     {
-        public void GetExpectedY(IList<double> zeroedOutput, IList<double> input, IEnumerable<IPoint> points) => ConfinedGaussian.GetExpectedYFast(zeroedOutput, input, points.Cast<GaussianRegulatedCore>());
+        public void GetExpectedY(IList<double> zeroedOutput, IList<double> input, IEnumerable<ICore> cores) => ConfinedGaussian.GetExpectedYFast(zeroedOutput, input, cores.Cast<GaussianRegulatedCore>());
 
-        public void GetExpectedYY(IList<double> zeroedOutput, IList<double> input, IEnumerable<IPoint> points) => ConfinedGaussian.GetExpectedYYFast(zeroedOutput, input, points.Cast<GaussianRegulatedCore>());
+        public void GetExpectedYY(IList<double> zeroedOutput, IList<double> input, IEnumerable<ICore> cores) => ConfinedGaussian.GetExpectedYYFast(zeroedOutput, input, cores.Cast<GaussianRegulatedCore>());
     }
 }

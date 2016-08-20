@@ -52,7 +52,7 @@ namespace VentureLabTests
             var cores = GenerateRandomCores(inputLen, outputLen, numCores, false).ToList();
             var input = GenerateRandomInput(inputLen).ToArray();
 
-            GaussianRegulatedCore.SetCoreParameters(cores);
+            GaussianRegulatedCore.SetCoreVariables(cores, cores.Select(x=>x.Variables));
 
             double[] yg = new double[outputLen];
             GetExpectedYThruGeneric(yg, input, cores);
@@ -90,21 +90,24 @@ namespace VentureLabTests
             var r = _rand.NextDouble() + 0.5;
             var m = outputLen * r;
             var n = 1;
-            var core = new GaussianRegulatedCore(inputLen, outputLen, m, n, w);
+            var point = new Point(inputLen, outputLen);
+            var coreConstants = new GaussianRegulatedCoreConstants(outputLen, m, n);
+            var coreVariables = new GaussianRegulatedCoreVariables(inputLen, outputLen);
+            var core = new GaussianRegulatedCore(point, coreConstants, coreVariables, w);
             for (var i= 0; i < inputLen; i++)
             {
-                core.Input[i] = _rand.NextDouble();
+                core.Point.Input[i] = _rand.NextDouble();
                 if (generatePrecision)
-                  core.K[i] = GenerateRandomNegPrecision();
+                  core.Variables.K[i] = GenerateRandomNegPrecision();
             }
             for (var i = 0; i < outputLen; i++)
             {
-                core.Output[i] = _rand.NextDouble();
+                core.Point.Output[i] = _rand.NextDouble();
                 if (generatePrecision)
                     core.L[i] = GenerateRandomNegPrecision();
             }
-            core.UpdateLp();
-            core.UpdateNormalizer();
+            core.Variables.UpdateLp();
+            core.Variables.UpdateNormalizer();
             return core;
         }
 

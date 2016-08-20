@@ -2,7 +2,7 @@
 
 namespace VentureLab.Prediction
 {
-    public interface IPointManager : IPredictor, IPointFactory
+    public interface IPointManager : IPredictor, IPointFactory, ICoreFactory
     {
     }
 }

@@ -13,16 +13,18 @@ namespace VentureLab.QbGaussianMethod.Helpers
 
         public static bool Predict(StockManager stockManager, IPointManager pointManager, StockItem item, GetItemIndexCallback giicb, double[] y, double[] yy)
         {
-            var points = stockManager.PreparePrediction(item).Cast<GaussianRegulatedCore>().ToList();
-            if (points.Count < MinPointCount)
+            var cores = stockManager.PreparePrediction(item, pointManager).Cast<GaussianRegulatedCore>().ToList();
+            if (cores.Count < MinPointCount)
             {
                 return false;
             }
-            GaussianRegulatedCore.SetCoreParameters(points);
+            var gf = pointManager as IGaussianCoreFactory;
+            var varsets = gf?.GetCoreVariableSets() ?? cores.Select(x => x.Variables).Distinct();
+            GaussianRegulatedCore.SetCoreVariables(cores, varsets);
             var index = giicb(item);
             var input = item.SampleInput(pointManager, index);
-            pointManager.GetExpectedY(y, input.StrainPoint.Input, points);
-            pointManager.GetExpectedYY(yy, input.StrainPoint.Input, points);
+            pointManager.GetExpectedY(y, input.StrainPoint.Input, cores);
+            pointManager.GetExpectedYY(yy, input.StrainPoint.Input, cores);
             return true;
         }
     }
