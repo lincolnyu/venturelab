@@ -482,7 +482,7 @@ namespace VentureLabDrills
             var elapsed = _simpleTimeEstimator.TotalElapsed;
             var remain = _simpleTimeEstimator.Estimate;
             var elapsedstr = elapsed.ToString(@"d\.hh\:mm\:ss");
-            var remainstr = remain.ToString(@"d\.hh\:mm");
+            var remainstr = remain?.ToString(@"d\.hh\:mm")?? "unestimatable time";
             Logger.InplaceWrite(MyLogger.Levels.Info, $"{done}/{total} {itemName} done, {elapsedstr} elapsed {remainstr} remaining.");
             return true;
         }
