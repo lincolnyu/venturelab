@@ -89,9 +89,7 @@ namespace VentureLabDrills
             var expertLenStr = args.GetSwitchValue("--expert");
             if (expertLenStr != null)
             {
-                var pstr = args.GetSwitchValue("-p")?? "1";
-                int pnum = 1;
-                int.TryParse(pstr, out pnum); 
+                var pnum = args.GetMaxDegreeOfParallelism();
                 int expLen;
                 int.TryParse(expertLenStr, out expLen);
                 RunExpert(stockManager, dateStr, expLen, pnum);
@@ -411,10 +409,11 @@ namespace VentureLabDrills
 
             var scorer = new SimpleScorer(inputThr, 1.0/outputThr, outputPenalty);
             var pointManager = _pointManagerFactory.ReusableManager;
-            var parallel = args.Contains("-p");
-            if (parallel)
+
+            var parallel = args.GetMaxDegreeOfParallelism();
+            if (parallel > 1)
             {
-                stockManager.ReloadStrainsParallel(pointManager);
+                stockManager.ReloadStrainsParallel(pointManager, parallel);
             }
             else
             {
@@ -439,9 +438,9 @@ namespace VentureLabDrills
             else
             {
                 Logger.LocateInplaceWrite();
-                if (parallel)
+                if (parallel > 1)
                 {
-                    st = stockManager.GetScoreTableParallel(adapter, scorer, ReportGetScoresProgress);
+                    st = stockManager.GetScoreTableParallel(adapter, scorer, ReportGetScoresProgress, parallel);
                 }
                 else
                 {

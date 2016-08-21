@@ -93,7 +93,7 @@ namespace VentureLab.Asx
 
         public void ReloadStrains(IPointFactory pointFactory) => ReloadStrains(pointFactory, DefaultLoadStrainCallback);
 
-        public void ReloadStrainsParallel(IPointFactory pointFactory) => ReloadStrainsParallel(pointFactory, DefaultLoadStrainCallback);
+        public void ReloadStrainsParallel(IPointFactory pointFactory, int maxDegreeOfParallelism) => ReloadStrainsParallel(pointFactory, DefaultLoadStrainCallback, maxDegreeOfParallelism);
 
         public void ReloadStrains(IPointFactory pointFactory, LoadStrainCallback lscb) 
         {
@@ -103,7 +103,11 @@ namespace VentureLab.Asx
             }
         }
 
-        public void ReloadStrainsParallel(IPointFactory pointFactory, LoadStrainCallback lscb) => Parallel.ForEach(Items.Values, strain => lscb(pointFactory, strain));
+        public void ReloadStrainsParallel(IPointFactory pointFactory, LoadStrainCallback lscb, int maxDegreeOfParallelism = int.MaxValue)
+        {
+            var options = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
+            Parallel.ForEach(Items.Values, options, strain => lscb(pointFactory, strain));
+        } 
 
         public static void DefaultLoadStrainCallback(IPointFactory pointFactory, StockItem stockItem) => stockItem.LoadStrain(pointFactory);
 
@@ -121,9 +125,10 @@ namespace VentureLab.Asx
             return scoreTable;
         }
 
-        public ScoreTable GetScoreTableParallel(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
+        public ScoreTable GetScoreTableParallel(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null, int maxDegreeOfParallelism = int.MaxValue)
         {
-            var scoreTable = GetScoreTable(adapter, scorer, StrainsHelper.GetScoresParallel, reportProgress);
+            var parallelizer = new GetScoresParallelizer(maxDegreeOfParallelism);
+            var scoreTable = GetScoreTable(adapter, scorer, parallelizer.GetScoresParallel, reportProgress);
             return scoreTable;
         }
 
