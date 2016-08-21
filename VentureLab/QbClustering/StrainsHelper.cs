@@ -24,7 +24,7 @@ namespace VentureLab.QbClustering
 
             public static GetScoresParallelizer Instance = new GetScoresParallelizer();
 
-            public ScoreTable GetScoresParallel(IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
+            public ScoreTable GetScoresParallel(IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, int inc = 1, ReportGetScoresProgress reportProgress = null)
             {
                 var numStrains = strains.Count;
                 var scores = new ScoreTable();
@@ -36,7 +36,7 @@ namespace VentureLab.QbClustering
                 {
                     var strain1 = strainPair.Strain1;
                     var strain2 = strainPair.Strain2;
-                    var score = adapter.Score(strain1, strain2, scorer);
+                    var score = adapter.Score(strain1, strain2, scorer, inc);
                     lock (scores)
                     {
                         scores[strain1, strain2] = score;
@@ -70,7 +70,7 @@ namespace VentureLab.QbClustering
             }
         }
 
-        public static ScoreTable GetScores(this IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
+        public static ScoreTable GetScores(this IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, int inc = 1, ReportGetScoresProgress reportProgress = null)
         {
             var numStrains = strains.Count;
             var scores = new ScoreTable();
@@ -82,7 +82,7 @@ namespace VentureLab.QbClustering
                 for (var j = i; j < numStrains; j++)
                 {
                     var strain2 = strains[j];
-                    var score = adapter.Score(strain1, strain2, scorer);
+                    var score = adapter.Score(strain1, strain2, scorer, inc);
                     if (score > 0)
                     {
                         scores[strain1, strain2] = score;
@@ -93,9 +93,9 @@ namespace VentureLab.QbClustering
             return scores;
         }
 
-        public static ScoreTable GetScoresParallel(this IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
+        public static ScoreTable GetScoresParallel(this IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, int inc = 1, ReportGetScoresProgress reportProgress = null)
         {
-            return GetScoresParallelizer.Instance.GetScoresParallel(strains, adapter, scorer, reportProgress);
+            return GetScoresParallelizer.Instance.GetScoresParallel(strains, adapter, scorer, inc, reportProgress);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace VentureLab.Asx
 {
     public class StockManager
     {
-        public delegate ScoreTable GetScoresMethod(IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null);
+        public delegate ScoreTable GetScoresMethod(IList<IStrain> strains, StrainAdapter adapter, IScorer scorer, int inc = 1, ReportGetScoresProgress reportProgress = null);
 
         public delegate void LoadStrainCallback(IPointFactory pointFactory, StockItem stockItem);
 
@@ -119,24 +119,24 @@ namespace VentureLab.Asx
             }
         }
 
-        public ScoreTable GetScoreTable(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null)
+        public ScoreTable GetScoreTable(StrainAdapter adapter, IScorer scorer, int inc = 1, ReportGetScoresProgress reportProgress = null)
         {
-            var scoreTable = GetScoreTable(adapter, scorer, StrainsHelper.GetScores, reportProgress);
+            var scoreTable = GetScoreTable(adapter, scorer, StrainsHelper.GetScores, inc, reportProgress);
             return scoreTable;
         }
 
-        public ScoreTable GetScoreTableParallel(StrainAdapter adapter, IScorer scorer, ReportGetScoresProgress reportProgress = null, int maxDegreeOfParallelism = int.MaxValue)
+        public ScoreTable GetScoreTableParallel(StrainAdapter adapter, IScorer scorer, int inc = 1, ReportGetScoresProgress reportProgress = null, int maxDegreeOfParallelism = int.MaxValue)
         {
             var parallelizer = new GetScoresParallelizer(maxDegreeOfParallelism);
-            var scoreTable = GetScoreTable(adapter, scorer, parallelizer.GetScoresParallel, reportProgress);
+            var scoreTable = GetScoreTable(adapter, scorer, parallelizer.GetScoresParallel, inc,  reportProgress);
             return scoreTable;
         }
 
-        private ScoreTable GetScoreTable(StrainAdapter adapter, IScorer scorer, GetScoresMethod getScores, ReportGetScoresProgress reportProgress)
+        private ScoreTable GetScoreTable(StrainAdapter adapter, IScorer scorer, GetScoresMethod getScores, int inc, ReportGetScoresProgress reportProgress)
         {
             var strainList = Items.Values.Cast<IStrain>().ToList();
             adapter.UpdatePointsIndicators(strainList);
-            var scoreTable = getScores(strainList, adapter, scorer, reportProgress);
+            var scoreTable = getScores(strainList, adapter, scorer, inc, reportProgress);
             return scoreTable;
         }
 

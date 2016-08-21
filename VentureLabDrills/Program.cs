@@ -439,13 +439,15 @@ namespace VentureLabDrills
             {
                 Logger.LocateInplaceWrite();
                 _simpleTimeEstimator.Start();
+                var inc = args.GetSwitchValueAsInt("--scoreSampleInc", 1, 1);
+
                 if (parallel > 1)
                 {
-                    st = stockManager.GetScoreTableParallel(adapter, scorer, ReportGetScoresProgress, parallel);
+                    st = stockManager.GetScoreTableParallel(adapter, scorer, inc, ReportGetScoresProgress, parallel);
                 }
                 else
                 {
-                    st = stockManager.GetScoreTable(adapter, scorer, ReportGetScoresProgress);
+                    st = stockManager.GetScoreTable(adapter, scorer, inc, ReportGetScoresProgress);
                 }
                 Logger.InplaceWriteLine(MyLogger.Levels.Info);
                 string saveTable;

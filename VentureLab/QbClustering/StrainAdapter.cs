@@ -17,26 +17,27 @@ namespace VentureLab.QbClustering
             }
         }
 
-        public virtual double Score(IStrain a, IStrain b, IScorer scorer)
+        public virtual double Score(IStrain a, IStrain b, IScorer scorer, int inc = 1)
         {
             int start = 0;
             var totalScore = 0.0;
-            foreach (var pa in a.Points)
+            for (var i = 0; i < a.Points.Count; i += inc)
             {
-                var i = start;
-                for (; i < b.Points.Count; i++)
+                var pa = a.Points[i];
+                var j = start;
+                for (; j < b.Points.Count; j += inc)
                 {
-                    var pb = b.Points[i];
+                    var pb = b.Points[j];
                     var diffInd = Math.Abs(pa.Indicator - pb.Indicator);
                     if (diffInd <= scorer.InputDiffTolerance)
                     {
-                        start = i;
+                        start = j;
                         break;
                     }
                 }
-                for (; i < b.Points.Count; i++)
+                for (; j < b.Points.Count; j += inc)
                 {
-                    var pb = b.Points[i];
+                    var pb = b.Points[j];
                     var diffInd = Math.Abs(pa.Indicator - pb.Indicator);
                     if (diffInd > scorer.InputDiffTolerance)
                     {
