@@ -438,6 +438,7 @@ namespace VentureLabDrills
             else
             {
                 Logger.LocateInplaceWrite();
+                _simpleTimeEstimator.Start();
                 if (parallel > 1)
                 {
                     st = stockManager.GetScoreTableParallel(adapter, scorer, ReportGetScoresProgress, parallel);
