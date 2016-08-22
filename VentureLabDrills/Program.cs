@@ -84,8 +84,13 @@ namespace VentureLabDrills
                 return;
             }
             Logger.WriteLine(MyLogger.Levels.Verbose, "Warmed up.");
-            var dateStr = args.GetSwitchValue("--date");
 
+            if (args.Contains("--warmupOnly"))
+            {
+                return;
+            }
+
+            var dateStr = args.GetSwitchValue("--date");
             var expertLenStr = args.GetSwitchValue("--expert");
             if (expertLenStr != null)
             {
