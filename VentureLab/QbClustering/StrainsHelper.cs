@@ -37,10 +37,13 @@ namespace VentureLab.QbClustering
                     var strain1 = strainPair.Strain1;
                     var strain2 = strainPair.Strain2;
                     var score = adapter.Score(strain1, strain2, scorer, inc);
-                    lock (scores)
+                    if (score > 0)
                     {
-                        scores[strain1, strain2] = score;
-                        reportProgress?.Invoke(++count, total);
+                        lock (scores)
+                        {
+                            scores[strain1, strain2] = score;
+                            reportProgress?.Invoke(++count, total);
+                        }
                     }
                 });
                 return scores;

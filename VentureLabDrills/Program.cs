@@ -223,18 +223,18 @@ namespace VentureLabDrills
 #else
             var cores = stockManager.PreparePrediction(item, pointManager).Cast<GaussianRegulatedCore>().ToList();
 #endif
-            GaussianRegulatedCore.SetCoreVariables(cores, new[] { pointManager.SharedVariables });
             var firstPoint = cores.FirstOrDefault();
-            DisplayParameters(firstPoint);
-            DisplayWeights(item);
             if (firstPoint == null)
             {
                 Logger.WriteLine(MyLogger.Levels.Error, "Specified stock has no statistical points.");
+                return;
             }
-            else
-            {
-                Logger.WriteLine(MyLogger.Levels.Info, $"Totally {cores.Count} statistical points generated.");
-            }
+
+            GaussianRegulatedCore.SetCoreVariables(cores, new[] { pointManager.SharedVariables });
+            DisplayParameters(firstPoint);
+            DisplayWeights(item);
+            Logger.WriteLine(MyLogger.Levels.Info, $"Totally {cores.Count} statistical points generated.");
+
             var outputLen = firstPoint.Point.OutputLength;
             var y = new double[outputLen];
             var yy = new double[outputLen];
@@ -392,22 +392,13 @@ namespace VentureLabDrills
             var outputPenaltyStr = args.GetSwitchValue("--outputpenalty");
             double defaultInputThr = 0.1 * (isAbs ? SampleAccessor.InputCount : Math.Sqrt(SampleAccessor.InputCount));
             double defaultOutputThr = 0.1 * (isAbs ? SampleAccessor.OutputCount : Math.Sqrt(SampleAccessor.OutputCount));
-            double inputThr, outputThr;
-            if (!double.TryParse(inputThrStr, out inputThr))
-            {
-                inputThr = defaultInputThr;
-            }
-            if (!double.TryParse(outputThrStr, out outputThr))
-            {
-                outputThr = defaultOutputThr;
-            }
+          
             double outputPenalty;
             if (!double.TryParse(outputPenaltyStr, out outputPenalty))
             {
                 outputPenalty = SimpleScorer.DefaultOutputPenalty;
             }
 
-            var scorer = new SimpleScorer(inputThr, 1.0/outputThr, outputPenalty);
             var pointManager = _pointManagerFactory.ReusableManager;
 
             var parallel = args.GetMaxDegreeOfParallelism();
@@ -423,15 +414,13 @@ namespace VentureLabDrills
 #if SUPPRESS_SCORING
             stockManager.SetupDefaultWeights();
 #else
-            ScoreTable st;
             string loadTable;
             if ((loadTable = args.GetSwitchValue("--loadScoreTable")) != null)
             {
                 Logger.Write(MyLogger.Levels.Info, $"Loading score table from file {loadTable}...");
-                st = new ScoreTable();
                 using (var sr = new StreamReader(loadTable))
                 {
-                    st.Load(stockManager, sr);
+                    stockManager.LoadScoresDirect(sr);
                 }
                 Logger.WriteLine(MyLogger.Levels.Info, "done.");
             }
@@ -439,8 +428,19 @@ namespace VentureLabDrills
             {
                 Logger.LocateInplaceWrite();
                 _simpleTimeEstimator.Start();
-                var inc = args.GetSwitchValueAsInt("--scoreSampleInc", 1, 1);
 
+                double inputThr, outputThr;
+                if (!double.TryParse(inputThrStr, out inputThr))
+                {
+                    inputThr = defaultInputThr;
+                }
+                if (!double.TryParse(outputThrStr, out outputThr))
+                {
+                    outputThr = defaultOutputThr;
+                }
+                var scorer = new SimpleScorer(inputThr, 1.0 / outputThr, outputPenalty);
+                var inc = args.GetSwitchValueAsInt("--scoreSampleInc", 1, 1);
+                ScoreTable st;
                 if (parallel > 1)
                 {
                     st = stockManager.GetScoreTableParallel(adapter, scorer, inc, ReportGetScoresProgress, parallel);
@@ -460,8 +460,9 @@ namespace VentureLabDrills
                     }
                     Logger.WriteLine(MyLogger.Levels.Info, "done.");
                 }
+                stockManager.SetScoreTableToItems(st);
             }
-            stockManager.SetScoreTableToItems(st);
+            stockManager.SuppressCrossScores();
 #endif
         }
 

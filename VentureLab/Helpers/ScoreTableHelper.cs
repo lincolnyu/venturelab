@@ -27,12 +27,34 @@ namespace VentureLab.Helpers
             while ((line = reader.ReadLine()) != null)
             {
                 var split = line.Split(',');
-                var code1 = split[0];
-                var code2 = split[1];
                 var score = double.Parse(split[2]);
-                var strain1 = sm.Items[code1];
-                var strain2 = sm.Items[code2];
-                scoreTable[strain1, strain2] = score;
+                if (score > 0)
+                {
+                    var code1 = split[0];
+                    var code2 = split[1];
+                    var strain1 = sm.Items[code1];
+                    var strain2 = sm.Items[code2];
+                    scoreTable[strain1, strain2] = score;
+                }
+            }
+        }
+
+        public static void LoadScoresDirect(this StockManager sm, TextReader reader)
+        {
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                var split = line.Split(',');
+                var score = double.Parse(split[2]);
+                if (score > 0)
+                {
+                    var code1 = split[0];
+                    var code2 = split[1];
+                    var strain1 = sm.Items[code1];
+                    var strain2 = sm.Items[code2];
+                    strain1.Weights[strain2] = score;
+                    strain2.Weights[strain1] = score;
+                }
             }
         }
     }
