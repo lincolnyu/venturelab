@@ -12,11 +12,14 @@ namespace VentureLab.Helpers
             foreach (var kvp in scoreTable.Data)
             {
                 var key = kvp.Key;
-                var strain1 = (StockItem)key.Strain1;
-                var strain2 = (StockItem)key.Strain2;
-                var code1 = strain1.Stock.Code;
-                var code2 = strain2.Stock.Code;
-                writer.WriteLine($"{code1},{code2},{kvp.Value}");
+                if (kvp.Value > 0)
+                {
+                    var strain1 = (StockItem)key.Strain1;
+                    var strain2 = (StockItem)key.Strain2;
+                    var code1 = strain1.Stock.Code;
+                    var code2 = strain2.Stock.Code;
+                    writer.WriteLine($"{code1},{code2},{kvp.Value}");
+                }
             }
         }
 

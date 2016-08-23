@@ -25,8 +25,11 @@ namespace VentureLab.QbGaussianMethod.Cores
 
         public GaussianRegulatedCoreConstants Constants { get; set; }
 
-        public GaussianRegulatedCoreVariables Variables { get { return _variables; }
-            set { _variables = value; _variables.Core = this; }  }
+        public GaussianRegulatedCoreVariables Variables
+        {
+            get { return _variables; }
+            set { _variables = value; _variables.Core = this; }
+        }
 
         #region IWeightedCore members
 

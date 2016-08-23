@@ -14,6 +14,7 @@ using VentureLab.QbGaussianMethod.Cores;
 using VentureLab.QbGaussianMethod.Helpers;
 using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
 using QLogger.Logging;
+using VentureLab;
 
 namespace VentureLabDrills
 {
@@ -75,6 +76,21 @@ namespace VentureLabDrills
                 PrintHelp();
                 return;
             }
+
+            var st = args.GetSwitchValue("--fix");
+            if (st != null)
+            {
+                if (File.Exists(st))
+                {
+                    FixStoreTableFile(st);
+                }
+                else
+                {
+                    Console.WriteLine("Cannot find the file to fix.");
+                }
+                return;
+            }
+
             InitLogWithDisplayLevel(args);
             StockManager stockManager;
             Logger.WriteLine(MyLogger.Levels.Verbose, "Warming up...");
@@ -113,6 +129,18 @@ namespace VentureLabDrills
             }
         }
 
+        private static void FixStoreTableFile(string stsrc)
+        {
+            var stfixed = stsrc + ".fix";
+            using (var sr = new StreamReader(stsrc))
+            {
+                using (var sw = new StreamWriter(stfixed))
+                {
+                    ScoreTableFixer.Fix(sr, sw);
+                }
+            }
+        }
+
         private static void RunExpert(StockManager stockManager, string dateStr, int expLen, int parallel)
         {
             Logger.LocateInplaceWrite();
@@ -120,7 +148,7 @@ namespace VentureLabDrills
             var list = parallel > 1?
                 Expert.RunParallel(stockManager, _pointManagerFactory, GaussianPredictionHelper.Predict, GetGiicb(dateStr), ReportExpertProgress, parallel): 
                 Expert.Run(stockManager, _pointManagerFactory.ReusableManager, GaussianPredictionHelper.Predict, GetGiicb(dateStr), ReportExpertProgress);
-            Logger.InplaceWriteLine(MyLogger.Levels.Info);
+            Logger.WriteLine(MyLogger.Levels.Info);
 
             if (expLen > 0)
             {
@@ -166,7 +194,7 @@ namespace VentureLabDrills
                     case 'P':
                         {
                             Console.Write("Code: ");
-                            var code = Console.ReadLine();
+                            var code = Console.ReadLine().ToUpper();
                             Console.Write("Date (YYYYMMDD): ");
                             var dateStr = Console.ReadLine();
                             Predict(stockManager, pointManager, code, dateStr);
@@ -454,7 +482,7 @@ namespace VentureLabDrills
                 {
                     st = stockManager.GetScoreTable(adapter, scorer, inc, ReportGetScoresProgress);
                 }
-                Logger.InplaceWriteLine(MyLogger.Levels.Info);
+                Logger.WriteLine(MyLogger.Levels.Info);
                 string saveTable;
                 if ((saveTable = args.GetSwitchValue("--saveScoreTable")) != null)
                 {
@@ -499,11 +527,32 @@ namespace VentureLabDrills
         {
             var appname = GetAppExecutableName();
             var appver = GetAppVersion();
+            Console.WriteLine();
             Console.WriteLine($"VentureLab (Ver {appver})");
+            Console.WriteLine("(c) 2016 quanbenSoft. All rights reserved.");
+            Console.WriteLine();
             Console.WriteLine("Usage: ");
+            Console.WriteLine();
             Console.WriteLine($"  {appname} -i <input folder> [--from <inclusive starting date>] [--to <exclusive ending date>]");
-            Console.WriteLine("     [--displaylevel={error|warning|verbose}] ");
+            Console.WriteLine("       --{saveScoreTable|loadScoreTable} <score table file path> ");
+            Console.WriteLine("       [--displaylevel={error|warning|verbose}] ");
+            Console.WriteLine("       [-p [<degree of maximum parallelism, default being infinity>]] ");
+            Console.WriteLine("       [--{predict <code name>|expert}]");
+            Console.WriteLine();
+            Console.WriteLine("    Perform the stock price prediction functionality");
+            Console.WriteLine("    * '--predict' to predict a specified stock");
+            Console.WriteLine("    * '--expert' for expert mode that automatically recommends stocks");
+            Console.WriteLine("    * When neither is used, enter the interactive prediction session loop ");
+            Console.WriteLine();
+            Console.WriteLine($"  {appname} --fix <score table file path>");
+            Console.WriteLine();
+            Console.WriteLine("    Attempt to fix the score file (such that it is compliant to the current version).");
+            Console.WriteLine("    Fixed path will be suffixed by '.fix'.");
+            Console.WriteLine();
             Console.WriteLine($"  {appname} --help");
+            Console.WriteLine();
+            Console.WriteLine("    Display this help ");
+            Console.WriteLine();
         }
     }
 }

@@ -52,7 +52,7 @@ namespace VentureLabDrills.Output
             }
         }
 
-        public void WriteLine(Levels level, string msg)
+        public void WriteLine(Levels level, string msg = "")
         {
             lock(this)
             {
@@ -89,13 +89,6 @@ namespace VentureLabDrills.Output
             writer.RestoreCursor();
             writer.WriteFormat(true, msg);
             writer.UpdateLastRefreshTime();
-        }
-
-        public void InplaceWriteLine(Levels level)
-        {
-            var writer = (InplaceWriter)InplaceDisplayer.Writer;
-            if (!writer.CanRefreshNow()) return;
-            writer.WriteLine("", true);
         }
     }
 }
