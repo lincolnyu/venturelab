@@ -67,7 +67,7 @@ namespace VentureLab.Helpers
                     break;
                 }
             }
-            results.Sort((a,b)=>a.Score.CompareTo(b.Score));
+            results.Sort((a, b) => -a.Score.CompareTo(b.Score));
             return results;
         }
 
@@ -84,7 +84,7 @@ namespace VentureLab.Helpers
                 var pointManager = pmFactory.Create();
                 predict(stockManager, pointManager, item.Value, giicb, result.Y, result.YY);
                 // TODO is List<> thread-safe?
-                lock(results)
+                lock (results)
                 {
                     results.Add(result);
                     if (!progress(result, ++count, items.Count))
@@ -93,9 +93,8 @@ namespace VentureLab.Helpers
                     }
                 }
             });
-            results.Sort((a, b) => a.Score.CompareTo(b.Score));
+            results.Sort((a, b) => -a.Score.CompareTo(b.Score));
             return results;
         }
-
     }
 }
