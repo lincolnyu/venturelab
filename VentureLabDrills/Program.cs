@@ -535,6 +535,7 @@ namespace VentureLabDrills
             Console.WriteLine();
             Console.WriteLine($"  {appname} -i <input folder> [--from <inclusive starting date>] [--to <exclusive ending date>]");
             Console.WriteLine("       --{saveScoreTable|loadScoreTable} <score table file path> ");
+            Console.WriteLine("       [--scoreSampleInc <step of sampling iteration for score table, default 1>] ");
             Console.WriteLine("       [--displaylevel={error|warning|verbose}] ");
             Console.WriteLine("       [-p [<degree of maximum parallelism, default being infinity>]] ");
             Console.WriteLine("       [--{predict <code name>|expert}]");
