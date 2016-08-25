@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Output\Displayer.cs" />
+    <Compile Include="Output\FileWriter.cs" />
     <Compile Include="Output\InplaceDisplayer.cs" />
     <Compile Include="Output\MyLogger.cs" />
     <Compile Include="Program.cs" />

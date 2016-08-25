@@ -23,7 +23,7 @@ namespace VentureLabDrills.Output
 
         public MyLogger(Levels displayLevel)
         {
-            Writers.Add(Displayer = new Displayer(this) { DisplayLevel = displayLevel, IsEnabled = true });
+            Writers.Add(Displayer = new Displayer(this) { ThresholdLevel = displayLevel, IsEnabled = true });
             SetupInplaceDisplayer();
         }
 

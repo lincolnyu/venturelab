@@ -11,10 +11,10 @@ using VentureLab.QbClustering;
 using VentureLab.Prediction;
 using VentureLabDrills.Output;
 using VentureLab.QbGaussianMethod.Cores;
-using VentureLab.QbGaussianMethod.Helpers;
 using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
 using QLogger.Logging;
 using VentureLab;
+using VentureLab.QbGaussianMethod.Helpers;
 
 namespace VentureLabDrills
 {
@@ -68,6 +68,9 @@ namespace VentureLabDrills
 
         private static MyLogger Logger;
 
+        public const int MaxDaysAheadAllowed = 5;
+        public const int MaxDaysBehindAllowed = 5;
+
         static void Main(string[] args)
         {
             _pointManagerFactory = new PointManagerFactory();
@@ -92,6 +95,8 @@ namespace VentureLabDrills
             }
 
             InitLogWithDisplayLevel(args);
+            SetupLogOutput(args);
+
             StockManager stockManager;
             Logger.WriteLine(MyLogger.Levels.Verbose, "Warming up...");
             if (!WarmUp(args, out stockManager))
@@ -146,8 +151,8 @@ namespace VentureLabDrills
             Logger.LocateInplaceWrite();
             _simpleTimeEstimator.Start();
             var list = parallel > 1?
-                Expert.RunParallel(stockManager, _pointManagerFactory, GaussianPredictionHelper.Predict, GetGiicb(dateStr), ReportExpertProgress, parallel): 
-                Expert.Run(stockManager, _pointManagerFactory.ReusableManager, GaussianPredictionHelper.Predict, GetGiicb(dateStr), ReportExpertProgress);
+                Expert.RunParallel(stockManager, _pointManagerFactory, GaussianOneOffPredictor.Instance.Predict, GetGiicb(dateStr), MaxDaysAheadAllowed, ReportExpertProgress, parallel): 
+                Expert.Run(stockManager, _pointManagerFactory.ReusableManager, GaussianOneOffPredictor.Instance.Predict, GetGiicb(dateStr), MaxDaysAheadAllowed, ReportExpertProgress);
             Logger.WriteLine(MyLogger.Levels.Info);
 
             if (expLen > 0)
@@ -157,24 +162,48 @@ namespace VentureLabDrills
             for (var i = 0; i < list.Count; i++)
             {
                 var item = list[i];
-                Console.WriteLine($"{i + 1}: {item.Item.Stock.Code}");
+                Logger.WriteLine(MyLogger.Levels.Info, $"{i + 1}: {item.Item.Stock.Code}");
                 DisplayPrediction(item.Y, item.YY);
-                Console.WriteLine();
+                Logger.WriteLine(MyLogger.Levels.Info);
             }
         }
 
         private static void InitLogWithDisplayLevel(string[] args)
         {
             MyLogger.Levels displayLevel = MyLogger.Levels.Warning;
-            if (args.Contains("--displaylevel=verbose"))
+            if (args.Contains("--displayLevel=verbose"))
             {
                 displayLevel = MyLogger.Levels.Verbose;
             }
-            else if (args.Contains("--displaylevel=error"))
+            else if (args.Contains("--displayLevel=error"))
             {
                 displayLevel = MyLogger.Levels.Error;
             }
             Logger = new MyLogger(displayLevel);
+        }
+
+        private static void SetupLogOutput(string[] args)
+        {
+            MyLogger.Levels logLevel = MyLogger.Levels.Verbose;
+            if (args.Contains("--logLevel=warning"))
+            {
+                logLevel = MyLogger.Levels.Warning;
+            }
+            else if (args.Contains("--logLevel=error"))
+            {
+                logLevel = MyLogger.Levels.Error;
+            }
+            var outfile = args.GetSwitchValue("--log");
+            if (outfile != null)
+            {
+                var fw = new FileWriter(Logger, new StreamWriter(outfile))
+                {
+                    IsEnabled = true,
+                    FlushEveryWrite = true,
+                    ThresholdLevel = logLevel
+                };
+                Logger.Writers.Add(fw);
+            }
         }
 
         private static void PredictionSession(StockManager stockManager, StockPoint.Manager pointManager)
@@ -194,7 +223,7 @@ namespace VentureLabDrills
                     case 'P':
                         {
                             Console.Write("Code: ");
-                            var code = Console.ReadLine().ToUpper();
+                            var code = Console.ReadLine();
                             Console.Write("Date (YYYYMMDD): ");
                             var dateStr = Console.ReadLine();
                             Predict(stockManager, pointManager, code, dateStr);
@@ -222,6 +251,7 @@ namespace VentureLabDrills
         private static void Predict(StockManager stockManager, StockPoint.Manager pointManager, string code, string dateStr)
         {
             var cb = GetGiicb(dateStr);
+            code = code.ToUpper();
             Predict(stockManager, code, cb);
         }
 
@@ -245,7 +275,7 @@ namespace VentureLabDrills
             StockItem item;
             if (!stockManager.Items.TryGetValue(code, out item))
             {
-                Console.WriteLine("Specified stock not found");
+                Logger.WriteLine(MyLogger.Levels.Error, "Specified stock not found");
                 return;
             }
 
@@ -266,36 +296,30 @@ namespace VentureLabDrills
             GaussianRegulatedCore.SetCoreVariables(cores, new[] { pointManager.SharedVariables });
             DisplayParameters(firstPoint);
             DisplayWeights(item);
-            Logger.WriteLine(MyLogger.Levels.Info, $"Totally {cores.Count} statistical points generated.");
+            Logger.WriteLine(MyLogger.Levels.Info, $"Totally {cores.Count} statistical points generated for {code}.");
 
             var outputLen = firstPoint.Point.OutputLength;
-            var y = new double[outputLen];
-            var yy = new double[outputLen];
 
-            var err = false;
-            var predres = GaussianPredictionHelper.Predict(stockManager, pointManager, item,
+            var result = new PredictionResult(outputLen);
+            GaussianOneOffPredictor.Instance.Predict(stockManager, pointManager, item,
                   x => {
                       var index = giicb(x);
-                      if (index < 0)
+                      if (index >= 0)
                       {
-                          err = true;
-                          Logger.WriteLine(MyLogger.Levels.Error, "Couldn't retrieve stock entry.");
+                          var day0 = item.Stock.Data[index];
+                          Logger.WriteLine(MyLogger.Levels.Info, $"Predicting {day0.Date}");
                       }
-                      var day0 = item.Stock.Data[index];
-                      Logger.WriteLine(MyLogger.Levels.Info, $"Predicting {day0.Date}");
                       return index;
-                  }, y, yy);
-            if (err) return;
-
-            if (predres)
+                  }, result);
+            if (result.ErrorMessage == null)
             {
                 Logger.WriteLine(MyLogger.Levels.Info, "Prediction = {");
-                DisplayPrediction(y, yy, 2);
+                DisplayPrediction(result.Y, result.YY, 2);
                 Logger.WriteLine(MyLogger.Levels.Info, "}");
             }
             else
             {
-                Logger.WriteLine(MyLogger.Levels.Info, "Not enough points to be statistically significant");
+                Logger.WriteLine(MyLogger.Levels.Error, result.ErrorMessage);
             }
         }
 
@@ -355,6 +379,15 @@ namespace VentureLabDrills
             {
                 var index = item.Stock.GetInsertIndex(date);
                 if (index >= item.Stock.Data.Count) index = item.Stock.Data.Count - 1;
+                if (index >= 0 && index < item.Stock.Data.Count)
+                {
+                    var s = item.Stock.Data[index];
+                    if (s.Date < date.Subtract(TimeSpan.FromDays(MaxDaysAheadAllowed))
+                        || s.Date > date.Subtract(TimeSpan.FromDays(MaxDaysBehindAllowed)))
+                    {
+                        return -1;
+                    }
+                }
                 return index;
             };
             return cb;
@@ -534,11 +567,13 @@ namespace VentureLabDrills
             Console.WriteLine("Usage: ");
             Console.WriteLine();
             Console.WriteLine($"  {appname} -i <input folder> [--from <inclusive starting date>] [--to <exclusive ending date>]");
-            Console.WriteLine("       --{saveScoreTable|loadScoreTable} <score table file path> ");
+            Console.WriteLine("       [--{saveScoreTable|loadScoreTable} <score table file path>]");
             Console.WriteLine("       [--scoreSampleInc <step of sampling iteration for score table, default 1>] ");
-            Console.WriteLine("       [--displaylevel={error|warning|verbose}] ");
-            Console.WriteLine("       [-p [<degree of maximum parallelism, default being infinity>]] ");
+            Console.WriteLine("       [--displayLevel={error|warning|verbose}]");
+            Console.WriteLine("       [-p [<degree of maximum parallelism, default being infinity>]]");
             Console.WriteLine("       [--{predict <code name>|expert}]");
+            Console.WriteLine("       [--logLevel={error|warning|verbose}]");
+            Console.WriteLine("       [--log <log file path]");
             Console.WriteLine();
             Console.WriteLine("    Perform the stock price prediction functionality");
             Console.WriteLine("    * '--predict' to predict a specified stock");
