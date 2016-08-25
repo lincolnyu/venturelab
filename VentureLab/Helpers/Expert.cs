@@ -61,6 +61,7 @@ namespace VentureLab.Helpers
             {
                 var result = new Result(outLen) { Item = item.Value };
                 predict(stockManager, pointManager, item.Value, giicb, result.Y, result.YY);
+                result.UpdateScore();
                 results.Add(result);
                 if (!progress(result, ++count, items.Count))
                 {
@@ -83,6 +84,7 @@ namespace VentureLab.Helpers
                 var result = new Result(outLen) { Item = item.Value };
                 var pointManager = pmFactory.Create();
                 predict(stockManager, pointManager, item.Value, giicb, result.Y, result.YY);
+                result.UpdateScore();
                 // TODO is List<> thread-safe?
                 lock (results)
                 {
