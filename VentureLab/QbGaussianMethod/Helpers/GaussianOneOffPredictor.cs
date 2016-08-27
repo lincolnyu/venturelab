@@ -2,6 +2,7 @@
 using VentureLab.Asx;
 using VentureLab.Prediction;
 using VentureLab.QbGaussianMethod.Cores;
+using VentureLab.QbGuassianMethod.Helpers;
 using static VentureLab.Asx.StockManager;
 using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
 
@@ -36,12 +37,23 @@ namespace VentureLab.QbGaussianMethod.Helpers
                 return;
             }
             var gf = pointManager as IGaussianCoreFactory;
-            var varsets = gf?.GetCoreVariableSets() ?? cores.Select(x => x.Variables).Distinct();
+            var varsets = gf?.GetCoreVariableSets() ?? cores.Select(c => c.Variables).Distinct();
             GaussianRegulatedCore.SetCoreVariables(cores, varsets);
             
             var input = item.SampleInput(pointManager, index);
-            pointManager.GetExpectedY(result.Y, input.StrainPoint.Input, cores);
-            pointManager.GetExpectedYY(result.YY, input.StrainPoint.Input, cores);
+            var x = input.StrainPoint.Input;
+            pointManager.GetExpectedY(result.Y, x, cores);
+            pointManager.GetExpectedYY(result.YY, x, cores);
+
+            if (result.Y.All(y=>double.IsNaN(y)) && result.YY.All(yy=>double.IsNaN(yy)))
+            {
+                ConfinedGaussian.OffsetEp(x, cores, varsets);
+                result.Reset();
+                pointManager.GetExpectedY(result.Y, x, cores);
+                pointManager.GetExpectedYY(result.YY, x, cores);
+            }
+
+            result.Date = item.Stock.Data[index].Date;
         }
     }
 }

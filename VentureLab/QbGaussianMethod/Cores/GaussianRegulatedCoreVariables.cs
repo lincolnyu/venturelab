@@ -25,6 +25,8 @@ namespace VentureLab.QbGaussianMethod.Cores
         /// </summary>
         public double Normalizer { get; set; }
 
+        public double EpOffset = 0;
+
         public void UpdateLp()
         {
             var prod = Enumerable.Aggregate(L, (a, b) => a * b);

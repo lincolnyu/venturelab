@@ -20,6 +20,7 @@ namespace VentureLab.QbGaussianMethod.Helpers
             double[] YY { get; }
             DateTime Date { get; set; }
             string ErrorMessage { get; set; }
+            void Reset();
         }
 
         public class PredictionResult : IPredictionResult
@@ -48,6 +49,12 @@ namespace VentureLab.QbGaussianMethod.Helpers
             public double[] YY
             {
                 get;
+            }
+
+            public void Reset()
+            {
+                for (var i = 0; i < Y.Length; i++) Y[i] = 0;
+                for (var i = 0; i < YY.Length; i++) YY[i] = 0;
             }
         }
     }

@@ -35,9 +35,13 @@ namespace VentureLab.Helpers
                 {
                     var code1 = split[0];
                     var code2 = split[1];
-                    var strain1 = sm.Items[code1];
-                    var strain2 = sm.Items[code2];
-                    scoreTable[strain1, strain2] = score;
+                    StockItem strain1, strain2;
+                    if (sm.Items.TryGetValue(code1, out strain1) && sm.Items.TryGetValue(code2, out strain2))
+                    {
+                        strain1.Weights[strain2] = score;
+                        strain2.Weights[strain1] = score;
+                        scoreTable[strain1, strain2] = score;
+                    }
                 }
             }
         }
@@ -53,10 +57,12 @@ namespace VentureLab.Helpers
                 {
                     var code1 = split[0];
                     var code2 = split[1];
-                    var strain1 = sm.Items[code1];
-                    var strain2 = sm.Items[code2];
-                    strain1.Weights[strain2] = score;
-                    strain2.Weights[strain1] = score;
+                    StockItem strain1, strain2;
+                    if (sm.Items.TryGetValue(code1, out strain1) && sm.Items.TryGetValue(code2, out strain2))
+                    {
+                        strain1.Weights[strain2] = score;
+                        strain2.Weights[strain1] = score;
+                    }
                 }
             }
         }

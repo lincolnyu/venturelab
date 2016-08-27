@@ -61,6 +61,14 @@ namespace VentureLab.QbGaussianMethod.Cores
 
         public double E(IList<double> x, double t)
         {
+            var tsum = GetEtShortfall(x, t);
+            return Math.Exp(Variables.EpOffset + tsum);
+        }
+
+        public double GetEpShortfall(IList<double> x) => GetEtShortfall(x, Constants.P);
+
+        private double GetEtShortfall(IList<double> x, double t)
+        {
             var sum = 0.0;
             for (var i = 0; i < Point.InputLength; i++)
             {
@@ -69,7 +77,7 @@ namespace VentureLab.QbGaussianMethod.Cores
                 dd *= Variables.K[i];
                 sum += dd;
             }
-            return Math.Exp(t * sum);
+            return t * sum;
         }
 
         public delegate void UpdateCoefficients(int index, double coeff);

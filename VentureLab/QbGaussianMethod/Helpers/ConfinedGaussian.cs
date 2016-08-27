@@ -18,6 +18,27 @@ namespace VentureLab.QbGuassianMethod.Helpers
             GetExpectedYY(zeroedY, x, cores.Select(c => c.Point), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.A), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.B), cores.Select(c => c.L));
         }
 
+        /// <summary>
+        ///  This is up to the user to call to remedy NaN outputs possibly caused by zero EP (due to far distance between input and any cores, which may be an unstable and problematic prediction case and should be taken note of anyway)
+        /// </summary>
+        /// <param name="x">The input</param>
+        /// <param name="cores">All the cores</param>
+        /// <param name="vars">The core variables that the caller should take hold of</param>
+        public static void OffsetEp(IList<double> x, IEnumerable<GaussianRegulatedCore> cores,
+            IEnumerable<GaussianRegulatedCoreVariables> vars)
+        {
+            var minEps = double.MinValue;
+            foreach (var c in cores)
+            {
+                var eps = c.GetEpShortfall(x);
+                if (eps > minEps) minEps = eps;
+            }
+            foreach (var v in vars)
+            {
+                v.EpOffset = -minEps;
+            }
+        }
+
         public static void GetExpectedYFast(IList<double> zeroedY, IList<double> x, IEnumerable<GaussianRegulatedCore> cores)
         {
             var wasum = 0.0;
@@ -46,10 +67,9 @@ namespace VentureLab.QbGuassianMethod.Helpers
             {
                 var cy = c.Point.Output;
                 var s = c.S / c.Variables.Lp;
-                var e = c.E(x, 1);
-                var ep = Math.Pow(e, c.Constants.P);
+                var ep = c.E(x, c.Constants.P);
                 var sep = s * ep;
-                var sd = s * Math.Pow(e, c.Constants.P - c.Constants.N);
+                var sd = s * Math.Pow(ep, (c.Constants.P - c.Constants.N) / c.Constants.P);
                 for (var k = 0; k < zeroedY.Count; k++)
                 {
                     zeroedY[k] += cy[k] * cy[k] * sep - 0.5 * sd / c.L[k];

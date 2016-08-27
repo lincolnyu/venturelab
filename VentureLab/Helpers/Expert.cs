@@ -118,10 +118,11 @@ namespace VentureLab.Helpers
         private static void RemoveResultsTooAhead(IList<Result> results, DateTime latestDate, int maxDaysAheadAllowed)
         {
             var tsMaxDaysAhead = TimeSpan.FromDays(maxDaysAheadAllowed);
+            var earliestAllowed = latestDate.Subtract(tsMaxDaysAhead);
             for (var i = results.Count - 1; i >= 0; i--)
             {
                 var result = results[i];
-                if (result.Date < latestDate.Subtract(tsMaxDaysAhead))
+                if (result.Date < earliestAllowed)
                 {
                     results.RemoveAt(i);
                 }

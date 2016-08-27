@@ -293,13 +293,7 @@ namespace VentureLabDrills
                 return;
             }
 
-            GaussianRegulatedCore.SetCoreVariables(cores, new[] { pointManager.SharedVariables });
-            DisplayParameters(firstPoint);
-            DisplayWeights(item);
-            Logger.WriteLine(MyLogger.Levels.Info, $"Totally {cores.Count} statistical points generated for {code}.");
-
             var outputLen = firstPoint.Point.OutputLength;
-
             var result = new PredictionResult(outputLen);
             GaussianOneOffPredictor.Instance.Predict(stockManager, pointManager, item,
                   x => {
@@ -313,6 +307,10 @@ namespace VentureLabDrills
                   }, result);
             if (result.ErrorMessage == null)
             {
+                DisplayParameters(firstPoint);
+                DisplayWeights(item);
+                Logger.WriteLine(MyLogger.Levels.Info, $"Totally {cores.Count} statistical points generated for {code}.");
+
                 Logger.WriteLine(MyLogger.Levels.Info, "Prediction = {");
                 DisplayPrediction(result.Y, result.YY, 2);
                 Logger.WriteLine(MyLogger.Levels.Info, "}");
