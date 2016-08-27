@@ -2,19 +2,20 @@
 using System.Linq;
 using VentureLab.Asx;
 using System;
-using static QLogger.AppHelpers.AppInfo;
-using static VentureLab.Helpers.AsxFileHelper;
-using static VentureLab.Asx.StockManager;
 using System.IO;
 using VentureLab.Helpers;
 using VentureLab.QbClustering;
 using VentureLab.Prediction;
 using VentureLabDrills.Output;
 using VentureLab.QbGaussianMethod.Cores;
-using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
 using QLogger.Logging;
 using VentureLab;
 using VentureLab.QbGaussianMethod.Helpers;
+using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
+using static QLogger.AppHelpers.AppInfo;
+using static VentureLab.Helpers.AsxFileHelper;
+using static VentureLab.Asx.StockManager;
+using System.Collections.Generic;
 
 namespace VentureLabDrills
 {
@@ -73,7 +74,19 @@ namespace VentureLabDrills
 
         static void Main(string[] args)
         {
-            _pointManagerFactory = new PointManagerFactory();
+            var m = args.GetSwitchValueAsDoubleOpt("--paramM", 1);
+            var n = args.GetSwitchValueAsDoubleOpt("--paramN", 1);
+
+            if (m != null || n != null)
+            {
+                if (m == null) m = 1;
+                if (n == null) n = 1;
+                _pointManagerFactory = new PointManagerFactory(m.Value, n.Value);
+            }
+            else
+            {
+                _pointManagerFactory = new PointManagerFactory();
+            }
             if (args.Contains("--help"))
             {
                 PrintHelp();
@@ -321,9 +334,9 @@ namespace VentureLabDrills
             }
         }
 
-        private static void DisplayPrediction(double[] y, double[] yy, int verticalIndent = -1)
+        private static void DisplayPrediction(IList<double> y, IList<double> yy, int verticalIndent = -1)
         {
-            for (var i = 0; i < y.Length && i < yy.Length; i++)
+            for (var i = 0; i < y.Count && i < yy.Count; i++)
             {
                 var yi = y[i];
                 var yyi = yy[i];
@@ -565,23 +578,27 @@ namespace VentureLabDrills
             Console.WriteLine("Usage: ");
             Console.WriteLine();
             Console.WriteLine($"  {appname} -i <input folder> [--from <inclusive starting date>] [--to <exclusive ending date>]");
+            Console.WriteLine("       [--paramM <M value>] [--parmaN <N value>]");
             Console.WriteLine("       [--{saveScoreTable|loadScoreTable} <score table file path>]");
             Console.WriteLine("       [--scoreSampleInc <step of sampling iteration for score table, default 1>] ");
             Console.WriteLine("       [--displayLevel={error|warning|verbose}]");
-            Console.WriteLine("       [-p [<degree of maximum parallelism, default being infinity>]]");
+            Console.WriteLine("       [-p [<degree of maximum parallelism, default infinity>]]");
             Console.WriteLine("       [--{predict <code name>|expert}]");
             Console.WriteLine("       [--logLevel={error|warning|verbose}]");
-            Console.WriteLine("       [--log <log file path]");
+            Console.WriteLine("       [--log <log file path>]");
             Console.WriteLine();
             Console.WriteLine("    Perform the stock price prediction functionality");
-            Console.WriteLine("    * '--predict' to predict a specified stock");
-            Console.WriteLine("    * '--expert' for expert mode that automatically recommends stocks");
-            Console.WriteLine("    * When neither is used, enter the interactive prediction session loop ");
+            Console.WriteLine("      '--predict' to predict a specified stock;");
+            Console.WriteLine("      '--expert' for expert mode that automatically recommends stocks;");
+            Console.WriteLine("      When neither is used, enter the interactive prediction session loop. ");
+            Console.WriteLine();
+            Console.WriteLine("    * When either M or N is specified, the default value for the other is 1.");
+            Console.WriteLine("    * Default display level is warning, default log level verbose.");
             Console.WriteLine();
             Console.WriteLine($"  {appname} --fix <score table file path>");
             Console.WriteLine();
             Console.WriteLine("    Attempt to fix the score file (such that it is compliant to the current version).");
-            Console.WriteLine("    Fixed path will be suffixed by '.fix'.");
+            Console.WriteLine("    Fixed file will be in the same folder and suffixed by '.fix'.");
             Console.WriteLine();
             Console.WriteLine($"  {appname} --help");
             Console.WriteLine();

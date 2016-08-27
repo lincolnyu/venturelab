@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using VentureLab.Asx;
 using VentureLab.Prediction;
 using static VentureLab.Asx.StockManager;
@@ -14,10 +15,8 @@ namespace VentureLab.QbGaussianMethod.Helpers
 
         public delegate void PredictDelegate(StockManager stockManager, IPointManager pointManager, StockItem item, GetItemIndexCallback giicb, IPredictionResult result);
 
-        public interface IPredictionResult
+        public interface IPredictionResult : IResult
         {
-            double[] Y { get; }
-            double[] YY { get; }
             DateTime Date { get; set; }
             string ErrorMessage { get; set; }
             void Reset();
@@ -41,20 +40,22 @@ namespace VentureLab.QbGaussianMethod.Helpers
                 get; set;
             }
 
-            public double[] Y
+            public IList<double> Y
             {
                 get;
             }
 
-            public double[] YY
+            public IList<double> YY
             {
                 get;
             }
+
+            public double Strength { get; set; }
 
             public void Reset()
             {
-                for (var i = 0; i < Y.Length; i++) Y[i] = 0;
-                for (var i = 0; i < YY.Length; i++) YY[i] = 0;
+                for (var i = 0; i < Y.Count; i++) Y[i] = 0;
+                for (var i = 0; i < YY.Count; i++) YY[i] = 0;
             }
         }
     }

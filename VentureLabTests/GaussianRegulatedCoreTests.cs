@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VentureLab.QbGaussianMethod.Cores;
 using VentureLab.QbGaussianMethod.Helpers;
+using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
 using static VentureLab.QbGuassianMethod.Helpers.ConfinedGaussian;
 
 namespace VentureLabTests
@@ -13,14 +14,24 @@ namespace VentureLabTests
     {
         private Random _rand = new Random(123);
 
+        private const double IdenticalThr = double.Epsilon;
+        private const double RoughlyEqualThr = 0.0001;
+
         [TestMethod]
         public void TestGaussianRegulatedCoreRandomly()
         {
             var inputLen = _rand.Next(5, 25);
             var outputLen = _rand.Next(3, 10);
             var numCores = _rand.Next(50, 200);
+
             var cores = GenerateRandomCores(inputLen, outputLen, numCores).ToList();
             var input = GenerateRandomInput(inputLen).ToArray();
+
+            var resg = new PredictionResult(outputLen);
+            var resf = new PredictionResult(outputLen);
+            PredictThruGeneric(resg, input, cores);
+            PredictFast(resf, input, cores);
+
 
             double[] yg = new double[outputLen];
             GetExpectedYThruGeneric(yg, input, cores);
@@ -29,7 +40,9 @@ namespace VentureLabTests
 
             for (var i = 0; i < outputLen; i++)
             {
-                Assert.IsTrue(Math.Abs(yg[i] - yf[i]) < 0.0001);
+                AssertRoughlyEqual(yg[i], yf[i]);
+                AssertRoughlyEqual(yg[i], resg.Y[i], IdenticalThr);
+                AssertRoughlyEqual(yf[i], resf.Y[i], IdenticalThr);
             }
 
             Generic.ZeroList(yg);
@@ -39,8 +52,16 @@ namespace VentureLabTests
 
             for (var i = 0; i < outputLen; i++)
             {
-                Assert.IsTrue(Math.Abs(yg[i] - yf[i]) < 0.0001);
+                AssertRoughlyEqual(yg[i], yf[i]);
+                AssertRoughlyEqual(yg[i], resg.YY[i], IdenticalThr);
+                AssertRoughlyEqual(yf[i], resf.YY[i], IdenticalThr);
             }
+
+            var sg = GetStrengthThruGeneric(input, cores);
+            var sf = GetStrengthFast(input, cores);
+            AssertRoughlyEqual(sg, sf);
+            AssertRoughlyEqual(sg, resg.Strength, IdenticalThr);
+            AssertRoughlyEqual(sf, resf.Strength, IdenticalThr);
         }
 
         [TestMethod]
@@ -61,7 +82,7 @@ namespace VentureLabTests
 
             for (var i = 0; i < outputLen; i++)
             {
-                Assert.IsTrue(Math.Abs(yg[i] - yf[i]) < 0.0001);
+                AssertRoughlyEqual(yg[i], yf[i]);
             }
 
             Generic.ZeroList(yg);
@@ -72,8 +93,13 @@ namespace VentureLabTests
 
             for (var i = 0; i < outputLen; i++)
             {
-                Assert.IsTrue(Math.Abs(yg[i] - yf[i]) * 2 / (Math.Abs(yg[i]) + Math.Abs(yf[i])) < 0.0001);
+                AssertRoughlyEqual(yg[i], yf[i]);
             }
+        }
+
+        static void AssertRoughlyEqual(double d1, double d2, double thr = RoughlyEqualThr)
+        {
+            Assert.IsTrue(Math.Abs(d1 - d2) / (Math.Abs(d1) + Math.Abs(d2)) <= thr);
         }
 
         public IEnumerable<GaussianRegulatedCore> GenerateRandomCores(int inputLen, int outputLen, int numCores, bool generatePrecision=true)
@@ -107,6 +133,7 @@ namespace VentureLabTests
                     core.L[i] = GenerateRandomNegPrecision();
             }
             core.Variables.UpdateLp();
+            core.Variables.UpdateKp();
             core.Variables.UpdateNormalizer();
             return core;
         }

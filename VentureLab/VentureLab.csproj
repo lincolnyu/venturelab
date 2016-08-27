@@ -56,6 +56,7 @@
     <Compile Include="Prediction\IPointManager.cs" />
     <Compile Include="Prediction\IPointManagerFactory.cs" />
     <Compile Include="Prediction\IPredictor.cs" />
+    <Compile Include="Prediction\IResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QbClustering\AbsStrainAdapter.cs" />
     <Compile Include="QbClustering\SimpleScorer.cs" />

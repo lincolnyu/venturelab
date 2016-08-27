@@ -5,8 +5,12 @@ namespace VentureLab.Prediction
 {
     public interface IPredictor
     {
-        void GetExpectedY(IList<double> zeroedOutput, IList<double> input, IEnumerable<ICore> points);
+        void Predict(IResult result, IList<double> input, IEnumerable<ICore> cores);
 
-        void GetExpectedYY(IList<double> zeroedOutput, IList<double> input, IEnumerable<ICore> points);
+        double GetStrength(IList<double> input, IEnumerable<ICore> cores);
+
+        void GetExpectedY(IList<double> zeroedOutput, IList<double> input, IEnumerable<ICore> cores);
+
+        void GetExpectedYY(IList<double> zeroedOutput, IList<double> input, IEnumerable<ICore> cores);
     }
 }

@@ -37,6 +37,8 @@ namespace VentureLab.QbGaussianMethod.Cores
 
         public IList<double> L => Variables.L;
 
+        public double Integral => S * Math.Pow(Math.PI / Constants.P, Point.InputLength / 2.0) / (Variables.Kp*Variables.Lp); 
+
         #endregion
 
         public double Weight { get; set; }
@@ -130,6 +132,7 @@ namespace VentureLab.QbGaussianMethod.Cores
             foreach (var cv in coreVars)
             {
                 cv.UpdateLp();
+                cv.UpdateKp();
                 // This method makes all cores have exactly the same parameters
                 cv.Normalizer = 1;
             }

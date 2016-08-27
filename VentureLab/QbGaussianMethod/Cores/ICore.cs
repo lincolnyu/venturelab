@@ -7,5 +7,8 @@ namespace VentureLab.QbGaussianMethod.Cores
         double A(IList<double> x);
         double B(IList<double> x);
         IList<double> L { get; }
+
+        // integral of C(x) over entire domain
+        double Integral { get; }
     }
 }

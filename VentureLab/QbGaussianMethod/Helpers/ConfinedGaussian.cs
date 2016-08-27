@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using VentureLab.Prediction;
 using VentureLab.QbGaussianMethod.Cores;
 using static VentureLab.QbGaussianMethod.Helpers.Generic;
 
@@ -8,15 +9,15 @@ namespace VentureLab.QbGuassianMethod.Helpers
 {
     public static class ConfinedGaussian
     {
-        public static void GetExpectedYThruGeneric(IList<double> zeroedY, IList<double> x, IEnumerable<GaussianRegulatedCore> cores)
-        {
-            GetExpectedY(zeroedY, x, cores.Select(c=>c.Point), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.A), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.B), cores.Select(c => c.L));
-        }
+        public static double GetStrengthThruGeneric(IList<double> x, IEnumerable<GaussianRegulatedCore> cores) => GetStrength(x, cores, cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.A), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.B), cores.Select(c => c.L));
+        
 
-        public static void GetExpectedYYThruGeneric(IList<double> zeroedY, IList<double> x, IEnumerable<GaussianRegulatedCore> cores)
-        {
-            GetExpectedYY(zeroedY, x, cores.Select(c => c.Point), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.A), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.B), cores.Select(c => c.L));
-        }
+        public static void GetExpectedYThruGeneric(IList<double> zeroedY, IList<double> x, IEnumerable<GaussianRegulatedCore> cores) =>
+            GetExpectedY(zeroedY, x, cores.Select(c=>c.Point), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.A), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.B), cores.Select(c => c.L));
+
+        public static void GetExpectedYYThruGeneric(IList<double> zeroedY, IList<double> x, IEnumerable<GaussianRegulatedCore> cores) => GetExpectedYY(zeroedY, x, cores.Select(c => c.Point), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.A), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.B), cores.Select(c => c.L));
+
+        public static void PredictThruGeneric(IResult result, IList<double> x, IEnumerable<GaussianRegulatedCore> cores) => Predict(result, x, cores.Select(c => c.Point), cores, cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.A), cores.Select<GaussianRegulatedCore, VectorToScalar>(c => c.B), cores.Select(c => c.L));
 
         /// <summary>
         ///  This is up to the user to call to remedy NaN outputs possibly caused by zero EP (due to far distance between input and any cores, which may be an unstable and problematic prediction case and should be taken note of anyway)
@@ -37,6 +38,53 @@ namespace VentureLab.QbGuassianMethod.Helpers
             {
                 v.EpOffset = -minEps;
             }
+        }
+
+        public static void PredictFast(IResult result, IList<double> x, IEnumerable<GaussianRegulatedCore> cores)
+        {
+            var wasum = 0.0;
+            var num = 0.0;
+            var den = 0.0;
+            foreach (var c in cores)
+            {
+                var cy = c.Point.Output;
+                var s = c.S / c.Variables.Lp;
+                var ep = c.E(x, c.Constants.P);
+                var pp = Math.Pow(c.Constants.P, x.Count / 2.0);
+                num += c.Weight * c.Variables.Kp * pp * ep;
+                den += c.Weight;
+                var sep = s * ep;
+                var sd = s * Math.Pow(ep, (c.Constants.P - c.Constants.N) / c.Constants.P);
+                for (var k = 0; k < result.YY.Count; k++)
+                {
+                    result.Y[k] += cy[k] * sep;
+                    result.YY[k] += cy[k] * cy[k] * sep - 0.5 * sd / c.L[k];
+                }
+                wasum += sep;
+            }
+            for (var k = 0; k < result.YY.Count; k++)
+            {
+                result.Y[k] /= wasum;
+                result.YY[k] /= wasum;
+            }
+            var coef = Math.Pow(Math.PI, -x.Count / 2.0);
+            result.Strength = coef * num / den;
+        }
+
+        public static double GetStrengthFast(IList<double> x, IEnumerable<GaussianRegulatedCore> cores)
+        {
+            var num = 0.0;
+            var den = 0.0;
+            foreach (var c in cores)
+            {
+                var ep = c.E(x, c.Constants.P);
+                var pp = Math.Pow(c.Constants.P, x.Count / 2.0);
+                num += c.Weight * c.Variables.Kp * pp * ep;
+                den += c.Weight;
+            }
+            var coef = Math.Pow(Math.PI, -x.Count / 2.0);
+            var res = coef * num / den;
+            return res;
         }
 
         public static void GetExpectedYFast(IList<double> zeroedY, IList<double> x, IEnumerable<GaussianRegulatedCore> cores)
@@ -60,7 +108,7 @@ namespace VentureLab.QbGuassianMethod.Helpers
             }
         }
 
-        public static void GetExpectedYYFast(IList<double> zeroedY, IList<double> x, IEnumerable<GaussianRegulatedCore> cores)
+        public static void GetExpectedYYFast(IList<double> zeroedYY, IList<double> x, IEnumerable<GaussianRegulatedCore> cores)
         {
             var wasum = 0.0;
             foreach (var c in cores)
@@ -70,15 +118,15 @@ namespace VentureLab.QbGuassianMethod.Helpers
                 var ep = c.E(x, c.Constants.P);
                 var sep = s * ep;
                 var sd = s * Math.Pow(ep, (c.Constants.P - c.Constants.N) / c.Constants.P);
-                for (var k = 0; k < zeroedY.Count; k++)
+                for (var k = 0; k < zeroedYY.Count; k++)
                 {
-                    zeroedY[k] += cy[k] * cy[k] * sep - 0.5 * sd / c.L[k];
+                    zeroedYY[k] += cy[k] * cy[k] * sep - 0.5 * sd / c.L[k];
                 }
                 wasum += sep;
             }
-            for (var k = 0; k < zeroedY.Count; k++)
+            for (var k = 0; k < zeroedYY.Count; k++)
             {
-                zeroedY[k] /= wasum;
+                zeroedYY[k] /= wasum;
             }
         }
     }

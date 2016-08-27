@@ -18,7 +18,15 @@ namespace VentureLab.QbGaussianMethod.Cores
 
         public IList<double> L { get; }
 
+        /// <summary>
+        ///  Square root of absolute value of product of all Ls
+        /// </summary>
         public double Lp { get; private set; }
+
+        /// <summary>
+        ///  Square root of absolute value of product of all Ks
+        /// </summary>
+        public double Kp { get; private set; }
 
         /// <summary>
         ///  Normalize the core (before weight applied) based on the precision factors
@@ -33,16 +41,17 @@ namespace VentureLab.QbGaussianMethod.Cores
             Lp = Math.Sqrt(Math.Abs(prod));
         }
 
+        public void UpdateKp()
+        {
+            var prod = Enumerable.Aggregate(K, (a, b) => a * b);
+            Kp = Math.Sqrt(Math.Abs(prod));
+        }
+
         public void UpdateNormalizer()
         {
             // the PI term is omitted as we just want to normalize a constant
             var inputLen = Core.Point.InputLength;
-            var outputLen = Core.Point.OutputLength;
-            var kprod = Enumerable.Aggregate(K, (a, b) => a * b);
-            var kprodcoeff = Math.Sqrt(Math.Abs(kprod));
-            var pcoeff = Math.Pow(Core.Constants.P, -inputLen / 2.0);
-            Normalizer = pcoeff * kprodcoeff * Lp;
-            Normalizer /= Math.Pow(Math.PI, (inputLen + outputLen) / 2.0);
+            Normalizer = Kp * Lp * Math.Pow(Core.Constants.P, inputLen / 2.0);
         }
     }
 }

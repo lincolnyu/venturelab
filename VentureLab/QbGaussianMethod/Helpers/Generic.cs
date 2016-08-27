@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using VentureLab.Prediction;
 using VentureLab.QbGaussianMethod.Cores;
 
 namespace VentureLab.QbGaussianMethod.Helpers
@@ -82,15 +83,15 @@ namespace VentureLab.QbGaussianMethod.Helpers
 
         public static void GetExpectedY(IList<double> zeroedY, IList<double> x, IEnumerable<IPoint> samples, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll, int outputLen)
         {
-            var cc = Cc(aa, bb, ll);
             var sumc = 0.0;
+            var cc = Cc(aa, bb, ll);
             var ecc = cc.GetEnumerator();
-            var esample = samples.GetEnumerator();
-            while (ecc.MoveNext() && esample.MoveNext())
+            var esamples = samples.GetEnumerator();
+            while (ecc.MoveNext() && esamples.MoveNext())
             {
                 var c = ecc.Current;
                 var ci = c(x);
-                var yi = esample.Current;
+                var yi = esamples.Current;
                 for (var k = 0; k < outputLen; k++)
                 {
                     var yik = yi.Output[k];
@@ -110,20 +111,19 @@ namespace VentureLab.QbGaussianMethod.Helpers
             GetExpectedY(zeroedY, x, samples, aa, bb, ll, outputLen);
         }
 
-        public static void GetExpectedYY(IList<double> zeroedY, IList<double> x, IEnumerable<IPoint> samples, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll, int outputLen)
+        public static void GetExpectedYY(IList<double> zeroedYY, IList<double> x, IEnumerable<IPoint> samples, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll, int outputLen)
         {
-
-            var cc = Cc(aa, bb, ll);
             var sumc = 0.0;
+            var cc = Cc(aa, bb, ll);
             var ecc = cc.GetEnumerator();
-            var esample = samples.GetEnumerator();
+            var esamples = samples.GetEnumerator();
             var eaa = aa.GetEnumerator();
             var ell = ll.GetEnumerator();
-            while (eaa.MoveNext() && ecc.MoveNext() && ell.MoveNext() && esample.MoveNext())
+            while (eaa.MoveNext() && ecc.MoveNext() && ell.MoveNext() && esamples.MoveNext())
             {
                 var c = ecc.Current;
                 var ci = c(x);
-                var yi = esample.Current;
+                var yi = esamples.Current;
                 var a = eaa.Current;
                 var ai = a(x);
                 var l = ell.Current;
@@ -132,20 +132,94 @@ namespace VentureLab.QbGaussianMethod.Helpers
                     var yik = yi.Output[k];
                     var yik2 = yik * yik;
                     var t = yik2 - 0.5 / (ai * l[k]);
-                    zeroedY[k] += t * ci;
+                    zeroedYY[k] += t * ci;
                 }
                 sumc += ci;
             }
             for (var k = 0; k < outputLen; k++)
             {
-                zeroedY[k] /= sumc;
+                zeroedYY[k] /= sumc;
             }
         }
-
+        
         public static void GetExpectedYY(IList<double> zeroedY, IList<double> x, IEnumerable<IPoint> samples, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll)
         {
             var outputLen = ll.First().Count;
             GetExpectedYY(zeroedY, x, samples, aa, bb, ll, outputLen);
+        }
+
+        public static double GetStrength(IList<double> x, IEnumerable<ICore> cores, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll, int outputLen)
+        {
+            var cc = Cc(aa, bb, ll);
+            var ecc = cc.GetEnumerator();
+            var ecores = cores.GetEnumerator();
+            var num = 0.0;
+            var den = 0.0;
+            while (ecc.MoveNext() && ecores.MoveNext())
+            {
+                var c = ecc.Current;
+                var ci = c(x);
+                var core = ecores.Current;
+                num += ci;
+                den += core.Integral;
+            }
+            return num / den;
+        }
+
+        public static double GetStrength(IList<double> x, IEnumerable<ICore> cores, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll)
+        {
+            var outputLen = ll.First().Count;
+            return GetStrength(x, cores, aa, bb, ll, outputLen);
+        }
+
+        public static void Predict(IResult result, IList<double> x, IEnumerable<IPoint> samples,
+            IEnumerable<ICore> cores, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll, int outputLen)
+        {
+            var zeroedYY = result.YY;
+            var zeroedY = result.Y;
+            var cc = Cc(aa, bb, ll);
+            var sumc = 0.0;
+            var num = 0.0;
+            var den = 0.0;
+            var ecc = cc.GetEnumerator();
+            var esamples = samples.GetEnumerator();
+            var ecores = cores.GetEnumerator();
+            var eaa = aa.GetEnumerator();
+            var ell = ll.GetEnumerator();
+            while (eaa.MoveNext() && ecc.MoveNext() && ell.MoveNext() && esamples.MoveNext()
+                && ecores.MoveNext())
+            {
+                var c = ecc.Current;
+                var ci = c(x);
+                var yi = esamples.Current;
+                var a = eaa.Current;
+                var ai = a(x);
+                var l = ell.Current;
+                var core = ecores.Current;
+                for (var k = 0; k < outputLen; k++)
+                {
+                    var yik = yi.Output[k];
+                    var yik2 = yik * yik;
+                    var t = yik2 - 0.5 / (ai * l[k]);
+                    zeroedYY[k] += t * ci;
+                    zeroedY[k] += yik * ci;
+                }
+                sumc += ci;
+                num += ci;
+                den += core.Integral;
+            }
+            for (var k = 0; k < outputLen; k++)
+            {
+                zeroedYY[k] /= sumc;
+                zeroedY[k] /= sumc;
+            }
+            result.Strength = num / den;
+        }
+
+        public static void Predict(IResult result, IList<double> x, IEnumerable<IPoint> samples, IEnumerable<ICore> cores, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll)
+        {
+            var outputLen = ll.First().Count;
+            Predict(result, x, samples, cores, aa, bb, ll, outputLen);
         }
     }
 }

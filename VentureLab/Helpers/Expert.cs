@@ -26,7 +26,7 @@ namespace VentureLab.Helpers
                 var a = 1;
                 var b = 1;
                 Score = 0;
-                for (var i = 0; i < Y.Length; i++)
+                for (var i = 0; i < Y.Count; i++)
                 {
                     var currScore = GetScore(Y[i], YY[i]);
                     Score += currScore * a;
