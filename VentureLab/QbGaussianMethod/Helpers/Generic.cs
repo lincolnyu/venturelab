@@ -155,8 +155,8 @@ namespace VentureLab.QbGaussianMethod.Helpers
             var ecores = cores.GetEnumerator();
             var num = 0.0;
             var den = 0.0;
-            var maxMaxCx = 0.0;
-            var coreCount = 0;
+            var sumMaxCx = 0.0;
+            var sumIntg = 0.0;
             while (ecc.MoveNext() && ecores.MoveNext())
             {
                 var c = ecc.Current;
@@ -165,11 +165,10 @@ namespace VentureLab.QbGaussianMethod.Helpers
                 num += ci;
                 var integral = core.Integral;
                 den += integral;
-                var maxCx = core.MaxCx / integral;
-                if (maxCx > maxMaxCx) maxMaxCx = maxCx;
-                coreCount++;
+                sumMaxCx += core.MaxCx;
+                sumIntg += core.Integral;
             }
-            return num * coreCount / (den * maxMaxCx);
+            return num * sumIntg / (den * sumMaxCx);
         }
 
         public static double GetStrength(IList<double> x, IEnumerable<ICore> cores, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll)
@@ -187,8 +186,8 @@ namespace VentureLab.QbGaussianMethod.Helpers
             var sumc = 0.0;
             var num = 0.0;
             var den = 0.0;
-            var maxMaxCx = 0.0;
-            var coreCount = 0;
+            var sumMaxCx = 0.0;
+            var sumIntg = 0.0;
             var ecc = cc.GetEnumerator();
             var esamples = samples.GetEnumerator();
             var ecores = cores.GetEnumerator();
@@ -216,16 +215,15 @@ namespace VentureLab.QbGaussianMethod.Helpers
                 num += ci;
                 var integral = core.Integral;
                 den += integral;
-                var maxCx = core.MaxCx / integral;
-                if (maxCx > maxMaxCx) maxMaxCx = maxCx;
-                coreCount++;
+                sumMaxCx += core.MaxCx;
+                sumIntg += core.Integral;
             }
             for (var k = 0; k < outputLen; k++)
             {
                 zeroedYY[k] /= sumc;
                 zeroedY[k] /= sumc;
             }
-            result.Strength = num * coreCount / (den * maxMaxCx);
+            result.Strength = num * sumIntg / (den * sumMaxCx);
         }
 
         public static void Predict(IResult result, IList<double> x, IEnumerable<IPoint> samples, IEnumerable<ICore> cores, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll)
