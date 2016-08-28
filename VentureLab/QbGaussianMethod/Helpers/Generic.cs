@@ -155,15 +155,21 @@ namespace VentureLab.QbGaussianMethod.Helpers
             var ecores = cores.GetEnumerator();
             var num = 0.0;
             var den = 0.0;
+            var maxMaxCx = 0.0;
+            var coreCount = 0;
             while (ecc.MoveNext() && ecores.MoveNext())
             {
                 var c = ecc.Current;
                 var ci = c(x);
                 var core = ecores.Current;
                 num += ci;
-                den += core.Integral;
+                var integral = core.Integral;
+                den += integral;
+                var maxCx = core.MaxCx / integral;
+                if (maxCx > maxMaxCx) maxMaxCx = maxCx;
+                coreCount++;
             }
-            return num / den;
+            return num * coreCount / (den * maxMaxCx);
         }
 
         public static double GetStrength(IList<double> x, IEnumerable<ICore> cores, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll)
@@ -181,6 +187,8 @@ namespace VentureLab.QbGaussianMethod.Helpers
             var sumc = 0.0;
             var num = 0.0;
             var den = 0.0;
+            var maxMaxCx = 0.0;
+            var coreCount = 0;
             var ecc = cc.GetEnumerator();
             var esamples = samples.GetEnumerator();
             var ecores = cores.GetEnumerator();
@@ -206,14 +214,18 @@ namespace VentureLab.QbGaussianMethod.Helpers
                 }
                 sumc += ci;
                 num += ci;
-                den += core.Integral;
+                var integral = core.Integral;
+                den += integral;
+                var maxCx = core.MaxCx / integral;
+                if (maxCx > maxMaxCx) maxMaxCx = maxCx;
+                coreCount++;
             }
             for (var k = 0; k < outputLen; k++)
             {
                 zeroedYY[k] /= sumc;
                 zeroedY[k] /= sumc;
             }
-            result.Strength = num / den;
+            result.Strength = num * coreCount / (den * maxMaxCx);
         }
 
         public static void Predict(IResult result, IList<double> x, IEnumerable<IPoint> samples, IEnumerable<ICore> cores, IEnumerable<VectorToScalar> aa, IEnumerable<VectorToScalar> bb, IEnumerable<IList<double>> ll)

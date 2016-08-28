@@ -58,7 +58,7 @@ namespace VentureLabDrills
             }
         }
 
-        private const double DefaultM = 100;
+        private const double DefaultM = 50;
         private const double DefaultN = 1;
 
         private static SimpleTimeEstimator _simpleTimeEstimator = new SimpleTimeEstimator();
@@ -176,7 +176,7 @@ namespace VentureLabDrills
             {
                 var item = list[i];
                 Logger.WriteLine(MyLogger.Levels.Info, $"{i + 1}: {item.Item.Stock.Code}");
-                DisplayPrediction(item.Y, item.YY);
+                DisplayPrediction(item);
                 Logger.WriteLine(MyLogger.Levels.Info);
             }
         }
@@ -325,7 +325,7 @@ namespace VentureLabDrills
                 Logger.WriteLine(MyLogger.Levels.Info, $"Totally {cores.Count} statistical points generated for {code}.");
 
                 Logger.WriteLine(MyLogger.Levels.Info, "Prediction = {");
-                DisplayPrediction(result.Y, result.YY, 2);
+                DisplayPrediction(result, 2);
                 Logger.WriteLine(MyLogger.Levels.Info, "}");
             }
             else
@@ -334,8 +334,16 @@ namespace VentureLabDrills
             }
         }
 
-        private static void DisplayPrediction(IList<double> y, IList<double> yy, int verticalIndent = -1)
+        private static void DisplayPrediction(IResult result, int verticalIndent = -1)
         {
+            var y = result.Y;
+            var yy = result.YY;
+            string indent = null;
+            if (verticalIndent >= 0)
+            {
+                indent = new string(' ', verticalIndent);
+            }
+           
             for (var i = 0; i < y.Count && i < yy.Count; i++)
             {
                 var yi = y[i];
@@ -343,16 +351,69 @@ namespace VentureLabDrills
                 var stdyi = StatisticsHelper.GetStandardVariance(yi, yyi);
                 var yiperc = (Math.Pow(2, yi) - 1) * 100;
                 var pmperc = (Math.Pow(2, stdyi) - 1) * 100;
-                if (verticalIndent >= 0)
+                var yiperStr = GetFormattedStringOfDouble(yiperc, 2);
+                var pmpercStr = GetFormattedStringOfNonNegativeDouble(pmperc, 2);
+                if (indent != null)
                 {
-                    var indent = new string(' ', verticalIndent);
-                    Logger.WriteLine(MyLogger.Levels.Info, $"{indent}{_periodNames[i]}: {yiperc:0.00}+/-{pmperc:0.00}%");
+                    Logger.WriteLine(MyLogger.Levels.Info, $"{indent}{_periodNames[i]}: {yiperStr}+/-{pmpercStr}%");
                 }
                 else
                 {
-                    Logger.Write(MyLogger.Levels.Info, $"{_periodNames[i]}: {yiperc:0.00}+/-{pmperc:0.00}%; ");
+                    Logger.Write(MyLogger.Levels.Info, $"{_periodNames[i]}: {yiperStr}+/-{pmpercStr}%; ");
                 }
             }
+            var clstr = GetScientificExp(result.Strength, 2);
+            if (indent != null)
+            {
+                Logger.WriteLine(MyLogger.Levels.Info, $"{indent}Confidence level: {clstr}");
+            }
+            else
+            {
+                Logger.Write(MyLogger.Levels.Info, $"Confidence level: {clstr}");
+            }
+        }
+
+        private static string GetScientificExp(double value, int decimals)
+        {
+            if (double.IsPositiveInfinity(value))
+            {
+                return "+Inf";
+            }
+            else if (double.IsNegativeInfinity(value))
+            {
+                return "-Inf";
+            }
+            var s = $"{{0:E{decimals}}}";
+            var fmt = string.Format(s, value);
+            return fmt;
+        }
+
+        private static string GetFormattedStringOfDouble(double value, int decimals)
+        {
+            if (double.IsPositiveInfinity(value))
+            {
+                return "+Inf";
+            }
+            else if (double.IsNegativeInfinity(value))
+            {
+                return "-Inf";
+            }
+            var zeros = new string('0', decimals);
+            var s = $"{{0:0.{zeros}}}";
+            var fmt = string.Format(s, value);
+            return fmt;
+        }
+
+        private static string GetFormattedStringOfNonNegativeDouble(double value, int decimals)
+        {
+            if (double.IsInfinity(value))
+            {
+                return "Inf";
+            }
+            var zeros = new string('0', decimals);
+            var s = $"{{0:0.{zeros}}}";
+            var fmt = string.Format(s, value);
+            return fmt;
         }
 
         private static void DisplayWeights(StockItem item, int count = 5)
@@ -393,8 +454,13 @@ namespace VentureLabDrills
                 if (index >= 0 && index < item.Stock.Data.Count)
                 {
                     var s = item.Stock.Data[index];
+                    if (s.Date > date.Add(TimeSpan.FromDays(MaxDaysBehindAllowed)))
+                    {
+                        if (index > 0) index--;
+                        s = item.Stock.Data[index];
+                    }
                     if (s.Date < date.Subtract(TimeSpan.FromDays(MaxDaysAheadAllowed))
-                        || s.Date > date.Subtract(TimeSpan.FromDays(MaxDaysBehindAllowed)))
+                        || s.Date > date.Add(TimeSpan.FromDays(MaxDaysBehindAllowed)))
                     {
                         return -1;
                     }

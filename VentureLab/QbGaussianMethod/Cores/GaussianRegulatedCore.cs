@@ -37,7 +37,9 @@ namespace VentureLab.QbGaussianMethod.Cores
 
         public IList<double> L => Variables.L;
 
-        public double Integral => S * Math.Pow(Math.PI / Constants.P, Point.InputLength / 2.0) / (Variables.Kp*Variables.Lp); 
+        public double Integral => S * Math.Pow(Math.PI / Constants.P, Point.InputLength / 2.0) / (Variables.Kp*Variables.Lp);
+
+        public double MaxCx => S / Variables.Lp;
 
         #endregion
 

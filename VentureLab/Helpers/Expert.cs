@@ -23,6 +23,7 @@ namespace VentureLab.Helpers
 
             public void UpdateScore()
             {
+                // TODO incorporate strength
                 var a = 1;
                 var b = 1;
                 Score = 0;

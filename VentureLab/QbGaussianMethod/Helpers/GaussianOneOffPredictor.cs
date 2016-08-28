@@ -42,15 +42,13 @@ namespace VentureLab.QbGaussianMethod.Helpers
             
             var input = item.SampleInput(pointManager, index);
             var x = input.StrainPoint.Input;
-            pointManager.GetExpectedY(result.Y, x, cores);
-            pointManager.GetExpectedYY(result.YY, x, cores);
+            pointManager.Predict(result, x, cores);
 
             if (result.Y.All(y=>double.IsNaN(y)) && result.YY.All(yy=>double.IsNaN(yy)))
             {
                 ConfinedGaussian.OffsetEp(x, cores, varsets);
                 result.Reset();
-                pointManager.GetExpectedY(result.Y, x, cores);
-                pointManager.GetExpectedYY(result.YY, x, cores);
+                pointManager.Predict(result, x, cores);
             }
 
             result.Date = item.Stock.Data[index].Date;
