@@ -10,6 +10,7 @@ namespace VentureLab.QbGaussianMethod.Helpers
     {
         public const string ErrorCantLocate = "Couldn't find acceptable date";
         public const string ErrorNotEnoughCores = "Not enough points to be statistically significant.";
+        public const string ErrorStartDayToEarly = "Not proper to predict on a day that doesn't have enough preceding days";
 
         public delegate int GetItemIndexCallback(StockItem item);
 

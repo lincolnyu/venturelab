@@ -40,6 +40,12 @@ namespace VentureLab.QbGaussianMethod.Helpers
             var varsets = gf?.GetCoreVariableSets() ?? cores.Select(c => c.Variables).Distinct();
             GaussianRegulatedCore.SetCoreVariables(cores, varsets);
             
+            if (index < SampleAccessor.DaysBefore)
+            {
+                result.ErrorMessage = ErrorStartDayToEarly;
+                return;
+            }
+
             var input = item.SampleInput(pointManager, index);
             var x = input.StrainPoint.Input;
             pointManager.Predict(result, x, cores);
