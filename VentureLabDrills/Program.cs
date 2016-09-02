@@ -131,7 +131,7 @@ namespace VentureLabDrills
                 var pnum = args.GetMaxDegreeOfParallelism();
                 int expLen;
                 int.TryParse(expertLenStr, out expLen);
-                RunExpert(stockManager, dateStr, expLen, pnum);
+                RunExpert(stockManager, dateStr, expLen, expLen, pnum);
                 return;
             }
 
@@ -159,7 +159,7 @@ namespace VentureLabDrills
             }
         }
 
-        private static void RunExpert(StockManager stockManager, string dateStr, int expLen, int parallel)
+        private static void RunExpert(StockManager stockManager, string dateStr, int topLen, int bottomLen, int parallel)
         {
             Logger.LocateInplaceWrite();
             _simpleTimeEstimator.Start();
@@ -168,14 +168,26 @@ namespace VentureLabDrills
                 Expert.Run(stockManager, _pointManagerFactory.ReusableManager, GaussianOneOffPredictor.Instance.Predict, GetGiicb(dateStr), MaxDaysAheadAllowed, ReportExpertProgress);
             Logger.WriteLine(MyLogger.Levels.Info);
 
-            if (expLen > 0)
+            List<Expert.Result> top, bottom;
+            if (topLen + bottomLen > list.Count)
             {
-                list = list.GetRange(0, expLen);
+                top = list.GetRange(0, topLen);
+                bottom = list.GetRange(list.Count - bottomLen, list.Count);
+                DisplayExpertChosen("Gain ", top);
+                DisplayExpertChosen("Lose ", bottom);
             }
+            else
+            {
+                DisplayExpertChosen("", list);
+            }
+        }
+
+        private static void DisplayExpertChosen(string prefix, IList<Expert.Result> list)
+        {
             for (var i = 0; i < list.Count; i++)
             {
                 var item = list[i];
-                Logger.WriteLine(MyLogger.Levels.Info, $"{i + 1}: {item.Item.Stock.Code}");
+                Logger.WriteLine(MyLogger.Levels.Info, $"{prefix}{i + 1}: {item.Item.Stock.Code}");
                 DisplayPrediction(item);
                 Logger.WriteLine(MyLogger.Levels.Info);
             }
@@ -254,7 +266,7 @@ namespace VentureLabDrills
                             var pstr = Console.ReadLine();
                             int pnum = 1;
                             int.TryParse(pstr, out pnum);
-                            RunExpert(stockManager, dateStr, expLen, pnum);
+                            RunExpert(stockManager, dateStr, expLen, expLen, pnum);
                             break;
                         }
                 }
