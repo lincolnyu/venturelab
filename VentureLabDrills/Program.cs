@@ -74,24 +74,14 @@ namespace VentureLabDrills
 
         static void Main(string[] args)
         {
-            var m = args.GetSwitchValueAsDoubleOpt("--paramM", 1);
-            var n = args.GetSwitchValueAsDoubleOpt("--paramN", 1);
-
-            if (m != null || n != null)
-            {
-                if (m == null) m = 1;
-                if (n == null) n = 1;
-                _pointManagerFactory = new PointManagerFactory(m.Value, n.Value);
-            }
-            else
-            {
-                _pointManagerFactory = new PointManagerFactory();
-            }
             if (args.Contains("--help"))
             {
                 PrintHelp();
                 return;
             }
+
+            InitLogWithDisplayLevel(args);
+            SetupLogOutput(args);
 
             var st = args.GetSwitchValue("--fix");
             if (st != null)
@@ -107,8 +97,39 @@ namespace VentureLabDrills
                 return;
             }
 
-            InitLogWithDisplayLevel(args);
-            SetupLogOutput(args);
+            var idts = Array.IndexOf(args, "--byDateToByCode");
+            if (idts >= 0)
+            {
+                if (idts + 2 >= args.Length)
+                {
+                    Console.WriteLine("Directories not specified.");
+                    PrintHelp();
+                    return;
+                }
+                var bd = args[idts + 1];
+                var bc = args[idts + 2];
+                if (!Directory.Exists(bd) || !Directory.Exists(bc))
+                {
+                    Console.WriteLine("Cannot find the directories");
+                    return;
+                }
+                RunByDateToByCode(bd, bc);
+                return;
+            }
+
+            var m = args.GetSwitchValueAsDoubleOpt("--paramM", 1);
+            var n = args.GetSwitchValueAsDoubleOpt("--paramN", 1);
+
+            if (m != null || n != null)
+            {
+                if (m == null) m = 1;
+                if (n == null) n = 1;
+                _pointManagerFactory = new PointManagerFactory(m.Value, n.Value);
+            }
+            else
+            {
+                _pointManagerFactory = new PointManagerFactory();
+            }
 
             StockManager stockManager;
             Logger.WriteLine(MyLogger.Levels.Verbose, "Warming up...");
@@ -145,6 +166,22 @@ namespace VentureLabDrills
                 Logger.WriteLine(MyLogger.Levels.Info, "Prediction session started");
                 PredictionSession(stockManager, _pointManagerFactory.ReusableManager);
             }
+        }
+
+        private static void RunByDateToByCode(string bd, string bc)
+        {
+            var dbd = new DirectoryInfo(bd);
+            var inputFiles = dbd.GetFiles("*.txt").Select(f =>
+               { DateTime date; var res = IsAsxDateFile(f.Name, out date); return new { f, date, res }; }).Where(x => x.res).OrderBy(x => x.date).Select(x => x.f);
+            Logger.LocateInplaceWrite();
+            var bdtbs = new ByDateToByStock(inputFiles, bc, RunByDateToByCodeProgress).Run();
+            Logger.WriteLine(MyLogger.Levels.Info);
+            Logger.WriteLine(MyLogger.Levels.Info, $"By-date files have been converted to by-code files in '{bc}'. {bdtbs.LinesSuccessful} line(s) are successfully converted; {bdtbs.LinesFailed} failed and ignored.");
+        }
+
+        private static void RunByDateToByCodeProgress(string inputFileName)
+        {
+            Logger.InplaceWrite(MyLogger.Levels.Info, $"'{inputFileName}' processed.");
         }
 
         private static void FixStoreTableFile(string stsrc)
@@ -677,6 +714,8 @@ namespace VentureLabDrills
             Console.WriteLine();
             Console.WriteLine("    Attempt to fix the score file (such that it is compliant to the current version).");
             Console.WriteLine("    Fixed file will be in the same folder and suffixed by '.fix'.");
+            Console.WriteLine();
+            Console.WriteLine($"  {appname} --byDateToByCode <by-date files directory> <by-code files directory>");
             Console.WriteLine();
             Console.WriteLine($"  {appname} --help");
             Console.WriteLine();

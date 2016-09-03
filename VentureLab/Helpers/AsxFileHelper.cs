@@ -81,7 +81,14 @@ namespace VentureLab.Helpers
             return TryParseCompactDateString(fnwoext, out date);
         }
 
-        private static bool TryParseLine(string line, out string code, out DailyEntry de)
+        public static string GetCodeOfLine(string line)
+        {
+            var segs = line.Split(',');
+            if (segs.Length < 1) return null;
+            return segs[0];
+        }
+
+        public static bool TryParseLine(string line, out string code, out DailyEntry de)
         {
             var segs = line.Split(',');
             code = null;
@@ -106,11 +113,6 @@ namespace VentureLab.Helpers
                 Date = date
             };
             return true;
-        }
-
-        private static bool TryParseCompactDateString(string v, out object dt)
-        {
-            throw new NotImplementedException();
         }
     }
 }

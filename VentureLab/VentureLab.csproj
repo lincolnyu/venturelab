@@ -47,6 +47,7 @@
     <Compile Include="Asx\StockManager.cs" />
     <Compile Include="Asx\StockPoint.cs" />
     <Compile Include="Helpers\AsxFileHelper.cs" />
+    <Compile Include="Helpers\ByDateToByStock.cs" />
     <Compile Include="Helpers\DistanceHelper.cs" />
     <Compile Include="Helpers\Expert.cs" />
     <Compile Include="Helpers\HashingHelper.cs" />
