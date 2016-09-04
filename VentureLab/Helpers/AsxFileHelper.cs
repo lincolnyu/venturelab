@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using VentureCommon;
 using VentureLab.Asx;
+using static VentureCommon.Helpers.StockRecordHelper;
 
 namespace VentureLab.Helpers
 {
@@ -53,27 +55,13 @@ namespace VentureLab.Helpers
                     var line = sr.ReadLine();
                     if (line == null) break;
                     string code;
-                    DailyEntry de;
-                    if (!TryParseLine(line, out code, out de)) continue;
+                    StockRecord de = null;
+                    if (!TryParseLine(line, out code, ref de)) continue;
                     stocks.Add(code, de);
                 }
             }
         }
 
-        public static bool TryParseCompactDateString(string dateStr, out DateTime date)
-        {
-            date = default(DateTime);
-            if (dateStr == null || dateStr.Length != 8) return false;
-            var yrstr = dateStr.Substring(0, 4);
-            var mthstr = dateStr.Substring(4, 2);
-            var daystr = dateStr.Substring(6, 2);
-            int yr, mth, day;
-            if (!int.TryParse(yrstr, out yr)) return false;
-            if (!int.TryParse(mthstr, out mth)) return false;
-            if (!int.TryParse(daystr, out day)) return false;
-            date = new DateTime(yr, mth, day);
-            return true;
-        }
 
         public static bool IsAsxDateFile(string fileName, out DateTime date)
         {
@@ -88,31 +76,5 @@ namespace VentureLab.Helpers
             return segs[0];
         }
 
-        public static bool TryParseLine(string line, out string code, out DailyEntry de)
-        {
-            var segs = line.Split(',');
-            code = null;
-            de = null;
-            if (segs.Length != 7) return false;
-            code = segs[0];
-            double open, close, low, high, vol;
-            DateTime date;
-            if (!TryParseCompactDateString(segs[1], out date)) return false;
-            if (!double.TryParse(segs[2], out open)) return false;
-            if (!double.TryParse(segs[3], out high)) return false;
-            if (!double.TryParse(segs[4], out low)) return false;
-            if (!double.TryParse(segs[5], out close)) return false;
-            if (!double.TryParse(segs[6], out vol)) return false;
-            de = new DailyEntry
-            {
-                Open = open,
-                Close = close,
-                Low = low,
-                High = high,
-                Volume = vol,
-                Date = date
-            };
-            return true;
-        }
     }
 }

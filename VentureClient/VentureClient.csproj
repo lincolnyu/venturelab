@@ -95,11 +95,14 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Commands\OpenFileCommand.cs" />
+    <Compile Include="Commands\OpenExpertFileCommand.cs" />
+    <Compile Include="Commands\OpenStockFileCommand.cs" />
     <Compile Include="Models\Expert.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\FileBased.cs" />
+    <Compile Include="Models\Stock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +130,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VentureCommon\VentureCommon.csproj">
+      <Project>{c30d6005-074a-4919-95ea-df38c7bbbd01}</Project>
+      <Name>VentureCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VentureVisualization\VentureVisualization.csproj">
+      <Project>{14a4ffac-ea45-403f-8b85-b42ae9a32e10}</Project>
+      <Name>VentureVisualization</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

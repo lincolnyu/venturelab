@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using VentureCommon;
 using VentureLab.Helpers;
 using VentureLab.QbClustering;
 using VentureLab.QbGaussianMethod.Cores;
@@ -79,7 +80,7 @@ namespace VentureLab.Asx
 
         public Dictionary<string, StockItem> Items { get; } = new Dictionary<string, StockItem>();
 
-        public bool Add(string code, DailyEntry de)
+        public bool Add(string code, StockRecord de)
         {
             StockItem stockItem;
             if (!Items.TryGetValue(code, out stockItem))

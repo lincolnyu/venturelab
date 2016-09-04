@@ -11,8 +11,8 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
-            <AppBarButton Icon="OpenPane" Label="Open Stock File" Command="{Binding OpenFile}"/>
-            <AppBarButton Icon="OpenLocal" Label="Open Expert File" Command="{Binding OpenFile}"/>
+            <AppBarButton Icon="OpenPane" Label="Open Stock File" Command="{Binding OpenStockFile}"/>
+            <AppBarButton Icon="OpenLocal" Label="Open Expert File" Command="{Binding OpenExpertFile}"/>
         </CommandBar>
     </Page.TopAppBar>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -21,9 +21,11 @@
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="0">
-            <TextBlock x:Name="textBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Stock Name:" VerticalAlignment="Top"/>
-            <TextBox x:Name="StockName" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="textBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Stock Code:" VerticalAlignment="Top"/>
+            <TextBox x:Name="StockCode" HorizontalAlignment="Left" 
+                     TextWrapping="Wrap" VerticalAlignment="Top" IsReadOnly="True"/>
         </StackPanel>
-        <Canvas Grid.Row="1" Background="Pink"></Canvas>
+        <Canvas Grid.Row="1" Background="Pink" Name="MainCanvas"
+                SizeChanged="MainCanvasOnSizeChanged"></Canvas>
     </Grid>
 </Page>

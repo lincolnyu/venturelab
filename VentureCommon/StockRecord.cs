@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace VentureLab.Asx
+namespace VentureCommon
 {
-    public class DailyEntry : IComparable<DailyEntry>
+    public class StockRecord : IComparable<StockRecord>
     {
         public DateTime Date { get; set; }
         public double Open { get; set; }
@@ -11,7 +11,7 @@ namespace VentureLab.Asx
         public double Close { get; set; }
         public double Volume { get; set; }
 
-        public int CompareTo(DailyEntry other)
+        public int CompareTo(StockRecord other)
         {
             return Date.CompareTo(other.Date);
         }

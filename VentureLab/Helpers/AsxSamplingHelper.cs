@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using VentureCommon;
 using VentureLab.Asx;
 using VentureLab.QbClustering;
 using VentureLab.QbGaussianMethod.Cores;
@@ -14,7 +15,7 @@ namespace VentureLab.Helpers
             return sa;
         }
 
-        public static IEnumerable<IStrainPoint> Sample(this IPointFactory pointFactory, IList<DailyEntry> data, int start, int end, int interval)
+        public static IEnumerable<IStrainPoint> Sample(this IPointFactory pointFactory, IList<StockRecord> data, int start, int end, int interval)
         {
             for (var i = start; i < end; i += interval)
             {
@@ -36,13 +37,13 @@ namespace VentureLab.Helpers
             end = len - SampleAccessor.DaysAfter;
         }
         
-        public static void SampleOne(this SampleAccessor sa, IList<DailyEntry> data, int day0)
+        public static void SampleOne(this SampleAccessor sa, IList<StockRecord> data, int day0)
         {
             sa.SampleOneInput(data, day0);
             sa.SampleOneOutput(data, day0);
         }
 
-        public static void SampleOneInput(this SampleAccessor sa, IList<DailyEntry> data, int day0)
+        public static void SampleOneInput(this SampleAccessor sa, IList<StockRecord> data, int day0)
         {
             // history prices and volumes
             var d1 = data[day0];
@@ -128,7 +129,7 @@ namespace VentureLab.Helpers
             sa.UpdateInput();
         }
 
-        private static double GetClose(IList<DailyEntry> entry, int day0,
+        private static double GetClose(IList<StockRecord> entry, int day0,
             int j, ref double sum)
         {
             if (day0 >= j)
@@ -145,7 +146,7 @@ namespace VentureLab.Helpers
             return sum;
         }
 
-        private static double GetVolume(IList<DailyEntry> entry, int day0,
+        private static double GetVolume(IList<StockRecord> entry, int day0,
             int j, ref double sum)
         {
             if (day0 >= j)
@@ -162,7 +163,7 @@ namespace VentureLab.Helpers
             return sum;
         }
 
-        public static void SampleOneOutput(this SampleAccessor sa, IList<DailyEntry> data, int day0)
+        public static void SampleOneOutput(this SampleAccessor sa, IList<StockRecord> data, int day0)
         {
             var sum = 0.0;
             int j;

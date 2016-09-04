@@ -4,9 +4,9 @@ using VentureClient.Models;
 
 namespace VentureClient.Commands
 {
-    public class OpenFileCommand : ICommand
+    public class OpenExpertFileCommand : ICommand
     {
-        public OpenFileCommand(Expert expert)
+        public OpenExpertFileCommand(Expert expert)
         {
             Expert = expert;
         }

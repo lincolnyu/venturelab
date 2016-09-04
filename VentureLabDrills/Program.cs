@@ -15,6 +15,7 @@ using static VentureLab.QbGaussianMethod.Helpers.PredictionCommon;
 using static QLogger.AppHelpers.AppInfo;
 using static VentureLab.Helpers.AsxFileHelper;
 using static VentureLab.Asx.StockManager;
+using static VentureCommon.Helpers.StockRecordHelper;
 using System.Collections.Generic;
 
 namespace VentureLabDrills

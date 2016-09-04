@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VentureCommon;
 using VentureLab.Asx;
 using VentureLab.Helpers;
 using VentureLab.QbClustering;
@@ -347,18 +348,18 @@ namespace VentureLabTests
             }
         }
         
-        private IEnumerable<DailyEntry> GenerateDailyEntries(int numDays, int samplesPerDay, Generator generator)
+        private IEnumerable<StockRecord> GenerateDailyEntries(int numDays, int samplesPerDay, Generator generator)
         {
             var hourSequence = generator.GenerateSequence(numDays*samplesPerDay);
             var volumes = generator.GenerateVolume(numDays).GetEnumerator();
             var step = 0;
-            DailyEntry entry = null;
+            StockRecord entry = null;
             double low = 0, high = 0;
             foreach (var v in hourSequence)
             {
                 if (step == 0)
                 {
-                    entry = new DailyEntry();
+                    entry = new StockRecord();
                     entry.Open = v;
                     low = v;
                     high = v;

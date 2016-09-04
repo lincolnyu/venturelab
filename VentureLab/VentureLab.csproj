@@ -40,7 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Asx\DailyEntry.cs" />
     <Compile Include="Asx\SampleAccessor.cs" />
     <Compile Include="Helpers\AsxSamplingHelper.cs" />
     <Compile Include="Asx\Stock.cs" />
@@ -94,6 +93,10 @@
     <ProjectReference Include="..\..\qlogger\QLogger\QLogger.csproj">
       <Project>{124E7226-5154-4A8C-B4A1-BDAEBA8C1973}</Project>
       <Name>QLogger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VentureCommon\VentureCommon.csproj">
+      <Project>{c30d6005-074a-4919-95ea-df38c7bbbd01}</Project>
+      <Name>VentureCommon</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

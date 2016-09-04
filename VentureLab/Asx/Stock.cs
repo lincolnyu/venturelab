@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using VentureCommon;
 
 namespace VentureLab.Asx
 {
@@ -12,9 +13,9 @@ namespace VentureLab.Asx
 
         public string Code { get; }
         public string Description { get; set; }
-        public List<DailyEntry> Data { get; } = new List<DailyEntry>();
+        public List<StockRecord> Data { get; } = new List<StockRecord>();
 
-        public bool Add(DailyEntry de)
+        public bool Add(StockRecord de)
         {
             if (Data.Count == 0 || Data[Data.Count - 1].CompareTo(de) < 0)
             {
@@ -32,7 +33,7 @@ namespace VentureLab.Asx
 
         public int GetIndex(DateTime date)
         {
-            var dummy = new DailyEntry { Date = date.Date };
+            var dummy = new StockRecord { Date = date.Date };
             var index = Data.BinarySearch(dummy);
             return index;
         }
