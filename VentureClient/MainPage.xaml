@@ -11,8 +11,8 @@
             <CommandBar.Content>
                 <Grid/>
             </CommandBar.Content>
-            <AppBarButton Icon="OpenPane" Label="Open Stock File" Command="{Binding OpenStockFile}"/>
-            <AppBarButton Icon="OpenLocal" Label="Open Expert File" Command="{Binding OpenExpertFile}"/>
+            <AppBarButton Icon="OpenPane" Label="Open Stock File" Command="{Binding OpenStockFileCommand}"/>
+            <AppBarButton Icon="OpenLocal" Label="Open Expert File" Command="{Binding OpenExpertFileCommand}"/>
         </CommandBar>
     </Page.TopAppBar>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -20,12 +20,24 @@
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" Grid.Row="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="30"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="30"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <TextBlock x:Name="textBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Stock Code:" VerticalAlignment="Top"/>
             <TextBox x:Name="StockCode" HorizontalAlignment="Left" 
                      TextWrapping="Wrap" VerticalAlignment="Top" IsReadOnly="True"/>
         </StackPanel>
-        <Canvas Grid.Row="1" Background="Pink" Name="MainCanvas"
+        <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Command="{Binding ZoomInCommand}">+</Button>
+            <Button Command="{Binding ZoomOutCommand}">-</Button>
+        </StackPanel>
+        <Canvas Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Background="Pink" Name="MainCanvas"
                 SizeChanged="MainCanvasOnSizeChanged"></Canvas>
+        <Button Grid.Row="1" Grid.Column="0" Command="{Binding GoLeftCommand}">&lt;</Button>
+        <Button Grid.Row="1" Grid.Column="2" Command="{Binding GoRightCommand}">&gt;</Button>
     </Grid>
 </Page>

@@ -95,8 +95,13 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Commands\GoLeftCommand.cs" />
+    <Compile Include="Commands\GoRightCommand.cs" />
     <Compile Include="Commands\OpenExpertFileCommand.cs" />
     <Compile Include="Commands\OpenStockFileCommand.cs" />
+    <Compile Include="Commands\ZoomInCommand.cs" />
+    <Compile Include="Commands\ZoomOutCommand.cs" />
+    <Compile Include="Interfaces\IChartNavigator.cs" />
     <Compile Include="Models\Expert.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
