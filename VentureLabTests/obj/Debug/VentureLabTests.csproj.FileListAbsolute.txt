@@ -6,3 +6,15 @@ C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\
 C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\obj\Debug\VentureLabTests.csprojResolveAssemblyReference.cache
 C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\obj\Debug\VentureLabTests.dll
 C:\Users\quanb\Documents\Visual Studio 2015\Projects\VentureLab\VentureLabTests\obj\Debug\VentureLabTests.pdb
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureLabTests.dll
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureLabTests.pdb
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureCommon.dll
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureLab.dll
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\QLogger.dll
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureCommon.pdb
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\VentureLab.pdb
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\bin\Debug\QLogger.pdb
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\obj\Debug\VentureLabTests.csprojResolveAssemblyReference.cache
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\obj\Debug\VentureLabTests.dll
+C:\Users\quanb\Source\Repos\venturelab\VentureLabTests\obj\Debug\VentureLabTests.pdb

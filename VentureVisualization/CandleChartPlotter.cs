@@ -4,7 +4,9 @@ using VentureCommon;
 
 namespace VentureVisualization
 {
-    public class CandleChartPlotter
+    using DrawCandleDelegate = BasePlotter.DrawShapeDelegate<CandleChartPlotter.CandleShape>;
+
+    public sealed class CandleChartPlotter : BasePlotter
     {
         #region Nested types
 
@@ -31,15 +33,8 @@ namespace VentureVisualization
             YRange
         }
 
-        public enum YModes
+        public class CandleShape : BaseShape
         {
-            TopToBottom,
-            ButtomToTop
-        }
-
-        public class CandleShape
-        {
-            public StockRecord Record { get; set; }
             public CandleTypes CandleType { get; set; }
             public double X { get; set; }
             public double YMin { get; set; }
@@ -61,18 +56,11 @@ namespace VentureVisualization
             public double YClose { get; set; }
         }
 
-        private class Gap : StockRecord
-        {
-            public static readonly Gap Instance = new Gap();
-        }
-
         #endregion
 
         #region Default values
 
         public const VerticalModes DefaultVerticalMode = VerticalModes.YMargins;
-        public const YModes DefaultYMode = YModes.TopToBottom;
-        public const double DefaultChartWidthToLengthRatio = 8;
         public const double DefaultTopMarginRatio = 0.3;
         public const double DefaultBottomMarginRatio = 0.3;
         public const double DefaultYinWidthRatio = 0.8;
@@ -88,50 +76,27 @@ namespace VentureVisualization
 
         #endregion
 
-        public delegate void DrawBeginEndDelegate();
-
-        /// <summary>
-        ///  Candle drawer to call
-        /// </summary>
-        public delegate void DrawCandleDelegate(CandleShape shape);
-
         /// <summary>
         ///  Creates a candel chart
         /// </summary>
         /// <param name="data">The data reference held by this drawer</param>
         /// <param name="chartWidth">The width of the chart</param>
         /// <param name="chartHeight">The height of the chart</param>
-        public CandleChartPlotter(List<StockRecord> data, 
-            double chartWidth, double chartHeight, 
-            DrawBeginEndDelegate drawBegin,
+        public CandleChartPlotter(DrawBeginEndDelegate drawBegin,
             DrawCandleDelegate drawCandle, 
-            DrawBeginEndDelegate drawEnd)
+            DrawBeginEndDelegate drawEnd) : base(drawBegin, drawEnd)
         {
-            Data = data;
-            ChartWidth = chartWidth;
-            ChartHeight = chartHeight;
             YangWidthRatio = DefaultYangWidthRatio;
             YinWidthRatio = DefaultYinWidthRatio;
             TopMarginRatio = DefaultTopMarginRatio;
             BottomMarginRatio = DefaultBottomMarginRatio;
-            Length = ChartWidth / DefaultChartWidthToLengthRatio;
-            DrawBegin = drawBegin;
-            DrawEnd = drawEnd;
             DrawCandle = drawCandle;
         }
-
-        #region Data
-
-        public List<StockRecord> Data { get; }
-
-        #endregion
-
+      
         #region Chart config
 
         public double ChartWidth { get; set; }
         public double ChartHeight { get; set; }
-
-        public YModes YMode { get; set; } = DefaultYMode;
 
         /// <summary>
         ///  Width of yang bar vs width of its allocated horizontal slot
@@ -164,6 +129,7 @@ namespace VentureVisualization
                 return _yMaxValue;
             }
         }
+
         public double YMinValue
         {
             get
@@ -176,55 +142,34 @@ namespace VentureVisualization
         #endregion
 
         #region Temporal
-
-        public int StartIndex
-        {
-            get; set;
-        }
-
-        public double Length { get; set; }
-
+        
         public VerticalModes VertialMode { get; set; } = DefaultVerticalMode;
 
         #endregion
 
         #region Drawing delegate
 
-        DrawCandleDelegate DrawCandle { get; }
-        DrawBeginEndDelegate DrawBegin { get; }
-        DrawBeginEndDelegate DrawEnd { get; }  
+        private DrawCandleDelegate DrawCandle { get; }
 
         #endregion
-
-        public void Draw(IEnumerable<DateTime> times, double startSlot = 0)
-        {
-            var stocks = GetStocksAtTimes(times);
-            DrawCandles(stocks, startSlot);
-        }
-
-        public void Draw(int stockIndex, double startSlot = 0)
-        {
-            var stocks = GetStocksStarting(stockIndex);
-            DrawCandles(stocks, startSlot);
-        }
-
-        private void DrawCandles(IEnumerable<StockRecord> stocks, double startIndex)
+        
+        public override void Draw(IEnumerable<StockRecord> stocks, double startSlot)
         {
             IEnumerable<Candle> candles;
             switch (VertialMode)
             {
                 case VerticalModes.YMargins:
-                    candles = DrawWithYMargins(stocks, startIndex);
+                    candles = DrawWithYMargins(stocks, startSlot);
                     break;
                 case VerticalModes.YMarginsFull:
                     {
                         double ymin, ymax;
                         GetYMinMaxForMargins(YMinValue, YMaxValue, out ymin, out ymax);
-                        candles = DrawWithYRange(stocks, startIndex, ymin, ymax);
+                        candles = DrawWithYRange(stocks, startSlot, ymin, ymax);
                         break;
                     }
                 case VerticalModes.YRange:
-                    candles = DrawWithYRange(stocks, startIndex, YMin, YMax);
+                    candles = DrawWithYRange(stocks, startSlot, YMin, YMax);
                     break;
                 default:
                     throw new ArgumentException("Unexpected mode");
@@ -265,98 +210,39 @@ namespace VentureVisualization
             }
             DrawEnd();
         }
-
-        /// <summary>
-        ///  Returns stocks at the specified times, 
-        ///  returning gap record when not available; no interpolation.
-        /// </summary>
-        /// <param name="times">The times to return stock records for</param>
-        /// <returns>The corresponding stock records</returns>
-        private IEnumerable<StockRecord> GetStocksAtTimes(IEnumerable<DateTime> times)
-        {
-            int? index = null;
-            foreach (var time in times)
-            {
-                if (index == null)
-                {
-                    var q = new StockRecord { Date = time };
-                    index = Data.BinarySearch(q);
-                    if (index < 0)
-                    {
-                        index = -index - 1;
-                        yield return Gap.Instance;
-                    }
-                    else
-                    {
-                        yield return Data[index.Value];
-                        index++;
-                    }
-                }
-                else
-                {
-                    while (index < Data.Count && Data[index.Value].Date < time)
-                    {
-                        index++;
-                    }
-                    if (index >= Data.Count || Data[index.Value].Date > time)
-                    {
-                        yield return Gap.Instance;
-                    }
-                    else // Data[index.Value].Date == time
-                    {
-                        yield return Data[index.Value];
-                    }
-                }
-            }
-        }
-
-        private IEnumerable<StockRecord> GetStocksStarting(int index)
-        {
-            for (var i = index; i < Data.Count; i++)
-            {
-                yield return Data[i];
-            }
-        }
-
+        
         private IEnumerable<Candle> DrawWithYRange(IEnumerable<StockRecord> records, double startSlot, double ymin, double ymax)
         {
-            var slot = startSlot;
             var yd = ymax - ymin;
-            foreach (var r in records)
+            return PlotLoopYield(records, startSlot, (r, slot) =>
             {
                 var low = ChartHeight * r.Low;
                 var cd = new Candle
                 {
                     Record = r,
-                    X1 = ChartWidth * slot / Length,
-                    X2 = ChartWidth * (slot + 1) / Length,
+                    X1 = ChartWidth * slot / Sequencer.Length,
+                    X2 = ChartWidth * (slot + 1) / Sequencer.Length,
                     YOpen = (r.Open - ymin) * ChartHeight / yd,
                     YClose = (r.Close - ymin) * ChartHeight / yd,
                     YHigh = (r.High - ymin) * ChartHeight / yd,
                     YLow = (r.Low - ymin) * ChartHeight / yd
                 };
-                yield return cd;
-                slot++;
-            }
+                return cd;
+            });
         }
 
         private List<Candle> DrawWithYMargins(IEnumerable<StockRecord> records, double startSlot)
         {
-            var slot = startSlot;
             var cdlist = new List<Candle>();
             var min = double.MaxValue;
             var max = double.MinValue;
-            foreach (var r in records)
+            PlotLoop(records, startSlot, (r, slot) =>
             {
-                if (slot >= Length)
-                {
-                    break;
-                }
                 var low = ChartHeight * r.Low;
                 var cd = new Candle
                 {
-                    X1 = ChartWidth * slot / Length,
-                    X2 = ChartWidth * (slot + 1) / Length,
+                    X1 = ChartWidth * slot / Sequencer.Length,
+                    X2 = ChartWidth * (slot + 1) / Sequencer.Length,
                     // Y variables temporarily hold the original values
                     YOpen = r.Open,
                     YClose = r.Close,
@@ -366,8 +252,7 @@ namespace VentureVisualization
                 cdlist.Add(cd);
                 if (r.Low < min) min = r.Low;
                 if (r.High > max) max = r.High;
-                slot++;
-            }
+            });
 
             if (cdlist.Count > 0)
             {
@@ -396,7 +281,7 @@ namespace VentureVisualization
             if (_yMinMaxValueScanned) return;
             _yMinValue = double.MaxValue;
             _yMaxValue = double.MinValue;
-            foreach (var d in Data)
+            foreach (var d in Sequencer.Data)
             {
                 if (d.High > _yMaxValue) _yMaxValue = d.High;
                 if (d.Low < _yMinValue) _yMinValue = d.Low;

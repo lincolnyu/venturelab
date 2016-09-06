@@ -19,14 +19,30 @@ namespace VentureClient
     /// </summary>
     public sealed partial class MainPage : Page, IChartNavigator
     {
+        public const double ZoomBase = 1.25;
         public const int MinZoomLevel = -5;
         public const int MaxZoomLevel = 5;
 
         private Expert _expert;
         private Stock _stock;
         private CandleChartPlotter _candlePlotter;
+        private VolumePlotter _volumePlotter;
         private int _startIndex = 0;
         private int _zoomLevel = 0;
+        private StockSequencer _sequencer;
+
+        #region Reletaively unchanged drawing styles
+
+        private Brush _blackBrush = new SolidColorBrush(Colors.Black);
+
+        #endregion
+
+        #region Current drawing context
+
+        private double _volumeChartHeight;
+        private double _candleChartHeight;
+
+        #endregion
 
         public MainPage()
         {
@@ -47,7 +63,7 @@ namespace VentureClient
 
         public bool CanGoLeft => _candlePlotter != null && _startIndex > 0;
 
-        public bool CanGoRight => _candlePlotter != null && _startIndex + _candlePlotter.Length < _stock.Data.Count;
+        public bool CanGoRight => _candlePlotter != null && _startIndex + _sequencer.Length < _stock.Data.Count;
 
         public bool CanZoomIn => _zoomLevel < MaxZoomLevel;
         public bool CanZoomOut => _zoomLevel > MinZoomLevel;
@@ -76,7 +92,7 @@ namespace VentureClient
         public void GoRight(int step)
         {
             _startIndex += step;
-            if (_startIndex + _candlePlotter.Length >= _stock.Data.Count) _startIndex = (int)(_stock.Data.Count - _candlePlotter.Length);
+            if (_startIndex + _sequencer.Length >= _stock.Data.Count) _startIndex = (int)Math.Ceiling((_stock.Data.Count - _sequencer.Length));
 
             ReDraw();
 
@@ -116,11 +132,17 @@ namespace VentureClient
             _stock.StockUpdated += OnStockUpdated;
         }
 
+        private const double VolumeChartHeightRatio = 0.1;
+
         private void OnStockUpdated()
         {
             _startIndex = 0;
             _zoomLevel = 0;
-            _candlePlotter = new CandleChartPlotter(_stock.Data, MainCanvas.ActualWidth, MainCanvas.ActualHeight, DrawBegin, DrawCandle, DrawEnd);
+            _sequencer = new StockSequencer(_stock.Data);
+            _candlePlotter = new CandleChartPlotter(DrawBegin, DrawCandle, DrawEnd);
+            _volumePlotter = new VolumePlotter(DummyDrawBeginEnd, DrawVolume, DummyDrawBeginEnd);
+            _candlePlotter.Subscribe(_sequencer);
+            _volumePlotter.Subscribe(_sequencer);
             ReDraw();
             FireCanGoLeftRightChanged();
             
@@ -136,14 +158,21 @@ namespace VentureClient
 
         private void ReDraw()
         {
+            _volumeChartHeight = MainCanvas.ActualHeight * VolumeChartHeightRatio;
+            _candleChartHeight = MainCanvas.ActualHeight - _volumeChartHeight;
+
             var width = MainCanvas.ActualWidth;
-            var height = MainCanvas.ActualHeight;
             if (_candlePlotter == null) return;
-            var chartWtLRatio = DefaultChartWidthToLengthRatio * Math.Pow(2, _zoomLevel);
-            _candlePlotter.Length = width / chartWtLRatio;
+            var chartWtLRatio = StockSequencer.DefaultChartWidthToLengthRatio * Math.Pow(ZoomBase, _zoomLevel);
+            _sequencer.Length = width / chartWtLRatio;
             _candlePlotter.ChartWidth = width;
-            _candlePlotter.ChartHeight = height;
-            _candlePlotter.Draw(_startIndex);
+            _candlePlotter.ChartHeight = _candleChartHeight;
+
+            _volumePlotter.ChartWidth = width;
+            _volumePlotter.ChartHeight = _volumeChartHeight;
+
+            var records = _sequencer.GetStocksStarting(_startIndex);
+            _sequencer.Draw(records);
         }
 
         private void DrawBegin()
@@ -155,21 +184,37 @@ namespace VentureClient
         {
         }
 
+        private void DummyDrawBeginEnd()
+        {
+        }
+
+        private void DrawVolume(VolumePlotter.VolumeShape shape)
+        {
+            var line = new Line
+            {
+                X1 = shape.X,
+                X2 = shape.X,
+                Y1 = MainCanvas.ActualHeight,
+                Y2 = _candleChartHeight + shape.Y,
+                Stroke = _blackBrush
+            };
+            MainCanvas.Children.Add(line);
+        }
+
         private void DrawCandle(CandleShape shape)
         {
-            var brush = new SolidColorBrush(Colors.Black);
             var rect = new Rectangle
             {
                 Width = shape.XRectMax - shape.XRectMin,
                 Height = shape.YRectMax - shape.YRectMin,
-                Stroke = brush
+                Stroke = _blackBrush
             };
             if (rect.Height < 1) rect.Height = 1;
             rect.SetValue(Canvas.LeftProperty, shape.XRectMin);
             rect.SetValue(Canvas.TopProperty, shape.YRectMin);
             if (shape.CandleType == CandleTypes.Yin)
             {
-                rect.Fill = brush;
+                rect.Fill = _blackBrush;
             }
             MainCanvas.Children.Add(rect);
 
@@ -179,7 +224,7 @@ namespace VentureClient
                 X2 = shape.X,
                 Y1 = shape.YMin,
                 Y2 = shape.YRectMin,
-                Stroke = brush
+                Stroke = _blackBrush
             };
 
             MainCanvas.Children.Add(lineTop);
@@ -190,7 +235,7 @@ namespace VentureClient
                 X2 = shape.X,
                 Y1 = shape.YRectMax,
                 Y2 = shape.YMax,
-                Stroke = brush
+                Stroke = _blackBrush
             };
 
             MainCanvas.Children.Add(lineBottom);
