@@ -39,8 +39,9 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BasePlotter.cs" />
+    <Compile Include="StockPlotter.cs" />
     <Compile Include="CandleChartPlotter.cs" />
+    <Compile Include="PriceRuler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StockSequencer.cs" />
     <Compile Include="VerticalDistributionScan.cs" />

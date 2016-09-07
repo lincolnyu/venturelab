@@ -3,7 +3,7 @@ using VentureCommon;
 
 namespace VentureVisualization
 {
-    public abstract class BasePlotter
+    public abstract class StockPlotter
     {
         public delegate void DrawBeginEndDelegate();
 
@@ -26,14 +26,7 @@ namespace VentureVisualization
         {
             public StockRecord Record { get; set; }
         }
-
-        protected BasePlotter(DrawBeginEndDelegate drawBegin,
-            DrawBeginEndDelegate drawEnd)
-        {
-            DrawBegin = drawBegin;
-            DrawEnd = drawEnd;
-        }
-
+        
         public const YModes DefaultYMode = YModes.TopToBottom;
 
         #region Data
@@ -44,8 +37,8 @@ namespace VentureVisualization
 
         public YModes YMode { get; set; } = DefaultYMode;
 
-        protected DrawBeginEndDelegate DrawBegin { get; }
-        protected DrawBeginEndDelegate DrawEnd { get; }
+        public event DrawBeginEndDelegate DrawBegin;
+        public event DrawBeginEndDelegate DrawEnd;
 
         #region Methods
 
@@ -95,6 +88,16 @@ namespace VentureVisualization
                 }
                 slot++;
             }
+        }
+
+        protected void FireDrawBegin()
+        {
+            DrawBegin?.Invoke();
+        }
+
+        protected void FireDrawEnd()
+        {
+            DrawEnd?.Invoke();
         }
 
         #endregion

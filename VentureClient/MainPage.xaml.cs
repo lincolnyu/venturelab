@@ -23,10 +23,18 @@ namespace VentureClient
         public const int MinZoomLevel = -5;
         public const int MaxZoomLevel = 5;
 
+        private const double MarginX = 30;
+        private const double MarginY = 30;
+        private const double MajorBarRatio = 0.6;
+        private const double MajorBarWidth = MarginX * MajorBarRatio;
+        private const double VolumeChartHeightRatio = 0.1;
+        private const double PredictionAreaRatio = 0.2;
+
         private Expert _expert;
         private Stock _stock;
         private CandleChartPlotter _candlePlotter;
         private VolumePlotter _volumePlotter;
+        private PriceRuler _priceRuler;
         private int _startIndex = 0;
         private int _zoomLevel = 0;
         private StockSequencer _sequencer;
@@ -39,6 +47,9 @@ namespace VentureClient
 
         #region Current drawing context
 
+        private double _volumeChartYOffset;
+        private double _candleChartYOffset;
+        private double _ChartXOffset;
         private double _volumeChartHeight;
         private double _candleChartHeight;
 
@@ -132,21 +143,45 @@ namespace VentureClient
             _stock.StockUpdated += OnStockUpdated;
         }
 
-        private const double VolumeChartHeightRatio = 0.1;
-
         private void OnStockUpdated()
         {
+            StockCode.Text = _stock.Code;
+
             _startIndex = 0;
             _zoomLevel = 0;
             _sequencer = new StockSequencer(_stock.Data);
-            _candlePlotter = new CandleChartPlotter(DrawBegin, DrawCandle, DrawEnd);
-            _volumePlotter = new VolumePlotter(DummyDrawBeginEnd, DrawVolume, DummyDrawBeginEnd);
+            _candlePlotter = new CandleChartPlotter();
+            _volumePlotter = new VolumePlotter();
+            _priceRuler = new PriceRuler(_candlePlotter);
+            _candlePlotter.DrawCandle += DrawCandle;
+            _candlePlotter.DrawEnd += _priceRuler.Draw;
+            _volumePlotter.DrawVolume += DrawVolume;
             _candlePlotter.Subscribe(_sequencer);
             _volumePlotter.Subscribe(_sequencer);
+            _priceRuler.DrawMajor += PriceRulerOnDrawMajor;
+
             ReDraw();
-            FireCanGoLeftRightChanged();
-            
-            StockCode.Text = _stock.Code;
+            FireCanGoLeftRightChanged();            
+        }
+
+        private void PriceRulerOnDrawMajor(double y, double value)
+        {
+            var line = new Line
+            {
+                X1 = MarginX - MajorBarWidth,
+                X2 = MarginX,
+                Y1 = y,
+                Y2 = y,
+                Stroke = _blackBrush
+            };
+            var text = new TextBlock
+            {
+                Text = string.Format("{0:0.00}", value)
+            };
+            text.SetValue(Canvas.TopProperty, y);
+            text.SetValue(Canvas.LeftProperty, 0);
+            MainCanvas.Children.Add(text);
+            MainCanvas.Children.Add(line);
         }
 
         private void MainCanvasOnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -158,10 +193,15 @@ namespace VentureClient
 
         private void ReDraw()
         {
-            _volumeChartHeight = MainCanvas.ActualHeight * VolumeChartHeightRatio;
-            _candleChartHeight = MainCanvas.ActualHeight - _volumeChartHeight;
+            var totalHeight = MainCanvas.ActualHeight - MarginY * 2;
+            var predictionAreaWidth = PredictionAreaRatio * MainCanvas.ActualWidth;
+            var width = MainCanvas.ActualWidth - MarginX - predictionAreaWidth;
+            _volumeChartHeight = totalHeight * VolumeChartHeightRatio;
+            _candleChartHeight = totalHeight - _volumeChartHeight;
+            _ChartXOffset = MarginX;
+            _candleChartYOffset = MarginY;
+            _volumeChartYOffset = _candleChartYOffset + _candleChartHeight;
 
-            var width = MainCanvas.ActualWidth;
             if (_candlePlotter == null) return;
             var chartWtLRatio = StockSequencer.DefaultChartWidthToLengthRatio * Math.Pow(ZoomBase, _zoomLevel);
             _sequencer.Length = width / chartWtLRatio;
@@ -172,30 +212,23 @@ namespace VentureClient
             _volumePlotter.ChartHeight = _volumeChartHeight;
 
             var records = _sequencer.GetStocksStarting(_startIndex);
+            PrepareDraw();
             _sequencer.Draw(records);
         }
 
-        private void DrawBegin()
+        private void PrepareDraw()
         {
             MainCanvas.Children.Clear();
-        }
-
-        private void DrawEnd()
-        {
-        }
-
-        private void DummyDrawBeginEnd()
-        {
         }
 
         private void DrawVolume(VolumePlotter.VolumeShape shape)
         {
             var line = new Line
             {
-                X1 = shape.X,
-                X2 = shape.X,
-                Y1 = MainCanvas.ActualHeight,
-                Y2 = _candleChartHeight + shape.Y,
+                X1 = _ChartXOffset + shape.X,
+                X2 = _ChartXOffset + shape.X,
+                Y1 = _volumeChartYOffset + _volumeChartHeight,
+                Y2 = _volumeChartYOffset + shape.Y,
                 Stroke = _blackBrush
             };
             MainCanvas.Children.Add(line);
@@ -210,8 +243,8 @@ namespace VentureClient
                 Stroke = _blackBrush
             };
             if (rect.Height < 1) rect.Height = 1;
-            rect.SetValue(Canvas.LeftProperty, shape.XRectMin);
-            rect.SetValue(Canvas.TopProperty, shape.YRectMin);
+            rect.SetValue(Canvas.LeftProperty, _ChartXOffset + shape.XRectMin);
+            rect.SetValue(Canvas.TopProperty, _candleChartYOffset + shape.YRectMin);
             if (shape.CandleType == CandleTypes.Yin)
             {
                 rect.Fill = _blackBrush;
@@ -220,10 +253,10 @@ namespace VentureClient
 
             var lineTop = new Line
             {
-                X1 = shape.X,
-                X2 = shape.X,
-                Y1 = shape.YMin,
-                Y2 = shape.YRectMin,
+                X1 = _ChartXOffset + shape.X,
+                X2 = _ChartXOffset + shape.X,
+                Y1 = _candleChartYOffset + shape.YMin,
+                Y2 = _candleChartYOffset + shape.YRectMin,
                 Stroke = _blackBrush
             };
 
@@ -231,10 +264,10 @@ namespace VentureClient
 
             var lineBottom = new Line
             {
-                X1 = shape.X,
-                X2 = shape.X,
-                Y1 = shape.YRectMax,
-                Y2 = shape.YMax,
+                X1 = _ChartXOffset + shape.X,
+                X2 = _ChartXOffset + shape.X,
+                Y1 = _candleChartYOffset + shape.YRectMax,
+                Y2 = _candleChartYOffset + shape.YMax,
                 Stroke = _blackBrush
             };
 

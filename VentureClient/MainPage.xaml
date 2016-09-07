@@ -17,7 +17,7 @@
     </Page.TopAppBar>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="30"></RowDefinition>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -26,9 +26,9 @@
             <ColumnDefinition Width="30"/>
         </Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
-            <TextBlock x:Name="textBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Stock Code:" VerticalAlignment="Top"/>
-            <TextBox x:Name="StockCode" HorizontalAlignment="Left" 
-                     TextWrapping="Wrap" VerticalAlignment="Top" IsReadOnly="True"/>
+            <TextBlock x:Name="textBlock" HorizontalAlignment="Left" VerticalAlignment="Center" TextWrapping="Wrap" Text="Stock Code:"/>
+            <TextBox x:Name="StockCode" BorderThickness="0" HorizontalAlignment="Left"
+                     VerticalAlignment="Center" TextWrapping="Wrap" IsReadOnly="True"/>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal"
                     HorizontalAlignment="Right">

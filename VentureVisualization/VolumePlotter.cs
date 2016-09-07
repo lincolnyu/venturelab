@@ -5,9 +5,9 @@ using VentureCommon;
 
 namespace VentureVisualization
 {
-    using DrawVolumeDelegate = BasePlotter.DrawShapeDelegate<VolumePlotter.VolumeShape>;
+    using DrawVolumeDelegate = StockPlotter.DrawShapeDelegate<VolumePlotter.VolumeShape>;
 
-    public sealed class VolumePlotter : BasePlotter
+    public sealed class VolumePlotter : StockPlotter
     {
         public enum VerticalModes
         {
@@ -25,10 +25,8 @@ namespace VentureVisualization
         private double _maxVolume;
         private bool _maxVolumeScanned;
 
-        public VolumePlotter(DrawBeginEndDelegate drawBegin,
-            DrawVolumeDelegate drawVolume, DrawBeginEndDelegate drawEnd) : base(drawBegin, drawEnd)
+        public VolumePlotter() 
         {
-            DrawVolume = drawVolume;
         }
 
         public double ChartWidth { get; set; }
@@ -45,7 +43,7 @@ namespace VentureVisualization
             }
         }
 
-        private DrawVolumeDelegate DrawVolume { get; }
+        public event DrawVolumeDelegate DrawVolume;
 
         public override void Draw(IEnumerable<StockRecord> records, double startSlot)
         {
@@ -61,7 +59,7 @@ namespace VentureVisualization
                 default:
                     throw new ArgumentException("Unexpected vertical mode");
             }
-            DrawBegin();
+            FireDrawBegin();
             PlotLoop(records, startSlot, (record, slot) =>
             {
                 var y = record.Volume * ChartHeight / ymax;
@@ -76,7 +74,7 @@ namespace VentureVisualization
                 };
                 DrawVolume(vs);
             });
-            DrawEnd();
+            FireDrawEnd();
         }
         
         private void ScanMaxVolume()

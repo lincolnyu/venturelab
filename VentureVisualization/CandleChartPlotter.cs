@@ -4,9 +4,9 @@ using VentureCommon;
 
 namespace VentureVisualization
 {
-    using DrawCandleDelegate = BasePlotter.DrawShapeDelegate<CandleChartPlotter.CandleShape>;
+    using DrawCandleDelegate = StockPlotter.DrawShapeDelegate<CandleChartPlotter.CandleShape>;
 
-    public sealed class CandleChartPlotter : BasePlotter
+    public sealed class CandleChartPlotter : StockPlotter
     {
         #region Nested types
 
@@ -82,15 +82,12 @@ namespace VentureVisualization
         /// <param name="data">The data reference held by this drawer</param>
         /// <param name="chartWidth">The width of the chart</param>
         /// <param name="chartHeight">The height of the chart</param>
-        public CandleChartPlotter(DrawBeginEndDelegate drawBegin,
-            DrawCandleDelegate drawCandle, 
-            DrawBeginEndDelegate drawEnd) : base(drawBegin, drawEnd)
+        public CandleChartPlotter()
         {
             YangWidthRatio = DefaultYangWidthRatio;
             YinWidthRatio = DefaultYinWidthRatio;
             TopMarginRatio = DefaultTopMarginRatio;
             BottomMarginRatio = DefaultBottomMarginRatio;
-            DrawCandle = drawCandle;
         }
       
         #region Chart config
@@ -118,7 +115,22 @@ namespace VentureVisualization
         /// </summary>
         public double BottomMarginRatio { get; set; }
 
+        /// <summary>
+        ///  Value of Y on the upper boundary
+        /// </summary>
+        /// <remarks>
+        ///  It is updated when re-drawn if the vertical mode is not YRange 
+        ///  or it is specified by the user
+        /// </remarks>
         public double YMax { get; set; }
+
+        /// <summary>
+        ///  Value of Y on the lower boundary
+        /// </summary>
+        /// <remarks>
+        ///  It is updated when re-drawn if the vertical mode is not YRange 
+        ///  or it is specified by the user
+        /// </remarks>
         public double YMin { get; set; }
 
         public double YMaxValue
@@ -149,7 +161,7 @@ namespace VentureVisualization
 
         #region Drawing delegate
 
-        private DrawCandleDelegate DrawCandle { get; }
+        public event DrawCandleDelegate DrawCandle;
 
         #endregion
         
@@ -166,6 +178,8 @@ namespace VentureVisualization
                         double ymin, ymax;
                         GetYMinMaxForMargins(YMinValue, YMaxValue, out ymin, out ymax);
                         candles = DrawWithYRange(stocks, startSlot, ymin, ymax);
+                        YMin = ymin;
+                        YMax = ymax;
                         break;
                     }
                 case VerticalModes.YRange:
@@ -174,7 +188,7 @@ namespace VentureVisualization
                 default:
                     throw new ArgumentException("Unexpected mode");
             }
-            DrawBegin();
+            FireDrawBegin();
             foreach (var candle in candles)
             {
                 var ct = candle.YOpen < candle.YClose ? CandleTypes.Yin : CandleTypes.Yang;
@@ -208,7 +222,7 @@ namespace VentureVisualization
                 };
                 DrawCandle(cs);
             }
-            DrawEnd();
+            FireDrawEnd();
         }
         
         private IEnumerable<Candle> DrawWithYRange(IEnumerable<StockRecord> records, double startSlot, double ymin, double ymax)
@@ -258,6 +272,8 @@ namespace VentureVisualization
             {
                 double ymin, ymax;
                 GetYMinMaxForMargins(min, max, out ymin, out ymax);
+                YMin = ymin;
+                YMax = ymax;
                 var yd = ymax - ymin;
                 foreach (var cd in cdlist)
                 {
