@@ -6,7 +6,7 @@ namespace VentureVisualization
     {
         public delegate void DrawMajorDelegate(double y, double value);
 
-        public const double DefaultMajorThrRatio = 30;
+        public const double DefaultMinMajorInterval = 30;
         public const double DefaultMinMajorCount = 2;
 
         public PriceRuler(CandleChartPlotter candleChartPlotter)
@@ -19,7 +19,7 @@ namespace VentureVisualization
         public double RulerWidth { get; set; }
         public double RulerHeight => CandleChartPlotter.ChartHeight;
 
-        public double MaxMajorRatio { get; set; } = DefaultMajorThrRatio;
+        public double MinMajorInterval { get; set; } = DefaultMinMajorInterval;
         /// <summary>
         ///  It has to be a value smaller than 10
         /// </summary>
@@ -32,7 +32,7 @@ namespace VentureVisualization
             var max = CandleChartPlotter.YMax;
             var min = CandleChartPlotter.YMin;
             var d = max - min;
-            var maxMajors = RulerHeight / MaxMajorRatio;
+            var maxMajors = RulerHeight / MinMajorInterval;
             double interval, start;
             GetMajorInterval(min, max, maxMajors, out interval, out start);
             for (var bar = start; bar < max; bar += interval)

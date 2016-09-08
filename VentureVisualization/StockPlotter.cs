@@ -3,7 +3,7 @@ using VentureCommon;
 
 namespace VentureVisualization
 {
-    public abstract class StockPlotter
+    public abstract class StockPlotter : SequencerSubscriber
     {
         public delegate void DrawBeginEndDelegate();
 
@@ -29,32 +29,12 @@ namespace VentureVisualization
         
         public const YModes DefaultYMode = YModes.TopToBottom;
 
-        #region Data
-
-        public StockSequencer Sequencer { get; private set; }
-
-        #endregion
-
         public YModes YMode { get; set; } = DefaultYMode;
 
         public event DrawBeginEndDelegate DrawBegin;
         public event DrawBeginEndDelegate DrawEnd;
 
         #region Methods
-
-        public abstract void Draw(IEnumerable<StockRecord> records, double startSlot);
-
-        public void Subscribe(StockSequencer sequencer)
-        {
-            Sequencer = sequencer;
-            Sequencer.DrawSequence += Draw;
-        }
-
-        public void Unsubscribe(StockSequencer sequencer)
-        {
-            Sequencer.DrawSequence -= Draw;
-            Sequencer = null;
-        }
 
         protected void PlotLoop(IEnumerable<StockRecord> records, double startSlot, PlotRecordDelegate plotRecord)
         {

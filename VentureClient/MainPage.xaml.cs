@@ -27,17 +27,22 @@ namespace VentureClient
         private const double MarginY = 30;
         private const double MajorBarRatio = 0.6;
         private const double MajorBarWidth = MarginX * MajorBarRatio;
+        private const double DateBarRatio = 0.4;
+        private const double DateBarHeight = MarginY * DateBarRatio;
         private const double VolumeChartHeightRatio = 0.1;
         private const double PredictionAreaRatio = 0.2;
 
         private Expert _expert;
         private Stock _stock;
+
         private CandleChartPlotter _candlePlotter;
         private VolumePlotter _volumePlotter;
         private PriceRuler _priceRuler;
+        private TimeRuler _timeRuler;
+        private StockSequencer _sequencer;
+
         private int _startIndex = 0;
         private int _zoomLevel = 0;
-        private StockSequencer _sequencer;
 
         #region Reletaively unchanged drawing styles
 
@@ -153,15 +158,44 @@ namespace VentureClient
             _candlePlotter = new CandleChartPlotter();
             _volumePlotter = new VolumePlotter();
             _priceRuler = new PriceRuler(_candlePlotter);
+            _timeRuler = new TimeRuler();
             _candlePlotter.DrawCandle += DrawCandle;
             _candlePlotter.DrawEnd += _priceRuler.Draw;
             _volumePlotter.DrawVolume += DrawVolume;
+            _timeRuler.DrawDatePeg += DrawDatePeg;
             _candlePlotter.Subscribe(_sequencer);
             _volumePlotter.Subscribe(_sequencer);
+            _timeRuler.Subscribe(_sequencer);
             _priceRuler.DrawMajor += PriceRulerOnDrawMajor;
 
             ReDraw();
             FireCanGoLeftRightChanged();            
+        }
+
+        private void DrawDatePeg(double x, DateTime dt)
+        {
+            var xpeg = MarginX + x;
+            var ytop = MainCanvas.ActualHeight - MarginY;
+            var ybottom = ytop + DateBarHeight;
+            var line = new Line
+            {
+                X1 = xpeg,
+                X2 = xpeg,
+                Y1 = ytop,
+                Y2 = ybottom,
+                Stroke = _blackBrush
+            };
+            MainCanvas.Children.Add(line);
+
+            var text = new TextBlock
+            {
+                Text = string.Format("{0:dd/MM/yy}", dt.Date)
+            };
+            text.SetValue(Canvas.TopProperty, ybottom);
+            text.SetValue(Canvas.LeftProperty, xpeg);
+            text.LayoutUpdated += (s, e) =>
+                text.SetValue(Canvas.LeftProperty, xpeg - text.ActualWidth / 2);
+            MainCanvas.Children.Add(text);
         }
 
         private void PriceRulerOnDrawMajor(double y, double value)
@@ -174,14 +208,15 @@ namespace VentureClient
                 Y2 = y,
                 Stroke = _blackBrush
             };
+            MainCanvas.Children.Add(line);
+
             var text = new TextBlock
             {
-                Text = string.Format("{0:0.00}", value)
+                Text = string.Format("{0:0.000}", value)
             };
             text.SetValue(Canvas.TopProperty, y);
             text.SetValue(Canvas.LeftProperty, 0);
             MainCanvas.Children.Add(text);
-            MainCanvas.Children.Add(line);
         }
 
         private void MainCanvasOnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -210,6 +245,8 @@ namespace VentureClient
 
             _volumePlotter.ChartWidth = width;
             _volumePlotter.ChartHeight = _volumeChartHeight;
+
+            _timeRuler.RulerWidth = width;
 
             var records = _sequencer.GetStocksStarting(_startIndex);
             PrepareDraw();
