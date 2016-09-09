@@ -23,14 +23,14 @@ namespace VentureClient
         public const int MinZoomLevel = -5;
         public const int MaxZoomLevel = 5;
 
-        private const double MarginX = 30;
+        private const double MarginLeft = 50;
+        private const double MarginRight = 30;
         private const double MarginY = 30;
         private const double MajorBarRatio = 0.6;
-        private const double MajorBarWidth = MarginX * MajorBarRatio;
+        private const double MajorBarWidth = MarginLeft * MajorBarRatio;
         private const double DateBarRatio = 0.4;
         private const double DateBarHeight = MarginY * DateBarRatio;
         private const double VolumeChartHeightRatio = 0.1;
-        private const double PredictionAreaRatio = 0.2;
 
         private Expert _expert;
         private Stock _stock;
@@ -43,6 +43,12 @@ namespace VentureClient
 
         private int _startIndex = 0;
         private int _zoomLevel = 0;
+
+        #region Frame wide variables for plotting
+
+        private int _lastYear = int.MinValue;
+        
+        #endregion 
 
         #region Reletaively unchanged drawing styles
 
@@ -174,7 +180,7 @@ namespace VentureClient
 
         private void DrawDatePeg(double x, DateTime dt)
         {
-            var xpeg = MarginX + x;
+            var xpeg = MarginLeft + x;
             var ytop = MainCanvas.ActualHeight - MarginY;
             var ybottom = ytop + DateBarHeight;
             var line = new Line
@@ -187,10 +193,12 @@ namespace VentureClient
             };
             MainCanvas.Children.Add(line);
 
+            var year = dt.Date.Year;
             var text = new TextBlock
             {
-                Text = string.Format("{0:dd/MM/yy}", dt.Date)
+                Text = string.Format(year > _lastYear ? "{0:dd/MM/yy}" : "{0:dd/MM}", dt.Date)
             };
+            _lastYear = year;
             text.SetValue(Canvas.TopProperty, ybottom);
             text.SetValue(Canvas.LeftProperty, xpeg);
             text.LayoutUpdated += (s, e) =>
@@ -202,8 +210,8 @@ namespace VentureClient
         {
             var line = new Line
             {
-                X1 = MarginX - MajorBarWidth,
-                X2 = MarginX,
+                X1 = MarginLeft - MajorBarWidth,
+                X2 = MarginLeft,
                 Y1 = y,
                 Y2 = y,
                 Stroke = _blackBrush
@@ -228,16 +236,16 @@ namespace VentureClient
 
         private void ReDraw()
         {
+            if (_candlePlotter == null) return;
+
             var totalHeight = MainCanvas.ActualHeight - MarginY * 2;
-            var predictionAreaWidth = PredictionAreaRatio * MainCanvas.ActualWidth;
-            var width = MainCanvas.ActualWidth - MarginX - predictionAreaWidth;
+            var width = MainCanvas.ActualWidth - MarginLeft - MarginRight;
             _volumeChartHeight = totalHeight * VolumeChartHeightRatio;
             _candleChartHeight = totalHeight - _volumeChartHeight;
-            _ChartXOffset = MarginX;
+            _ChartXOffset = MarginLeft;
             _candleChartYOffset = MarginY;
             _volumeChartYOffset = _candleChartYOffset + _candleChartHeight;
 
-            if (_candlePlotter == null) return;
             var chartWtLRatio = StockSequencer.DefaultChartWidthToLengthRatio * Math.Pow(ZoomBase, _zoomLevel);
             _sequencer.Length = width / chartWtLRatio;
             _candlePlotter.ChartWidth = width;
@@ -255,6 +263,7 @@ namespace VentureClient
 
         private void PrepareDraw()
         {
+            _lastYear = int.MinValue;
             MainCanvas.Children.Clear();
         }
 
