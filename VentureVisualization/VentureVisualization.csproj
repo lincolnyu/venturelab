@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Samples\GapSample.cs" />
-    <Compile Include="IDatedSample.cs" />
+    <Compile Include="Samples\IDatedSample.cs" />
     <Compile Include="Samples\ISample.cs" />
     <Compile Include="Samples\ITimeSpanSample.cs" />
     <Compile Include="SequencePlotting\PredictionPlotter.cs" />

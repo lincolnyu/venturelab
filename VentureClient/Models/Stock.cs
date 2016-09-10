@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using VentureCommon;
-using VentureVisualization;
 using VentureVisualization.Samples;
 using static VentureCommon.Helpers.StockRecordHelper;
 
@@ -19,9 +17,12 @@ namespace VentureClient.Models
 
         public async Task LoadFromFile()
         {
-            await PickFile();
-            var lines = ParseFile();
-            LoadFromLines(lines);
+            var filePicked = await PickFile();
+            if (filePicked)
+            {
+                var lines = ParseFile();
+                LoadFromLines(lines);
+            }
         }
 
         private void LoadFromLines(IEnumerable<string> lines)

@@ -11,12 +11,22 @@ namespace VentureClient.Models
     {
         public StorageFile File { get; private set; }
 
-        public async Task PickFile()
+        /// <summary>
+        ///  Returns true if a different file (excluding user cancel) has been picked
+        /// </summary>
+        /// <returns>True if a different file has been picked</returns>
+        public async Task<bool> PickFile()
         {
             var fop = new FileOpenPicker();
             fop.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
             fop.FileTypeFilter.Add(".txt");
-            File = await fop.PickSingleFileAsync();
+            var file = await fop.PickSingleFileAsync();
+            if (file != null && File != file)
+            {
+                File = file;
+                return true;
+            }
+            return false;
         }
 
         public IEnumerable<string> ParseFile()

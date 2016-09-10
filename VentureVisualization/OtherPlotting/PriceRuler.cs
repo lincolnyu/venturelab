@@ -8,7 +8,7 @@ namespace VentureVisualization.OtherPlotting
         public delegate void DrawMajorDelegate(double y, double value);
 
         public const double DefaultMinMajorInterval = 30;
-        public const double DefaultMinMajorCount = 2;
+        public const double DefaultMinMajorCount = 4;
 
         public PriceRuler(CandleChartPlotter candleChartPlotter)
         {

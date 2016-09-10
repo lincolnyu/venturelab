@@ -185,7 +185,8 @@ namespace VentureClient
             _priceRuler.DrawMajor += PriceRulerOnDrawMajor;
 
             ReDraw();
-            FireCanGoLeftRightChanged();            
+            FireCanGoLeftRightChanged();
+            FireCanZoomInOutChanged();
         }
 
         private void SequencerOnPreDrawDone()

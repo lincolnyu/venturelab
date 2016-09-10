@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VentureVisualization
+namespace VentureVisualization.Samples
 {
     public interface IDatedSample : ISample
     {
