@@ -11,6 +11,7 @@ using VentureVisualization.OtherPlotting;
 using VentureClient.Interfaces;
 using static VentureVisualization.SequencePlotting.CandleChartPlotter;
 using VentureVisualization.Samples;
+using System.Collections.Generic;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -34,20 +35,37 @@ namespace VentureClient
         private const double DateBarHeight = MarginY * DateBarRatio;
         private const double VolumeChartHeightRatio = 0.1;
 
+        public const double StepLengthRatio = 0.1;
+
+        #region Data
+
         private Expert _expert;
         private Stock _stock;
+
+        #endregion
+
+        #region Plotting facilities
+        
+        private StockAndPredictionSequencer _sequencer;
+
+        private YMarginManager _yMarginManager;
 
         private CandleChartPlotter _candlePlotter;
         private VolumePlotter _volumePlotter;
         private PriceRuler _priceRuler;
         private TimeRuler _timeRuler;
-        private StockAndPredictionSequencer _sequencer;
         private PredictionPlotter _predictPlotter;
+
+        #endregion
+
+        #region Current plotting contextual parameters
 
         private int _startIndex = 0;
         private int _zoomLevel = 0;
+        
+        #endregion
 
-        #region Frame wide variables for plotting
+        #region Frame-wide variables for plotting
 
         private int _lastYear = int.MinValue;
         
@@ -56,6 +74,7 @@ namespace VentureClient
         #region Reletaively unchanged drawing styles
 
         private Brush _blackBrush = new SolidColorBrush(Colors.Black);
+        private Brush _redBrush = new SolidColorBrush(Colors.Red);
 
         #endregion
 
@@ -66,7 +85,6 @@ namespace VentureClient
         private double _ChartXOffset;
         private double _volumeChartHeight;
         private double _candleChartHeight;
-        private YMarginManager _yMarginManager;
 
         #endregion
 
@@ -87,9 +105,9 @@ namespace VentureClient
 
         #region IChartNavigator members
 
-        public bool CanGoLeft => _candlePlotter != null && _startIndex > 0;
+        public bool CanGoLeft => _sequencer != null && _startIndex > 0;
 
-        public bool CanGoRight => _candlePlotter != null && _startIndex + _sequencer.Length < _stock.Data.Count;
+        public bool CanGoRight => _sequencer != null && _startIndex + _sequencer.Length < _sequencer.TotalDataLength;
 
         public bool CanZoomIn => _zoomLevel < MaxZoomLevel;
         public bool CanZoomOut => _zoomLevel > MinZoomLevel;
@@ -105,9 +123,9 @@ namespace VentureClient
 
         #region IChartNavigator members
 
-        public void GoLeft(int step)
+        public void GoLeft()
         {
-            _startIndex -= step;
+            _startIndex -= (int)Math.Ceiling(_sequencer.Length * StepLengthRatio);
             if (_startIndex < 0) _startIndex = 0;
 
             ReDraw();
@@ -115,10 +133,10 @@ namespace VentureClient
             FireCanGoLeftRightChanged();
         }
 
-        public void GoRight(int step)
+        public void GoRight()
         {
-            _startIndex += step;
-            if (_startIndex + _sequencer.Length >= _stock.Data.Count) _startIndex = (int)Math.Ceiling((_stock.Data.Count - _sequencer.Length));
+            _startIndex += (int)Math.Ceiling(_sequencer.Length * StepLengthRatio);
+            if (_startIndex + _sequencer.Length >= _sequencer.TotalDataLength) _startIndex = (int)Math.Ceiling((_sequencer.TotalDataLength - _sequencer.Length));
 
             ReDraw();
 
@@ -155,17 +173,25 @@ namespace VentureClient
         {
             _expert = new Expert();
             _stock = new Stock();
-            _stock.StockUpdated += OnStockUpdated;
+            _stock.StockUpdated += OnDataUpdated;
+            _expert.ExpertUpdated += OnDataUpdated;
         }
-
-        private void OnStockUpdated()
+        
+        private void OnDataUpdated()
         {
+            if (_stock.Code == null) return;
+
             StockCode.Text = _stock.Code;
 
             _startIndex = 0;
             _zoomLevel = 0;
-            
-            _sequencer = new StockAndPredictionSequencer(_stock.Data, new PredictionSample[0]);
+
+            List<PredictionSample> predictSamples;
+            if (!_expert.Data.TryGetValue(_stock.Code, out predictSamples))
+            {
+                predictSamples = new List<PredictionSample>();
+            }
+            _sequencer = new StockAndPredictionSequencer(_stock.Data, predictSamples);
             _sequencer.PreDrawDone += SequencerOnPreDrawDone;
 
             _yMarginManager = new YMarginManager { VertialMode = YMarginManager.VerticalModes.YMargins };
@@ -185,7 +211,6 @@ namespace VentureClient
             _volumePlotter.DrawVolume += DrawVolume;
             _volumePlotter.Subscribe(_sequencer);
 
-
             _predictPlotter = new PredictionPlotter(_candlePlotter);
             _predictPlotter.DrawPrediction += PredictPlotterOnDrawPrediction;
             _predictPlotter.Subscribe(_sequencer);
@@ -198,73 +223,6 @@ namespace VentureClient
         private void SequencerOnPreDrawDone()
         {
             _yMarginManager.UpdateVerticalSettings();
-        }
-
-        private void PredictPlotterOnDrawPrediction(PredictionPlotter.PredictionShape shape)
-        {
-            var lines = new Line[]
-            {
-                new Line { Y2 = shape.Y },
-                new Line { Y2 = shape.YLower },
-                new Line { Y2 = shape.YUpper },
-            };
-            foreach (var line in lines)
-            {
-                line.X1 = shape.PrevX;
-                line.Y1 = shape.PrevY;
-                line.X2 = shape.X;
-                line.Stroke = _blackBrush;
-                MainCanvas.Children.Add(line);
-            }
-        }
-
-        private void DrawDatePeg(double x, DateTime dt)
-        {
-            var xpeg = MarginLeft + x;
-            var ytop = MainCanvas.ActualHeight - MarginY;
-            var ybottom = ytop + DateBarHeight;
-            var line = new Line
-            {
-                X1 = xpeg,
-                X2 = xpeg,
-                Y1 = ytop,
-                Y2 = ybottom,
-                Stroke = _blackBrush
-            };
-            MainCanvas.Children.Add(line);
-
-            var year = dt.Date.Year;
-            var text = new TextBlock
-            {
-                Text = string.Format(year > _lastYear ? "{0:dd/MM/yy}" : "{0:dd/MM}", dt.Date)
-            };
-            _lastYear = year;
-            text.SetValue(Canvas.TopProperty, ybottom);
-            text.SetValue(Canvas.LeftProperty, xpeg);
-            text.LayoutUpdated += (s, e) =>
-                text.SetValue(Canvas.LeftProperty, xpeg - text.ActualWidth / 2);
-            MainCanvas.Children.Add(text);
-        }
-
-        private void PriceRulerOnDrawMajor(double y, double value)
-        {
-            var line = new Line
-            {
-                X1 = MarginLeft - MajorBarWidth,
-                X2 = MarginLeft,
-                Y1 = y,
-                Y2 = y,
-                Stroke = _blackBrush
-            };
-            MainCanvas.Children.Add(line);
-
-            var text = new TextBlock
-            {
-                Text = string.Format("{0:0.000}", value)
-            };
-            text.SetValue(Canvas.TopProperty, y);
-            text.SetValue(Canvas.LeftProperty, 0);
-            MainCanvas.Children.Add(text);
         }
 
         private void MainCanvasOnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -360,6 +318,75 @@ namespace VentureClient
 
             MainCanvas.Children.Add(lineBottom);
         }
+
+        private void PredictPlotterOnDrawPrediction(PredictionPlotter.PredictionShape shape)
+        {
+            var lines = new Line[]
+            {
+                new Line { Y2 = _candleChartYOffset + shape.Y },
+                new Line { Y2 = _candleChartYOffset + shape.YLower },
+                new Line { Y2 = _candleChartYOffset + shape.YUpper },
+            };
+            foreach (var line in lines)
+            {
+                line.X1 = _ChartXOffset + shape.PrevX;
+                line.Y1 = _candleChartYOffset + shape.PrevY;
+                line.X2 = _ChartXOffset + shape.X;
+                line.Stroke = _blackBrush;
+                MainCanvas.Children.Add(line);
+            }
+        }
+
+        private void DrawDatePeg(double x, DateTime dt)
+        {
+            var xpeg = MarginLeft + x;
+            var ytop = MainCanvas.ActualHeight - MarginY;
+            var ybottom = ytop + DateBarHeight;
+            var line = new Line
+            {
+                X1 = xpeg,
+                X2 = xpeg,
+                Y1 = ytop,
+                Y2 = ybottom,
+                Stroke = _blackBrush
+            };
+            MainCanvas.Children.Add(line);
+
+            var year = dt.Date.Year;
+            var text = new TextBlock
+            {
+                Text = string.Format(year > _lastYear ? "{0:dd/MM/yy}" : "{0:dd/MM}", dt.Date),
+                Foreground = year > _lastYear? _redBrush : _blackBrush
+            };
+            _lastYear = year;
+            text.SetValue(Canvas.TopProperty, ybottom);
+            text.SetValue(Canvas.LeftProperty, xpeg);
+            text.LayoutUpdated += (s, e) =>
+                text.SetValue(Canvas.LeftProperty, xpeg - text.ActualWidth / 2);
+            MainCanvas.Children.Add(text);
+        }
+
+        private void PriceRulerOnDrawMajor(double y, double value)
+        {
+            var line = new Line
+            {
+                X1 = MarginLeft - MajorBarWidth,
+                X2 = MarginLeft,
+                Y1 = y,
+                Y2 = y,
+                Stroke = _blackBrush
+            };
+            MainCanvas.Children.Add(line);
+
+            var text = new TextBlock
+            {
+                Text = string.Format("{0:0.000}", value)
+            };
+            text.SetValue(Canvas.TopProperty, y);
+            text.SetValue(Canvas.LeftProperty, 0);
+            MainCanvas.Children.Add(text);
+        }
+
 
         private void SetupCommands()
         {

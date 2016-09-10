@@ -15,9 +15,9 @@ namespace VentureClient.Interfaces
         event EventHandler CanGoRightChanged;
         event EventHandler CanZoomInChanged;
         event EventHandler CanZoomOutChanged;
-
-        void GoLeft(int step);
-        void GoRight(int step);
+        
+        void GoLeft();
+        void GoRight();
         void ZoomIn();
         void ZoomOut();
     }

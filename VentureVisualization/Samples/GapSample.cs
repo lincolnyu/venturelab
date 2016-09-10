@@ -6,6 +6,8 @@ namespace VentureVisualization.Samples
     {
         public DateTime Date { get; set; }
 
+        public double Offset => 0;
+
         public double Step { get; set; } = 1;
     }
 }

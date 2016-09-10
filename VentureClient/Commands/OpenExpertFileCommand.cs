@@ -22,7 +22,7 @@ namespace VentureClient.Commands
 
         public async void Execute(object parameter)
         {
-            await Expert.PickFile();
+            await Expert.LoadFromFile();
         }
     }
 }

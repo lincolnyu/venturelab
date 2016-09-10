@@ -12,14 +12,16 @@ namespace VentureVisualization.SequencePlotting
 
         public const double DefaultChartWidthToLengthRatio = 8;
 
-        public StockSequencer(List<RecordSample> data)
+        public StockSequencer(List<RecordSample> records)
         {
-            Data = data;
+            Records = records;
         }
 
         #region Data
 
-        public List<RecordSample> Data { get; }
+        public List<RecordSample> Records { get; }
+
+        public virtual double TotalDataLength => Records.Count;
 
         #endregion
 
@@ -41,11 +43,11 @@ namespace VentureVisualization.SequencePlotting
             DrawSequence(sequence, startSlot);   
         }
 
-        public IEnumerable<ISample> GetStocksStarting(int index)
+        public virtual IEnumerable<ISample> GetStocksStarting(int index)
         {
-            for (var i = index; i < Data.Count; i++)
+            for (var i = index; i < Records.Count; i++)
             {
-                yield return Data[i];
+                yield return Records[i];
             }
         }
 
@@ -55,7 +57,7 @@ namespace VentureVisualization.SequencePlotting
         /// </summary>
         /// <param name="times">The times to return stock records for</param>
         /// <returns>The corresponding stock records</returns>
-        public IEnumerable<ISample> GetStocksAtTimes(IEnumerable<DateTime> times)
+        public virtual IEnumerable<ISample> GetStocksAtTimes(IEnumerable<DateTime> times)
         {
             int? index = null;
             foreach (var time in times)
@@ -63,7 +65,7 @@ namespace VentureVisualization.SequencePlotting
                 if (index == null)
                 {
                     var q = new RecordSample { Date = time };
-                    index = Data.BinarySearch(q);
+                    index = Records.BinarySearch(q);
                     if (index < 0)
                     {
                         index = -index - 1;
@@ -71,23 +73,23 @@ namespace VentureVisualization.SequencePlotting
                     }
                     else
                     {
-                        yield return Data[index.Value];
+                        yield return Records[index.Value];
                         index++;
                     }
                 }
                 else
                 {
-                    while (index < Data.Count && Data[index.Value].Date < time)
+                    while (index < Records.Count && Records[index.Value].Date < time)
                     {
                         index++;
                     }
-                    if (index >= Data.Count || Data[index.Value].Date > time)
+                    if (index >= Records.Count || Records[index.Value].Date > time)
                     {
                         yield return new GapSample { Date = time };
                     }
                     else // Data[index.Value].Date == time
                     {
-                        yield return Data[index.Value];
+                        yield return Records[index.Value];
                     }
                 }
             }

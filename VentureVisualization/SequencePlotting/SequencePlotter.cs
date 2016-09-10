@@ -51,8 +51,18 @@ namespace VentureVisualization.SequencePlotting
         protected void PlotLoop<TSample>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample> plotSample) where TSample : ISample
         {
             var slot = startSlot;
+            var first = true;
             foreach (var sample in samples)
             {
+                if (first)
+                {
+                    slot += sample.Offset;
+                    first = false;
+                }
+                else
+                {
+                    slot += sample.Step;
+                }
                 if (slot >= Sequencer.Length)
                 {
                     break;
@@ -64,15 +74,24 @@ namespace VentureVisualization.SequencePlotting
                         break;
                     }
                 }
-                slot += sample.Step;
             }
         }
 
         protected IEnumerable<T> PlotLoopYield<TSample, T>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample, T> plotSample) where TSample : ISample
         {
             var slot = startSlot;
+            var first = true;
             foreach (var sample in samples)
             {
+                if (first)
+                {
+                    slot += sample.Offset;
+                    first = false;
+                }
+                else
+                {
+                    slot += sample.Step;
+                }
                 if (slot >= Sequencer.Length)
                 {
                     break;
@@ -89,7 +108,6 @@ namespace VentureVisualization.SequencePlotting
                         break;
                     }
                 }
-                slot += sample.Step;
             }
         }
 

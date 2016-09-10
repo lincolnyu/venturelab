@@ -85,7 +85,7 @@ namespace VentureVisualization.SequencePlotting
         {
             if (_maxVolumeScanned) return;
             _maxVolume = double.MinValue;
-            foreach (var d in Sequencer.Data)
+            foreach (var d in Sequencer.Records)
             {
                 if (d.Volume > _maxVolume) _maxVolume = d.Volume;
             }

@@ -6,16 +6,12 @@ namespace VentureClient.Commands
 {
     public class GoLeftCommand : ICommand
     {
-        public const int DefaultStepSize = 5;
-
         private IChartNavigator _navigator;
 
         public GoLeftCommand(IChartNavigator navigator)
         {
             _navigator = navigator;
         }
-
-        public int StepSize { get; set; } = DefaultStepSize;
 
         public event EventHandler CanExecuteChanged
         {
@@ -30,7 +26,7 @@ namespace VentureClient.Commands
 
         public void Execute(object parameter)
         {
-            _navigator.GoLeft(StepSize);
+            _navigator.GoLeft();
         }
     }
 }
