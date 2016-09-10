@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using VentureCommon;
+using VentureVisualization;
+using VentureVisualization.Samples;
 using static VentureCommon.Helpers.StockRecordHelper;
 
 namespace VentureClient.Models
@@ -11,7 +13,7 @@ namespace VentureClient.Models
 
         public string Code { get; private set; }
 
-        public List<StockRecord> Data { get; } = new List<StockRecord>();
+        public List<RecordSample> Data { get; } = new List<RecordSample>();
 
         public event StockUpdatedEventHandler StockUpdated;
 
@@ -27,7 +29,7 @@ namespace VentureClient.Models
             Data.Clear();
             foreach (var line in lines)
             {
-                StockRecord entry = null;
+                RecordSample entry = null;
                 string code;
                 if (TryParseLine(line, out code, ref entry))
                 {

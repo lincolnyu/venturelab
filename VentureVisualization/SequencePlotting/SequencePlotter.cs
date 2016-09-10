@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using VentureCommon;
+using VentureVisualization.Samples;
 
-namespace VentureVisualization
+namespace VentureVisualization.SequencePlotting
 {
-    public abstract class StockPlotter : SequencerSubscriber
+    public abstract class SequencePlotter : SequencerSubscriber
     {
         public delegate void DrawBeginEndDelegate();
 
-        protected delegate void PlotRecordDelegate(StockRecord record, double slot);
+        protected delegate void PlotSampleDelegate<TSample>(ISample record, double slot) where TSample : ISample;
 
-        protected delegate T PlotRecordDelegate<T>(StockRecord record, double slot);
+        protected delegate T PlotSampleDelegate<TSample, T>(TSample record, double slot) where TSample : ISample;
 
         /// <summary>
         ///  Candle drawer to call
@@ -29,6 +30,10 @@ namespace VentureVisualization
         
         public const YModes DefaultYMode = YModes.TopToBottom;
 
+        public SequencePlotter(bool subscribePreDraw) : base(subscribePreDraw)
+        {
+        }
+
         public YModes YMode { get; set; } = DefaultYMode;
 
         public event DrawBeginEndDelegate DrawBegin;
@@ -36,37 +41,41 @@ namespace VentureVisualization
 
         #region Methods
 
-        protected void PlotLoop(IEnumerable<StockRecord> records, double startSlot, PlotRecordDelegate plotRecord)
+        protected void PlotLoop<TSample>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample> plotSample) where TSample : ISample
         {
             var slot = startSlot;
-            foreach (var record in records)
+            foreach (var sample in samples)
             {
                 if (slot >= Sequencer.Length)
                 {
                     break;
                 }
-                if (!(record is StockSequencer.Gap))
+                if (!(sample is GapSample))
                 {
-                    plotRecord(record, slot);
+                    plotSample(sample, slot);
                 }
-                slot++;
+                slot += sample.Step;
             }
         }
 
-        protected IEnumerable<T> PlotLoopYield<T>(IEnumerable<StockRecord> records, double startSlot, PlotRecordDelegate<T> plotRecord)
+        protected IEnumerable<T> PlotLoopYield<TSample, T>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample, T> plotSample) where TSample : ISample
         {
             var slot = startSlot;
-            foreach (var record in records)
+            foreach (var sample in samples)
             {
                 if (slot >= Sequencer.Length)
                 {
                     break;
                 }
-                if (!(record is StockSequencer.Gap))
+                if (!(sample is GapSample))
                 {
-                    yield return plotRecord(record, slot);
+                    var v = plotSample(sample, slot);
+                    if (v != null)
+                    {
+                        yield return v;
+                    }
                 }
-                slot++;
+                slot += sample.Step;
             }
         }
 

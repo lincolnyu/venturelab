@@ -1,33 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using VentureCommon;
+using VentureVisualization.Samples;
 
-namespace VentureVisualization
+namespace VentureVisualization.SequencePlotting
 {
     public class StockSequencer
     {
-        public delegate void DrawSequenceEventHandler(IEnumerable<StockRecord> records, double startSlot);
+        public delegate void DrawSequenceEventHandler(IEnumerable<ISample> samples, double startSlot);
 
-        public class Gap : StockRecord
-        {
-            public static readonly Gap Instance = new Gap();
-        }
+        public delegate void PreDrawDoneEventHandler();
 
         public const double DefaultChartWidthToLengthRatio = 8;
 
-        public StockSequencer(List<StockRecord> data)
+        public StockSequencer(List<RecordSample> data)
         {
             Data = data;
         }
 
         #region Data
 
-        public List<StockRecord> Data { get; }
+        public List<RecordSample> Data { get; }
 
         #endregion
 
         public double Length { get; set; }
 
+        public event DrawSequenceEventHandler PreDrawSequence;
+        public event PreDrawDoneEventHandler PreDrawDone;
         public event DrawSequenceEventHandler DrawSequence;
 
         public void SetLengthByChartWidth(double chartWidth, double chartWidthToLengthRatio = DefaultChartWidthToLengthRatio)
@@ -35,12 +34,14 @@ namespace VentureVisualization
             Length = chartWidth / chartWidthToLengthRatio;
         }
 
-        public void Draw(IEnumerable<StockRecord> sequence, double startSlot = 0)
+        public void Draw(IEnumerable<ISample> sequence, double startSlot = 0)
         {
+            PreDrawSequence?.Invoke(sequence, startSlot);
+            PreDrawDone?.Invoke();
             DrawSequence(sequence, startSlot);   
         }
 
-        public IEnumerable<StockRecord> GetStocksStarting(int index)
+        public IEnumerable<ISample> GetStocksStarting(int index)
         {
             for (var i = index; i < Data.Count; i++)
             {
@@ -54,19 +55,19 @@ namespace VentureVisualization
         /// </summary>
         /// <param name="times">The times to return stock records for</param>
         /// <returns>The corresponding stock records</returns>
-        public IEnumerable<StockRecord> GetStocksAtTimes(IEnumerable<DateTime> times)
+        public IEnumerable<ISample> GetStocksAtTimes(IEnumerable<DateTime> times)
         {
             int? index = null;
             foreach (var time in times)
             {
                 if (index == null)
                 {
-                    var q = new StockRecord { Date = time };
+                    var q = new RecordSample { Date = time };
                     index = Data.BinarySearch(q);
                     if (index < 0)
                     {
                         index = -index - 1;
-                        yield return Gap.Instance;
+                        yield return new GapSample { Date = time };
                     }
                     else
                     {
@@ -82,7 +83,7 @@ namespace VentureVisualization
                     }
                     if (index >= Data.Count || Data[index.Value].Date > time)
                     {
-                        yield return Gap.Instance;
+                        yield return new GapSample { Date = time };
                     }
                     else // Data[index.Value].Date == time
                     {

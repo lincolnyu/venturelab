@@ -1,6 +1,7 @@
 ﻿using System;
+using VentureVisualization.SequencePlotting;
 
-namespace VentureVisualization
+namespace VentureVisualization.OtherPlotting
 {
     public class PriceRuler
     {
@@ -29,8 +30,8 @@ namespace VentureVisualization
 
         public void Draw()
         {
-            var max = CandleChartPlotter.YMax;
-            var min = CandleChartPlotter.YMin;
+            var max = CandleChartPlotter.YMarginManager.YMax;
+            var min = CandleChartPlotter.YMarginManager.YMin;
             var d = max - min;
             var maxMajors = RulerHeight / MinMajorInterval;
             double interval, start;
@@ -38,7 +39,7 @@ namespace VentureVisualization
             for (var bar = start; bar < max; bar += interval)
             {
                 var y = (bar - min) * RulerHeight / d;
-                if (CandleChartPlotter.YMode == StockPlotter.YModes.TopToBottom)
+                if (CandleChartPlotter.YMode == SequencePlotter.YModes.TopToBottom)
                 {
                     y = RulerHeight - y;
                     DrawMajor(y, bar);

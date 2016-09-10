@@ -39,15 +39,23 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SequencerSubscriber.cs" />
-    <Compile Include="StockPlotter.cs" />
-    <Compile Include="CandleChartPlotter.cs" />
-    <Compile Include="PriceRuler.cs" />
+    <Compile Include="Samples\GapSample.cs" />
+    <Compile Include="IDatedSample.cs" />
+    <Compile Include="Samples\ISample.cs" />
+    <Compile Include="Samples\ITimeSpanSample.cs" />
+    <Compile Include="SequencePlotting\PredictionPlotter.cs" />
+    <Compile Include="Samples\PredictionSample.cs" />
+    <Compile Include="Samples\RecordSample.cs" />
+    <Compile Include="SequencePlotting\SequencerSubscriber.cs" />
+    <Compile Include="SequencePlotting\StockAndPredictionSequencer.cs" />
+    <Compile Include="SequencePlotting\SequencePlotter.cs" />
+    <Compile Include="SequencePlotting\CandleChartPlotter.cs" />
+    <Compile Include="OtherPlotting\PriceRuler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StockSequencer.cs" />
-    <Compile Include="TimeRuler.cs" />
-    <Compile Include="VerticalDistributionScan.cs" />
-    <Compile Include="VolumePlotter.cs" />
+    <Compile Include="SequencePlotting\StockSequencer.cs" />
+    <Compile Include="SequencePlotting\TimeRuler.cs" />
+    <Compile Include="SequencePlotting\VolumePlotter.cs" />
+    <Compile Include="SequencePlotting\YMarginManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VentureCommon\VentureCommon.csproj">
@@ -55,6 +63,7 @@
       <Name>VentureCommon</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,14 +1,16 @@
-﻿using VentureClient.Commands;
+﻿using System;
+using VentureClient.Commands;
 using VentureClient.Models;
 using Windows.UI.Xaml.Controls;
-using VentureVisualization;
 using Windows.UI;
 using Windows.UI.Xaml.Shapes;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml;
-using static VentureVisualization.CandleChartPlotter;
+using VentureVisualization.SequencePlotting;
+using VentureVisualization.OtherPlotting;
 using VentureClient.Interfaces;
-using System;
+using static VentureVisualization.SequencePlotting.CandleChartPlotter;
+using VentureVisualization.Samples;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -39,7 +41,8 @@ namespace VentureClient
         private VolumePlotter _volumePlotter;
         private PriceRuler _priceRuler;
         private TimeRuler _timeRuler;
-        private StockSequencer _sequencer;
+        private StockAndPredictionSequencer _sequencer;
+        private PredictionPlotter _predictPlotter;
 
         private int _startIndex = 0;
         private int _zoomLevel = 0;
@@ -63,6 +66,7 @@ namespace VentureClient
         private double _ChartXOffset;
         private double _volumeChartHeight;
         private double _candleChartHeight;
+        private YMarginManager _yMarginManager;
 
         #endregion
 
@@ -160,11 +164,16 @@ namespace VentureClient
 
             _startIndex = 0;
             _zoomLevel = 0;
-            _sequencer = new StockSequencer(_stock.Data);
+            // TODO ...
+            _sequencer = new StockAndPredictionSequencer(_stock.Data, new PredictionSample[0]);
+            _sequencer.PreDrawDone += SequencerOnPreDrawDone;
+            _yMarginManager = new YMarginManager { VertialMode = YMarginManager.VerticalModes.YMargins };
             _candlePlotter = new CandleChartPlotter();
+            _candlePlotter.YMarginManager = _yMarginManager;
             _volumePlotter = new VolumePlotter();
             _priceRuler = new PriceRuler(_candlePlotter);
             _timeRuler = new TimeRuler();
+            _predictPlotter = new PredictionPlotter(_candlePlotter);
             _candlePlotter.DrawCandle += DrawCandle;
             _candlePlotter.DrawEnd += _priceRuler.Draw;
             _volumePlotter.DrawVolume += DrawVolume;
@@ -172,10 +181,16 @@ namespace VentureClient
             _candlePlotter.Subscribe(_sequencer);
             _volumePlotter.Subscribe(_sequencer);
             _timeRuler.Subscribe(_sequencer);
+            _predictPlotter.Subscribe(_sequencer);
             _priceRuler.DrawMajor += PriceRulerOnDrawMajor;
 
             ReDraw();
             FireCanGoLeftRightChanged();            
+        }
+
+        private void SequencerOnPreDrawDone()
+        {
+            _yMarginManager.UpdateVerticalSettings();
         }
 
         private void DrawDatePeg(double x, DateTime dt)
@@ -264,6 +279,7 @@ namespace VentureClient
         private void PrepareDraw()
         {
             _lastYear = int.MinValue;
+            _yMarginManager.ResetMinMax();
             MainCanvas.Children.Clear();
         }
 

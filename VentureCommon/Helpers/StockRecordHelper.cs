@@ -4,7 +4,7 @@ namespace VentureCommon.Helpers
 {
     public static class StockRecordHelper
     {
-        public static bool TryParseLine(string line, out string code, ref StockRecord de)
+        public static bool TryParseLine<TRecord>(string line, out string code, ref TRecord de) where TRecord : StockRecord, new()
         {
             var segs = line.Split(',');
             code = null;
@@ -20,7 +20,7 @@ namespace VentureCommon.Helpers
             if (!double.TryParse(segs[6], out vol)) return false;
             if (de == null)
             {
-                de = new StockRecord();
+                de = new TRecord();
             }
             de.Open = open;
             de.Close = close;

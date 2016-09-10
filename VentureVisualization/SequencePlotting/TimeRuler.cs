@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using VentureCommon;
 
-namespace VentureVisualization
+namespace VentureVisualization.SequencePlotting
 {
     public class TimeRuler : SequencerSubscriber
     {
@@ -11,7 +9,7 @@ namespace VentureVisualization
 
         public const double DefaultMinInterval = 80;
 
-        public TimeRuler()
+        public TimeRuler() : base(false)
         {
         }
 
@@ -20,24 +18,29 @@ namespace VentureVisualization
 
         public event DrawDatePegDelegate DrawDatePeg;
 
-        public override void Draw(IEnumerable<StockRecord> sequence, double startSlot = 0)
+        public override void Draw(IEnumerable<ISample> sequence, double startSlot = 0)
         {
             var len = Sequencer.Length;
             var lastX = double.MinValue;
             var slot = startSlot;
-            foreach (var dt in sequence.Select(x=>x.Date))
+            foreach (var s in sequence)
             {
                 if (slot >= Sequencer.Length)
                 {
                     break;
                 }
-                if (dt.Day == 1 || dt.Day % 5 == 0)
+                var dts = s as IDatedSample;
+                if (dts != null)
                 {
-                    var x = slot * RulerWidth / Sequencer.Length;
-                    if (x - lastX >= MinInterval)
+                    var dt = dts.Date;
+                    if (dt.Day == 1 || dt.Day % 5 == 0)
                     {
-                        DrawDatePeg(x, dt);
-                        lastX = x;
+                        var x = slot * RulerWidth / Sequencer.Length;
+                        if (x - lastX >= MinInterval)
+                        {
+                            DrawDatePeg(x, dt);
+                            lastX = x;
+                        }
                     }
                 }
                 slot++;

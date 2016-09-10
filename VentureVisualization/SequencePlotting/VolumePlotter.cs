@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using VentureCommon;
 
-namespace VentureVisualization
+namespace VentureVisualization.SequencePlotting
 {
-    using DrawVolumeDelegate = StockPlotter.DrawShapeDelegate<VolumePlotter.VolumeShape>;
+    using Samples;
+    using DrawVolumeDelegate = SequencePlotter.DrawShapeDelegate<VolumePlotter.VolumeShape>;
 
-    public sealed class VolumePlotter : StockPlotter
+    public sealed class VolumePlotter : SequencePlotter
     {
         public enum VerticalModes
         {
@@ -25,7 +26,7 @@ namespace VentureVisualization
         private double _maxVolume;
         private bool _maxVolumeScanned;
 
-        public VolumePlotter() 
+        public VolumePlotter() : base(false)
         {
         }
 
@@ -45,13 +46,13 @@ namespace VentureVisualization
 
         public event DrawVolumeDelegate DrawVolume;
 
-        public override void Draw(IEnumerable<StockRecord> records, double startSlot)
+        public override void Draw(IEnumerable<ISample> samples, double startSlot)
         {
             double ymax;
             switch (VertialMode)
             {
                 case VerticalModes.YVisible:
-                    ymax = records.Max(x => x.Volume);
+                    ymax = samples.OfType<StockRecord>().Max(x => x.Volume);
                     break;
                 case VerticalModes.YFull:
                     ymax = MaxVolume;
@@ -60,8 +61,10 @@ namespace VentureVisualization
                     throw new ArgumentException("Unexpected vertical mode");
             }
             FireDrawBegin();
-            PlotLoop(records, startSlot, (record, slot) =>
+            PlotLoop(samples, startSlot, (s, slot) =>
             {
+                var record = s as RecordSample;
+                if (record == null) return;
                 var y = record.Volume * ChartHeight / ymax;
                 if (YMode == YModes.TopToBottom)
                 {
