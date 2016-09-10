@@ -1,13 +1,12 @@
-﻿using System;
-
-namespace VentureVisualization.Samples
+﻿namespace VentureVisualization.Samples
 {
-    public class PredictionSample : ITimeSpanSample
+    public class PredictionSample : ISample
     {
+        /// <summary>
+        ///  This indicates number of (working) days
+        /// </summary>
         public double Step { get; set; }
-
-        public TimeSpan TimeSpan { get; set; }
-
+        
         public double Y { get; set; }
         public double StdVar { get; set; }
     }

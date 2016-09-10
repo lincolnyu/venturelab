@@ -164,25 +164,31 @@ namespace VentureClient
 
             _startIndex = 0;
             _zoomLevel = 0;
-            // TODO ...
+            
             _sequencer = new StockAndPredictionSequencer(_stock.Data, new PredictionSample[0]);
             _sequencer.PreDrawDone += SequencerOnPreDrawDone;
+
             _yMarginManager = new YMarginManager { VertialMode = YMarginManager.VerticalModes.YMargins };
-            _candlePlotter = new CandleChartPlotter();
-            _candlePlotter.YMarginManager = _yMarginManager;
-            _volumePlotter = new VolumePlotter();
+
+            _candlePlotter = new CandleChartPlotter(_yMarginManager);
             _priceRuler = new PriceRuler(_candlePlotter);
-            _timeRuler = new TimeRuler();
-            _predictPlotter = new PredictionPlotter(_candlePlotter);
+            _priceRuler.DrawMajor += PriceRulerOnDrawMajor;
             _candlePlotter.DrawCandle += DrawCandle;
             _candlePlotter.DrawEnd += _priceRuler.Draw;
-            _volumePlotter.DrawVolume += DrawVolume;
-            _timeRuler.DrawDatePeg += DrawDatePeg;
             _candlePlotter.Subscribe(_sequencer);
-            _volumePlotter.Subscribe(_sequencer);
+
+            _timeRuler = new TimeRuler();
+            _timeRuler.DrawDatePeg += DrawDatePeg;
             _timeRuler.Subscribe(_sequencer);
+
+            _volumePlotter = new VolumePlotter();
+            _volumePlotter.DrawVolume += DrawVolume;
+            _volumePlotter.Subscribe(_sequencer);
+
+
+            _predictPlotter = new PredictionPlotter(_candlePlotter);
+            _predictPlotter.DrawPrediction += PredictPlotterOnDrawPrediction;
             _predictPlotter.Subscribe(_sequencer);
-            _priceRuler.DrawMajor += PriceRulerOnDrawMajor;
 
             ReDraw();
             FireCanGoLeftRightChanged();
@@ -192,6 +198,24 @@ namespace VentureClient
         private void SequencerOnPreDrawDone()
         {
             _yMarginManager.UpdateVerticalSettings();
+        }
+
+        private void PredictPlotterOnDrawPrediction(PredictionPlotter.PredictionShape shape)
+        {
+            var lines = new Line[]
+            {
+                new Line { Y2 = shape.Y },
+                new Line { Y2 = shape.YLower },
+                new Line { Y2 = shape.YUpper },
+            };
+            foreach (var line in lines)
+            {
+                line.X1 = shape.PrevX;
+                line.Y1 = shape.PrevY;
+                line.X2 = shape.X;
+                line.Stroke = _blackBrush;
+                MainCanvas.Children.Add(line);
+            }
         }
 
         private void DrawDatePeg(double x, DateTime dt)

@@ -8,9 +8,16 @@ namespace VentureVisualization.SequencePlotting
     {
         public delegate void DrawBeginEndDelegate();
 
-        protected delegate void PlotSampleDelegate<TSample>(ISample record, double slot) where TSample : ISample;
+        /// <summary>
+        ///  To plot a sample
+        /// </summary>
+        /// <typeparam name="TSample">The type of the sample reference</typeparam>
+        /// <param name="sample">The sample</param>
+        /// <param name="slot">The slot where the sample is be drawn</param>
+        /// <returns>True if to continue or false if to quit</returns>
+        protected delegate bool PlotSampleDelegate<TSample>(ISample sample, double slot) where TSample : ISample;
 
-        protected delegate T PlotSampleDelegate<TSample, T>(TSample record, double slot) where TSample : ISample;
+        protected delegate bool PlotSampleDelegate<TSample, T>(TSample sample, double slot, out T t) where TSample : ISample;
 
         /// <summary>
         ///  Candle drawer to call
@@ -34,7 +41,7 @@ namespace VentureVisualization.SequencePlotting
         {
         }
 
-        public YModes YMode { get; set; } = DefaultYMode;
+        public virtual YModes YMode { get; set; } = DefaultYMode;
 
         public event DrawBeginEndDelegate DrawBegin;
         public event DrawBeginEndDelegate DrawEnd;
@@ -52,7 +59,10 @@ namespace VentureVisualization.SequencePlotting
                 }
                 if (!(sample is GapSample))
                 {
-                    plotSample(sample, slot);
+                    if (!plotSample(sample, slot))
+                    {
+                        break;
+                    }
                 }
                 slot += sample.Step;
             }
@@ -69,10 +79,14 @@ namespace VentureVisualization.SequencePlotting
                 }
                 if (!(sample is GapSample))
                 {
-                    var v = plotSample(sample, slot);
-                    if (v != null)
+                    T t;
+                    if (plotSample(sample, slot, out t))
                     {
-                        yield return v;
+                        yield return t;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
                 slot += sample.Step;

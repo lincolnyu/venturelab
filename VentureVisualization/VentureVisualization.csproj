@@ -42,7 +42,6 @@
     <Compile Include="Samples\GapSample.cs" />
     <Compile Include="Samples\IDatedSample.cs" />
     <Compile Include="Samples\ISample.cs" />
-    <Compile Include="Samples\ITimeSpanSample.cs" />
     <Compile Include="SequencePlotting\PredictionPlotter.cs" />
     <Compile Include="Samples\PredictionSample.cs" />
     <Compile Include="Samples\RecordSample.cs" />

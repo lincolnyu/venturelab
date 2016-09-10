@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace VentureVisualization.SequencePlotting
 {
-    using DrawCandleDelegate = SequencePlotter.DrawShapeDelegate<CandleChartPlotter.CandleShape>;
     using Samples;
+    using DrawCandleDelegate = SequencePlotter.DrawShapeDelegate<CandleChartPlotter.CandleShape>;
 
     public sealed class CandleChartPlotter : SequencePlotter
     {
@@ -43,10 +43,9 @@ namespace VentureVisualization.SequencePlotting
         /// <param name="data">The data reference held by this drawer</param>
         /// <param name="chartWidth">The width of the chart</param>
         /// <param name="chartHeight">The height of the chart</param>
-        public CandleChartPlotter() : base(true)
+        public CandleChartPlotter(YMarginManager yMarginManager) : base(true)
         {
-            YangWidthRatio = DefaultYangWidthRatio;
-            YinWidthRatio = DefaultYinWidthRatio;
+            YMarginManager = yMarginManager;
         }
       
         #region Chart config
@@ -57,16 +56,16 @@ namespace VentureVisualization.SequencePlotting
         /// <summary>
         ///  Width of yang bar vs width of its allocated horizontal slot
         /// </summary>
-        public double YangWidthRatio { get; set; }
+        public double YangWidthRatio { get; set; } = DefaultYangWidthRatio;
 
         /// <summary>
         ///  Width of yin bar vs width of its allocated horizontal slot
         /// </summary>
-        public double YinWidthRatio { get; set; }
-
-        public YMarginManager YMarginManager { get; set; }
+        public double YinWidthRatio { get; set; } = DefaultYinWidthRatio;
 
         #endregion
+
+        public YMarginManager YMarginManager { get; }
 
         #region Drawing delegate
 
@@ -79,9 +78,10 @@ namespace VentureVisualization.SequencePlotting
             PlotLoop(samples, startSlot, (s, slot) =>
             {
                 var r = s as RecordSample;
-                if (r == null) return;
+                if (r == null) return true;
                 YMarginManager.UpdateMax(r.High);
                 YMarginManager.UpdateMin(r.Low);
+                return true;
             });
         }
 
@@ -96,14 +96,14 @@ namespace VentureVisualization.SequencePlotting
             PlotLoop(samples, startSlot, (s, slot) =>
             {
                 var r = s as RecordSample;
-                if (r == null) return;
+                if (r == null) return true;
                 var low = ChartHeight * r.Low;
                 
                 var yopen = (r.Open - ymin) * ChartHeight / yd;
                 var yclose = (r.Close - ymin) * ChartHeight / yd;
                 var candleMax = (r.High - ymin) * ChartHeight / yd;
                 var candleMin = (r.Low - ymin) * ChartHeight / yd;
-                var ct = yopen < yclose ? CandleTypes.Yin : CandleTypes.Yang;
+                var ct = yopen < yclose ? CandleTypes.Yang : CandleTypes.Yin;
 
                 var x1 = ChartWidth * slot / Sequencer.Length;
                 var x2 = ChartWidth * (slot + 1) / Sequencer.Length;
@@ -138,6 +138,7 @@ namespace VentureVisualization.SequencePlotting
                     YMax = candleMax
                 };
                 DrawCandle(cs);
+                return true;
             });
 
             FireDrawEnd();

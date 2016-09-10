@@ -64,7 +64,7 @@ namespace VentureVisualization.SequencePlotting
             PlotLoop(samples, startSlot, (s, slot) =>
             {
                 var record = s as RecordSample;
-                if (record == null) return;
+                if (record == null) return true;
                 var y = record.Volume * ChartHeight / ymax;
                 if (YMode == YModes.TopToBottom)
                 {
@@ -76,6 +76,7 @@ namespace VentureVisualization.SequencePlotting
                     Y = y
                 };
                 DrawVolume(vs);
+                return true;
             });
             FireDrawEnd();
         }
