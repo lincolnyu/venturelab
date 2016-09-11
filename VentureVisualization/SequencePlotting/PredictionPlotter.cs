@@ -13,8 +13,7 @@ namespace VentureVisualization.SequencePlotting
             public double Y { get; set; }
             public double YUpper { get; set; }
             public double YLower { get; set; }
-            public double PrevX { get; set; }
-            public double PrevY { get; set; }
+            public PredictionShape PreviousShape {get;set;}
         }
 
         public PredictionPlotter(CandleChartPlotter candleChartPlotter) : base(true)
@@ -65,8 +64,7 @@ namespace VentureVisualization.SequencePlotting
             var yrate = ChartHeight / yd;
             double? lastClose = null;
             double prevSlot = 0;
-            double prevYVal = 0;
-            double? prevY = null;
+            PredictionShape prevShape = null;
             PlotLoop(samples, startSlot, (s, slot) =>
             {
                 var p = s as PredictionSample;
@@ -81,7 +79,7 @@ namespace VentureVisualization.SequencePlotting
                     var lastRecord = Sequencer.Records[Sequencer.Records.Count - 1];
                     System.Diagnostics.Debug.Assert( lastClose == lastRecord.Close);
 
-                    var x = xrate * slot;
+                    var x = slot * xrate;
                     var yval = lastClose * (1 + p.Y);
                     var yupperval = lastClose * (1 + p.Y + p.StdVar);
                     var ylowerval = lastClose * (1 + p.Y - p.StdVar);
@@ -97,15 +95,21 @@ namespace VentureVisualization.SequencePlotting
                         ylower = ChartHeight - ylower;
                     }
 
-                    if (prevY == null)
+                    if (prevShape == null)
                     {
                         // previous one was the last record
-                        prevY = (prevYVal - YMin) * yrate;
+                        var prevY = (lastClose - YMin) * yrate;
                         if (YMode == YModes.TopToBottom)
                         {
-                            prevY = ChartHeight - prevY.Value;
+                            prevY = ChartHeight - prevY;
                         }
-                        prevSlot += 1;
+                        prevShape = new PredictionShape
+                        {
+                            X = (prevSlot + 1) * xrate,
+                            Y = prevY.Value,
+                            YUpper = prevY.Value,
+                            YLower = prevY.Value
+                        };
                     }
 
                     var shape = new PredictionShape
@@ -114,20 +118,18 @@ namespace VentureVisualization.SequencePlotting
                         Y = y.Value,
                         YUpper = yupper.Value,
                         YLower = ylower.Value,
-                        PrevX = prevSlot * xrate,
-                        PrevY = prevY.Value
+                        PreviousShape = prevShape
                     };
                     DrawPrediction(shape);
 
-                    prevY = y.Value;
-                    prevSlot = slot;
+                    prevShape = shape;
                     return true;
                 }
                 var r = s as RecordSample;
                 if (r != null)
                 {
                     prevSlot = slot;
-                    lastClose = prevYVal = r.Close;
+                    lastClose = r.Close;
                 }
                 return true;
             });

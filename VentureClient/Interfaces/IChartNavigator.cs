@@ -18,6 +18,8 @@ namespace VentureClient.Interfaces
         
         void GoLeft();
         void GoRight();
+        void GoRightmost();
+        void GoLeftmost();
         void ZoomIn();
         void ZoomOut();
     }

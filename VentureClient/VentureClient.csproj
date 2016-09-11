@@ -96,7 +96,9 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands\GoLeftCommand.cs" />
+    <Compile Include="Commands\GoLeftmostCommand.cs" />
     <Compile Include="Commands\GoRightCommand.cs" />
+    <Compile Include="Commands\GoRightmostCommand.cs" />
     <Compile Include="Commands\OpenExpertFileCommand.cs" />
     <Compile Include="Commands\OpenStockFileCommand.cs" />
     <Compile Include="Commands\ZoomInCommand.cs" />

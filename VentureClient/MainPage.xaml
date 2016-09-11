@@ -18,26 +18,33 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"></RowDefinition>
+            <RowDefinition Height="30"></RowDefinition>
             <RowDefinition></RowDefinition>
+            <RowDefinition Height="30"></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="30"></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="30"/>
+            <ColumnDefinition Width="40"/>
             <ColumnDefinition/>
-            <ColumnDefinition Width="30"/>
+            <ColumnDefinition Width="40"/>
         </Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <TextBlock x:Name="textBlock" HorizontalAlignment="Left" VerticalAlignment="Center" TextWrapping="Wrap" Text="Stock Code:"/>
             <TextBox x:Name="StockCode" BorderThickness="0" HorizontalAlignment="Left"
                      VerticalAlignment="Center" TextWrapping="Wrap" IsReadOnly="True"/>
+            <CheckBox IsChecked="{Binding IsShowingCross, Mode=TwoWay}">Show Cross</CheckBox>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <Button Command="{Binding ZoomInCommand}">+</Button>
             <Button Command="{Binding ZoomOutCommand}">-</Button>
         </StackPanel>
-        <Canvas Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Background="Cyan" Name="MainCanvas"
-                SizeChanged="MainCanvasOnSizeChanged"></Canvas>
-        <Button Grid.Row="1" Grid.Column="0" Command="{Binding GoLeftCommand}">&lt;</Button>
-        <Button Grid.Row="1" Grid.Column="2" Command="{Binding GoRightCommand}">&gt;</Button>
+        <Canvas Grid.Row="1" Grid.RowSpan="5" Grid.Column="0" Grid.ColumnSpan="3" Background="Cyan" Name="MainCanvas"
+                SizeChanged="MainCanvasOnSizeChanged" PointerMoved="MainCanvasOnPointerMoved"></Canvas>
+        <Button Grid.Row="3" Grid.Column="0" Command="{Binding GoLeftCommand}">&lt;</Button>
+        <Button Grid.Row="3" Grid.Column="2" Command="{Binding GoRightCommand}">&gt;</Button>
+        <Button Grid.Row="5" Grid.Column="0" Command="{Binding GoLeftmostCommand}">|&lt;</Button>
+        <Button Grid.Row="5" Grid.Column="2" Command="{Binding GoRightmostCommand}">&gt;|</Button>
     </Grid>
 </Page>

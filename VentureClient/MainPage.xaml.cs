@@ -12,6 +12,9 @@ using VentureClient.Interfaces;
 using static VentureVisualization.SequencePlotting.CandleChartPlotter;
 using VentureVisualization.Samples;
 using System.Collections.Generic;
+using Windows.UI.Xaml.Input;
+using System.ComponentModel;
+using Windows.Foundation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -20,7 +23,7 @@ namespace VentureClient
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page, IChartNavigator
+    public sealed partial class MainPage : Page, IChartNavigator, INotifyPropertyChanged
     {
         public const double ZoomBase = 1.25;
         public const int MinZoomLevel = -5;
@@ -35,7 +38,7 @@ namespace VentureClient
         private const double DateBarHeight = MarginY * DateBarRatio;
         private const double VolumeChartHeightRatio = 0.1;
 
-        public const double StepLengthRatio = 0.1;
+        public const double StepLengthRatio = 0.25;
 
         #region Data
 
@@ -45,7 +48,7 @@ namespace VentureClient
         #endregion
 
         #region Plotting facilities
-        
+
         private StockAndPredictionSequencer _sequencer;
 
         private YMarginManager _yMarginManager;
@@ -62,17 +65,19 @@ namespace VentureClient
 
         private int _startIndex = 0;
         private int _zoomLevel = 0;
-        
+
         #endregion
 
         #region Frame-wide variables for plotting
 
         private int _lastYear = int.MinValue;
-        
-        #endregion 
 
-        #region Reletaively unchanged drawing styles
+        #endregion
 
+        #region Drawing styles
+
+        private Brush _greenBrush = new SolidColorBrush(Colors.Green);
+        private Brush _blueBrush = new SolidColorBrush(Colors.Blue);
         private Brush _blackBrush = new SolidColorBrush(Colors.Black);
         private Brush _redBrush = new SolidColorBrush(Colors.Red);
 
@@ -88,20 +93,65 @@ namespace VentureClient
 
         #endregion
 
+        #region Fixed drawing elements
+
+        private Line _crossHori = new Line();
+        private Line _crossVert = new Line();
+
+        private Point _lastPointPos;
+
+        #endregion
+
+        #region Backing fields
+
+        private bool _isShowingCross;
+
+        #endregion
+
         public MainPage()
         {
             InitializeComponent();
             SetupModels();
             SetupCommands();
+            SetupFixedElements();
+            SetupInitUI();
             DataContext = this;
         }
+
+        #region Commands
 
         public OpenExpertFileCommand OpenExpertFileCommand { get; private set; }
         public OpenStockFileCommand OpenStockFileCommand { get; private set; }
         public GoRightCommand GoRightCommand { get; private set; }
         public GoLeftCommand GoLeftCommand { get; private set; }
+        public GoRightmostCommand GoRightmostCommand { get; private set; }
+        public GoLeftmostCommand GoLeftmostCommand { get; private set; }
         public ZoomInCommand ZoomInCommand { get; private set; }
         public ZoomOutCommand ZoomOutCommand { get; private set; }
+
+        #endregion
+
+        #region Data bindings
+
+        public bool IsShowingCross
+        {
+            get
+            {
+                return _isShowingCross;
+            }
+
+            set
+            {
+                if (_isShowingCross != value)
+                {
+                    _isShowingCross = value;
+                    UpdateShowingCross();
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsShowingCross"));
+                }
+            }
+        }
+
+        #endregion
 
         #region IChartNavigator members
 
@@ -116,6 +166,12 @@ namespace VentureClient
         public event EventHandler CanGoRightChanged;
         public event EventHandler CanZoomInChanged;
         public event EventHandler CanZoomOutChanged;
+
+        #endregion
+
+        #region INotifyPropertyChanged members
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion
 
@@ -137,6 +193,24 @@ namespace VentureClient
         {
             _startIndex += (int)Math.Ceiling(_sequencer.Length * StepLengthRatio);
             if (_startIndex + _sequencer.Length >= _sequencer.TotalDataLength) _startIndex = (int)Math.Ceiling((_sequencer.TotalDataLength - _sequencer.Length));
+
+            ReDraw();
+
+            FireCanGoLeftRightChanged();
+        }
+
+        public void GoLeftmost()
+        {
+            _startIndex = 0;
+
+            ReDraw();
+
+            FireCanGoLeftRightChanged();
+        }
+
+        public void GoRightmost()
+        {
+            _startIndex = (int)Math.Ceiling((_sequencer.TotalDataLength - _sequencer.Length));
 
             ReDraw();
 
@@ -169,6 +243,8 @@ namespace VentureClient
 
         #endregion
 
+        #region Setup
+
         private void SetupModels()
         {
             _expert = new Expert();
@@ -176,7 +252,33 @@ namespace VentureClient
             _stock.StockUpdated += OnDataUpdated;
             _expert.ExpertUpdated += OnDataUpdated;
         }
-        
+
+
+        private void SetupCommands()
+        {
+            OpenExpertFileCommand = new OpenExpertFileCommand(_expert);
+            OpenStockFileCommand = new OpenStockFileCommand(_stock);
+            GoLeftCommand = new GoLeftCommand(this);
+            GoRightCommand = new GoRightCommand(this);
+            GoLeftmostCommand = new GoLeftmostCommand(this);
+            GoRightmostCommand = new GoRightmostCommand(this);
+            ZoomInCommand = new ZoomInCommand(this);
+            ZoomOutCommand = new ZoomOutCommand(this);
+        }
+
+        private void SetupFixedElements()
+        {
+            MainCanvas.Children.Add(_crossHori);
+            MainCanvas.Children.Add(_crossVert);
+        }
+
+        private void SetupInitUI()
+        {
+            IsShowingCross = true;
+        }
+
+        #endregion
+
         private void OnDataUpdated()
         {
             if (_stock.Code == null) return;
@@ -228,8 +330,19 @@ namespace VentureClient
         private void MainCanvasOnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             ReDraw();
+            UpdateCross();
 
             FireCanGoLeftRightChanged();
+        }
+
+        private void MainCanvasOnPointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            if (IsShowingCross)
+            {
+                var p = e.GetCurrentPoint(MainCanvas);
+                _lastPointPos = p.Position;
+                UpdateCross();
+            }
         }
 
         private void ReDraw()
@@ -264,7 +377,10 @@ namespace VentureClient
             _lastYear = int.MinValue;
             _yMarginManager.ResetMinMax();
             MainCanvas.Children.Clear();
+            SetupFixedElements();
         }
+
+        #region Plotter event handlers
 
         private void DrawVolume(VolumePlotter.VolumeShape shape)
         {
@@ -323,16 +439,29 @@ namespace VentureClient
         {
             var lines = new Line[]
             {
-                new Line { Y2 = _candleChartYOffset + shape.Y },
-                new Line { Y2 = _candleChartYOffset + shape.YLower },
-                new Line { Y2 = _candleChartYOffset + shape.YUpper },
+                new Line
+                {
+                    Y1 = _candleChartYOffset + shape.PreviousShape.Y,
+                    Y2 = _candleChartYOffset + shape.Y,
+                    Stroke = _blueBrush
+                },
+                new Line
+                {
+                    Y1 = _candleChartYOffset + shape.PreviousShape.YLower,
+                    Y2 = _candleChartYOffset + shape.YLower,
+                    Stroke = _redBrush
+                },
+                new Line
+                {
+                    Y1 = _candleChartYOffset + shape.PreviousShape.YUpper,
+                    Y2 = _candleChartYOffset + shape.YUpper,
+                    Stroke = _greenBrush
+                }
             };
             foreach (var line in lines)
             {
-                line.X1 = _ChartXOffset + shape.PrevX;
-                line.Y1 = _candleChartYOffset + shape.PrevY;
+                line.X1 = _ChartXOffset + shape.PreviousShape.X;
                 line.X2 = _ChartXOffset + shape.X;
-                line.Stroke = _blackBrush;
                 MainCanvas.Children.Add(line);
             }
         }
@@ -356,7 +485,7 @@ namespace VentureClient
             var text = new TextBlock
             {
                 Text = string.Format(year > _lastYear ? "{0:dd/MM/yy}" : "{0:dd/MM}", dt.Date),
-                Foreground = year > _lastYear? _redBrush : _blackBrush
+                Foreground = year > _lastYear ? _redBrush : _blackBrush
             };
             _lastYear = year;
             text.SetValue(Canvas.TopProperty, ybottom);
@@ -387,15 +516,36 @@ namespace VentureClient
             MainCanvas.Children.Add(text);
         }
 
+        #endregion
 
-        private void SetupCommands()
+        #region UI handler
+
+        private void UpdateShowingCross()
         {
-            OpenExpertFileCommand = new OpenExpertFileCommand(_expert);
-            OpenStockFileCommand = new OpenStockFileCommand(_stock);
-            GoLeftCommand = new GoLeftCommand(this);
-            GoRightCommand = new GoRightCommand(this);
-            ZoomInCommand = new ZoomInCommand(this);
-            ZoomOutCommand = new ZoomOutCommand(this);
+            if (!IsShowingCross)
+            {
+                _crossHori.Visibility = Visibility.Collapsed;
+                _crossVert.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        #endregion
+
+        private void UpdateCross()
+        {
+            if (IsShowingCross && _lastPointPos != null)
+            {
+                _crossHori.X1 = 0;
+                _crossHori.X2 = MainCanvas.ActualWidth;
+                _crossHori.Y1 = _crossHori.Y2 = _lastPointPos.Y;
+                _crossHori.Stroke = _blackBrush;
+                _crossVert.Y1 = 0;
+                _crossVert.Y2 = MainCanvas.ActualHeight;
+                _crossVert.X1 = _crossVert.X2 = _lastPointPos.X;
+                _crossVert.Stroke = _blackBrush;
+                _crossHori.Visibility = Visibility.Visible;
+                _crossVert.Visibility = Visibility.Visible;
+            }
         }
 
         private void FireCanGoLeftRightChanged()
