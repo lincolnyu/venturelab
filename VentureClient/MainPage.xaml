@@ -40,7 +40,7 @@
             <Button Command="{Binding ZoomInCommand}">+</Button>
             <Button Command="{Binding ZoomOutCommand}">-</Button>
         </StackPanel>
-        <Canvas Grid.Row="1" Grid.RowSpan="5" Grid.Column="0" Grid.ColumnSpan="3" Background="Cyan" Name="MainCanvas"
+        <Canvas Grid.Row="1" Grid.RowSpan="5" Grid.Column="0" Grid.ColumnSpan="3" Background="LightBlue" Name="MainCanvas"
                 SizeChanged="MainCanvasOnSizeChanged" PointerMoved="MainCanvasOnPointerMoved"></Canvas>
         <Button Grid.Row="3" Grid.Column="0" Command="{Binding GoLeftCommand}">&lt;</Button>
         <Button Grid.Row="3" Grid.Column="2" Command="{Binding GoRightCommand}">&gt;</Button>
