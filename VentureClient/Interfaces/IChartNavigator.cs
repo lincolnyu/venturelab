@@ -22,5 +22,6 @@ namespace VentureClient.Interfaces
         void GoLeftmost();
         void ZoomIn();
         void ZoomOut();
+        void ZoomReset();
     }
 }

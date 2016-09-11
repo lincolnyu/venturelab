@@ -145,6 +145,7 @@ namespace VentureClient
         public GoLeftmostCommand GoLeftmostCommand { get; private set; }
         public ZoomInCommand ZoomInCommand { get; private set; }
         public ZoomOutCommand ZoomOutCommand { get; private set; }
+        public ZoomResetCommand ZoomResetCommand { get; private set; }
 
         #endregion
 
@@ -205,7 +206,7 @@ namespace VentureClient
 
         public void GoLeft()
         {
-            PreReDraw();
+            PrepareChartSizeForRedraw();
 
             _startIndex -= (int)Math.Ceiling(_sequencer.Length * StepLengthRatio);
             if (_startIndex < 0) _startIndex = 0;
@@ -217,7 +218,7 @@ namespace VentureClient
 
         public void GoRight()
         {
-            PreReDraw();
+            PrepareChartSizeForRedraw();
 
             _startIndex += (int)Math.Ceiling(_sequencer.Length * StepLengthRatio);
             WorryAboutRight();
@@ -229,7 +230,7 @@ namespace VentureClient
 
         public void GoLeftmost()
         {
-            PreReDraw();
+            PrepareChartSizeForRedraw();
 
             _startIndex = 0;
 
@@ -240,7 +241,7 @@ namespace VentureClient
 
         public void GoRightmost()
         {
-            PreReDraw();
+            PrepareChartSizeForRedraw();
 
             _startIndex = (int)Math.Ceiling(IndexRightmost);
 
@@ -251,9 +252,10 @@ namespace VentureClient
 
         public void ZoomIn()
         {
-            PreReDraw();
-
             _zoomLevel++;
+
+            PrepareChartSizeForRedraw();
+
             if (_zoomLevel > MaxZoomLevel)
             {
                 _zoomLevel = MaxZoomLevel;
@@ -267,13 +269,28 @@ namespace VentureClient
 
         public void ZoomOut()
         {
-            PreReDraw();
-
             _zoomLevel--;
             if (_zoomLevel < MinZoomLevel)
             {
                 _zoomLevel = MinZoomLevel;
             }
+
+            PrepareChartSizeForRedraw();
+
+            WorryAboutRight();
+
+            ReDraw();
+
+            FireCanZoomInOutChanged();
+            FireCanGoLeftRightChanged();
+        }
+
+        public void ZoomReset()
+        {
+            _zoomLevel = 0;
+
+            PrepareChartSizeForRedraw();
+
             WorryAboutRight();
 
             ReDraw();
@@ -313,6 +330,7 @@ namespace VentureClient
             GoRightmostCommand = new GoRightmostCommand(this);
             ZoomInCommand = new ZoomInCommand(this);
             ZoomOutCommand = new ZoomOutCommand(this);
+            ZoomResetCommand = new ZoomResetCommand(this);
         }
 
         private void SetupFixedElements()
@@ -366,7 +384,7 @@ namespace VentureClient
             _predictPlotter.DrawPrediction += PredictPlotterOnDrawPrediction;
             _predictPlotter.Subscribe(_sequencer);
 
-            PreReDraw();
+            PrepareChartSizeForRedraw();
             ReDraw();
             FireCanGoLeftRightChanged();
             FireCanZoomInOutChanged();
@@ -379,7 +397,7 @@ namespace VentureClient
 
         private void MainCanvasOnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            PreReDraw();
+            PrepareChartSizeForRedraw();
             ReDraw();
             UpdateCross();
 
@@ -396,7 +414,7 @@ namespace VentureClient
             }
         }
 
-        private void PreReDraw()
+        private void PrepareChartSizeForRedraw()
         {
             if (_sequencer == null) return;
 
@@ -587,6 +605,7 @@ namespace VentureClient
 
         private void PriceRulerOnDrawMajor(double y, double value)
         {
+            y += _candleChartYOffset;
             var line = new Line
             {
                 X1 = MarginLeft - MajorBarWidth,

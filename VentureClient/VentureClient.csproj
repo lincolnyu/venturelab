@@ -103,6 +103,7 @@
     <Compile Include="Commands\OpenStockFileCommand.cs" />
     <Compile Include="Commands\ZoomInCommand.cs" />
     <Compile Include="Commands\ZoomOutCommand.cs" />
+    <Compile Include="Commands\ZoomResetCommand.cs" />
     <Compile Include="Interfaces\IChartNavigator.cs" />
     <Compile Include="Models\Expert.cs" />
     <Compile Include="MainPage.xaml.cs">

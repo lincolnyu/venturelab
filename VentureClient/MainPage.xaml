@@ -38,6 +38,7 @@
         <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <Button Command="{Binding ZoomInCommand}">+</Button>
+            <Button Command="{Binding ZoomResetCommand}">R</Button>
             <Button Command="{Binding ZoomOutCommand}">-</Button>
         </StackPanel>
         <Canvas Grid.Row="1" Grid.RowSpan="5" Grid.Column="0" Grid.ColumnSpan="3" Background="LightBlue" Name="MainCanvas"
