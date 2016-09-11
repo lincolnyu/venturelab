@@ -43,9 +43,11 @@ namespace VentureVisualization.SequencePlotting
                 if (!found)
                 {
                     s += p.Step;
-                    if (s >= excess)
+                    var nextp = i + 1 < Prediction.Count ? Prediction[i + 1] : null;
+                    if (s >= excess || nextp != null && s + nextp.Step >= excess)
                     {
                         p.Offset = s - excess;
+                        found = true;
                     }
                 }
                 if (found)

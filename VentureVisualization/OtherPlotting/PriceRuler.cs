@@ -39,7 +39,7 @@ namespace VentureVisualization.OtherPlotting
             for (var bar = start; bar < max; bar += interval)
             {
                 var y = (bar - min) * RulerHeight / d;
-                if (CandleChartPlotter.YMode == SequencePlotter.YModes.TopToBottom)
+                if (CandleChartPlotter.YMode == SamplePlotter.YModes.TopToBottom)
                 {
                     y = RulerHeight - y;
                     DrawMajor(y, bar);

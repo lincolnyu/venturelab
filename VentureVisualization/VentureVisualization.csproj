@@ -41,10 +41,12 @@
   <ItemGroup>
     <Compile Include="Samples\GapSample.cs" />
     <Compile Include="Samples\IDatedSample.cs" />
+    <Compile Include="Samples\IFutureSample.cs" />
     <Compile Include="Samples\ISample.cs" />
     <Compile Include="SequencePlotting\PredictionPlotter.cs" />
     <Compile Include="Samples\PredictionSample.cs" />
     <Compile Include="Samples\RecordSample.cs" />
+    <Compile Include="SequencePlotting\SamplePlotter.cs" />
     <Compile Include="SequencePlotting\SequencerSubscriber.cs" />
     <Compile Include="SequencePlotting\StockAndPredictionSequencer.cs" />
     <Compile Include="SequencePlotting\SequencePlotter.cs" />

@@ -6,7 +6,7 @@ namespace VentureVisualization.SequencePlotting
     using Samples;
     using DrawCandleDelegate = SequencePlotter.DrawShapeDelegate<CandleChartPlotter.CandleShape>;
 
-    public sealed class CandleChartPlotter : SequencePlotter
+    public sealed class CandleChartPlotter : SamplePlotter
     {
         #region Nested types
 
@@ -73,7 +73,7 @@ namespace VentureVisualization.SequencePlotting
 
         #endregion
 
-        public override void PreDraw(IEnumerable<ISample> samples, double startSlot = 0)
+        public override void PreDraw(IEnumerable<VentureVisualization.ISample> samples, double startSlot = 0)
         {
             PlotLoop(samples, startSlot, (s, slot) =>
             {
@@ -85,7 +85,7 @@ namespace VentureVisualization.SequencePlotting
             });
         }
 
-        public override void Draw(IEnumerable<ISample> samples, double startSlot = 0)
+        public override void Draw(IEnumerable<VentureVisualization.ISample> samples, double startSlot = 0)
         {
             var ymin = YMarginManager.YMin;
             var ymax = YMarginManager.YMax;

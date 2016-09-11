@@ -4,9 +4,10 @@ using VentureVisualization.Samples;
 
 namespace VentureVisualization.SequencePlotting
 {
-    public class TimeRuler : SequencerSubscriber
+    public class TimeRuler : SequencePlotter
     {
         public delegate void DrawDatePegDelegate(double x, DateTime dt);
+        public delegate void DrawFutureDatePegDelegate(double x, int days);
 
         public const double DefaultMinInterval = 80;
 
@@ -18,20 +19,18 @@ namespace VentureVisualization.SequencePlotting
         public double MinInterval { get; set; } = DefaultMinInterval;
 
         public event DrawDatePegDelegate DrawDatePeg;
+        public event DrawFutureDatePegDelegate DrawFutureDatePeg;
 
         public override void Draw(IEnumerable<ISample> sequence, double startSlot = 0)
         {
             var len = Sequencer.Length;
             var lastX = double.MinValue;
-            var slot = startSlot;
-            foreach (var s in sequence)
+
+            PlotLoop(sequence, startSlot, (s, slot) =>
             {
-                if (slot >= Sequencer.Length)
-                {
-                    break;
-                }
+                slot += 0.5;
                 var dts = s as IDatedSample;
-                if (dts != null)
+                if (dts != null && DrawDatePeg != null)
                 {
                     var dt = dts.Date;
                     if (dt.Day == 1 || dt.Day % 5 == 0)
@@ -43,9 +42,16 @@ namespace VentureVisualization.SequencePlotting
                             lastX = x;
                         }
                     }
+                    return true;
                 }
-                slot++;
-            }
+                var fs = s as IFutureSample;
+                if (fs != null && DrawFutureDatePeg != null)
+                {
+                    var x = slot * RulerWidth / Sequencer.Length;
+                    DrawFutureDatePeg(x, fs.Days);
+                }
+                return true;
+            });
         }
     }
 }

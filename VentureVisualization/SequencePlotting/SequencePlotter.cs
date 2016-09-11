@@ -7,6 +7,7 @@ namespace VentureVisualization.SequencePlotting
     public abstract class SequencePlotter : SequencerSubscriber
     {
         public delegate void DrawBeginEndDelegate();
+        public delegate bool SlotPredicate<TSample>(TSample sample, double slot)  where TSample : ISample;
 
         /// <summary>
         ///  To plot a sample
@@ -24,31 +25,27 @@ namespace VentureVisualization.SequencePlotting
         /// </summary>
         public delegate void DrawShapeDelegate<T>(T shape) where T : BaseShape;
 
-        public enum YModes
-        {
-            TopToBottom,
-            ButtomToTop
-        }
-
         public class BaseShape
         {
             public StockRecord Record { get; set; }
         }
-        
-        public const YModes DefaultYMode = YModes.TopToBottom;
-
+     
         public SequencePlotter(bool subscribePreDraw) : base(subscribePreDraw)
         {
         }
-
-        public virtual YModes YMode { get; set; } = DefaultYMode;
 
         public event DrawBeginEndDelegate DrawBegin;
         public event DrawBeginEndDelegate DrawEnd;
 
         #region Methods
 
-        protected void PlotLoop<TSample>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample> plotSample) where TSample : ISample
+        protected bool DefaultSlotCheck<TSample>(TSample sample, double slot) where TSample : ISample => slot < Sequencer.Length;
+
+        protected void PlotLoop<TSample>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample> plotSample) where TSample : ISample => PlotLoop(samples, startSlot, plotSample, DefaultSlotCheck);
+
+        protected IEnumerable<T> PlotLoopYield<TSample, T>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample, T> plotSample) where TSample : ISample => PlotLoopYield(samples, startSlot, plotSample, DefaultSlotCheck);
+
+        protected void PlotLoop<TSample>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample> plotSample, SlotPredicate<TSample> slotCheck) where TSample : ISample
         {
             var slot = startSlot;
             var first = true;
@@ -63,7 +60,7 @@ namespace VentureVisualization.SequencePlotting
                 {
                     slot += sample.Step;
                 }
-                if (slot >= Sequencer.Length)
+                if (!slotCheck(sample, slot))
                 {
                     break;
                 }
@@ -77,7 +74,7 @@ namespace VentureVisualization.SequencePlotting
             }
         }
 
-        protected IEnumerable<T> PlotLoopYield<TSample, T>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample, T> plotSample) where TSample : ISample
+        protected IEnumerable<T> PlotLoopYield<TSample, T>(IEnumerable<TSample> samples, double startSlot, PlotSampleDelegate<TSample, T> plotSample, SlotPredicate<TSample> slotCheck) where TSample : ISample
         {
             var slot = startSlot;
             var first = true;
@@ -92,7 +89,7 @@ namespace VentureVisualization.SequencePlotting
                 {
                     slot += sample.Step;
                 }
-                if (slot >= Sequencer.Length)
+                if (!slotCheck(sample, slot))
                 {
                     break;
                 }

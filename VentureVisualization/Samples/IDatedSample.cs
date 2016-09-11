@@ -2,7 +2,7 @@
 
 namespace VentureVisualization.Samples
 {
-    public interface IDatedSample : ISample
+    public interface IDatedSample : VentureVisualization.ISample
     {
         DateTime Date { get; }
     }

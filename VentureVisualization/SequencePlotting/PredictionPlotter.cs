@@ -5,7 +5,7 @@ namespace VentureVisualization.SequencePlotting
 {
     using DrawPredictionDelegate = SequencePlotter.DrawShapeDelegate<PredictionPlotter.PredictionShape>;
 
-    public class PredictionPlotter : SequencePlotter
+    public class PredictionPlotter : SamplePlotter
     {
         public class PredictionShape : BaseShape
         {
@@ -35,15 +35,16 @@ namespace VentureVisualization.SequencePlotting
 
         public override void PreDraw(IEnumerable<ISample> samples, double startSlot = 0)
         {
-            double? lastClose = null;
+            var lastRecord = Sequencer.Records[Sequencer.Records.Count - 1];
+            double lastClose = lastRecord.Close;
+            var oobGot = false;
             PlotLoop(samples, startSlot, (s, slot) =>
             {
                 var p = s as PredictionSample;
                 if (p != null)
                 {
-                    if (lastClose == null) return false;
-                    var yupper = lastClose.Value * (1 + p.Y + p.StdVar);
-                    var ylower = lastClose.Value * (1 + p.Y - p.StdVar);
+                    var yupper = lastClose * (1 + p.Y + p.StdVar);
+                    var ylower = lastClose * (1 + p.Y - p.StdVar);
                     YMarginManager.UpdateMax(yupper);
                     YMarginManager.UpdateMin(ylower);
                     return true;
@@ -54,6 +55,11 @@ namespace VentureVisualization.SequencePlotting
                     lastClose = r.Close;
                 }
                 return true;
+            }, (s, slot)=>
+            {
+                if (oobGot) return false;
+                oobGot = slot > Sequencer.Length;
+                return true;
             });
         }
 
@@ -62,22 +68,18 @@ namespace VentureVisualization.SequencePlotting
             var yd = YMax - YMin;
             var xrate = ChartWidth / Length;
             var yrate = ChartHeight / yd;
-            double? lastClose = null;
             double prevSlot = 0;
             PredictionShape prevShape = null;
+            var lastRecord = Sequencer.Records[Sequencer.Records.Count - 1];
+            double lastClose = lastRecord.Close;
+            var oobGot = false;
+            const double slotBias = 0.5;
             PlotLoop(samples, startSlot, (s, slot) =>
             {
                 var p = s as PredictionSample;
                 if (p != null)
                 {
-                    slot += 0.5;
-                    // not preceded by end of records, not to draw predict
-                    if (lastClose == null)
-                    {
-                        return false;
-                    }
-                    var lastRecord = Sequencer.Records[Sequencer.Records.Count - 1];
-                    System.Diagnostics.Debug.Assert( lastClose == lastRecord.Close);
+                    slot += slotBias;
 
                     var x = slot * xrate;
                     var yval = lastClose * (1 + p.Y);
@@ -95,7 +97,7 @@ namespace VentureVisualization.SequencePlotting
                         ylower = ChartHeight - ylower;
                     }
 
-                    if (prevShape == null)
+                    if (prevShape == null && slot > slotBias)
                     {
                         // previous one was the last record
                         var prevY = (lastClose - YMin) * yrate;
@@ -106,18 +108,18 @@ namespace VentureVisualization.SequencePlotting
                         prevShape = new PredictionShape
                         {
                             X = (prevSlot + 1) * xrate,
-                            Y = prevY.Value,
-                            YUpper = prevY.Value,
-                            YLower = prevY.Value
+                            Y = prevY,
+                            YUpper = prevY,
+                            YLower = prevY
                         };
                     }
 
                     var shape = new PredictionShape
                     {
                         X = x,
-                        Y = y.Value,
-                        YUpper = yupper.Value,
-                        YLower = ylower.Value,
+                        Y = y,
+                        YUpper = yupper,
+                        YLower = ylower,
                         PreviousShape = prevShape
                     };
                     DrawPrediction(shape);
@@ -131,6 +133,11 @@ namespace VentureVisualization.SequencePlotting
                     prevSlot = slot;
                     lastClose = r.Close;
                 }
+                return true;
+            }, (s, slot) =>
+            {
+                if (oobGot) return false;
+                oobGot = slot > Sequencer.Length;
                 return true;
             });
         }

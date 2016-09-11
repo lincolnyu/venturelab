@@ -8,7 +8,7 @@ namespace VentureVisualization.SequencePlotting
     using Samples;
     using DrawVolumeDelegate = SequencePlotter.DrawShapeDelegate<VolumePlotter.VolumeShape>;
 
-    public sealed class VolumePlotter : SequencePlotter
+    public sealed class VolumePlotter : SamplePlotter
     {
         public enum VerticalModes
         {
@@ -46,7 +46,7 @@ namespace VentureVisualization.SequencePlotting
 
         public event DrawVolumeDelegate DrawVolume;
 
-        public override void Draw(IEnumerable<ISample> samples, double startSlot)
+        public override void Draw(IEnumerable<VentureVisualization.ISample> samples, double startSlot)
         {
             double ymax;
             switch (VertialMode)

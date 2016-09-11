@@ -374,6 +374,7 @@ namespace VentureClient
 
             _timeRuler = new TimeRuler();
             _timeRuler.DrawDatePeg += DrawDatePeg;
+            _timeRuler.DrawFutureDatePeg += DrawFutureDatePeg;
             _timeRuler.Subscribe(_sequencer);
 
             _volumePlotter = new VolumePlotter();
@@ -545,6 +546,10 @@ namespace VentureClient
 
         private void PredictPlotterOnDrawPrediction(PredictionPlotter.PredictionShape shape)
         {
+            if (shape.PreviousShape == null)
+            {
+                return;
+            }
             var lines = new Line[]
             {
                 new Line
@@ -576,6 +581,20 @@ namespace VentureClient
 
         private void DrawDatePeg(double x, DateTime dt)
         {
+            var year = dt.Date.Year;
+            var text = string.Format(year > _lastYear ? "{0:dd/MM/yy}" : "{0:dd/MM}", dt.Date);
+            DrawDatePeg(x, text, year > _lastYear ? _redBrush : _blackBrush);
+            _lastYear = year;
+        }
+
+        private void DrawFutureDatePeg(double x, int days)
+        {
+            var text = days.ToString() + "d";
+            DrawDatePeg(x, text, _blueBrush);
+        }
+
+        private void DrawDatePeg(double x, string text, Brush textColor)
+        {
             var xpeg = MarginLeft + x;
             var ytop = MainCanvas.ActualHeight - MarginY;
             var ybottom = ytop + DateBarHeight;
@@ -589,18 +608,17 @@ namespace VentureClient
             };
             MainCanvas.Children.Add(line);
 
-            var year = dt.Date.Year;
-            var text = new TextBlock
+            var tb = new TextBlock
             {
-                Text = string.Format(year > _lastYear ? "{0:dd/MM/yy}" : "{0:dd/MM}", dt.Date),
-                Foreground = year > _lastYear ? _redBrush : _blackBrush
+                Text = text,
+                Foreground = textColor
             };
-            _lastYear = year;
-            text.SetValue(Canvas.TopProperty, ybottom);
-            text.SetValue(Canvas.LeftProperty, xpeg);
-            text.LayoutUpdated += (s, e) =>
-                text.SetValue(Canvas.LeftProperty, xpeg - text.ActualWidth / 2);
-            MainCanvas.Children.Add(text);
+
+            tb.SetValue(Canvas.TopProperty, ybottom);
+            tb.SetValue(Canvas.LeftProperty, xpeg);
+            tb.LayoutUpdated += (s, e) =>
+                tb.SetValue(Canvas.LeftProperty, xpeg - tb.ActualWidth / 2);
+            MainCanvas.Children.Add(tb);
         }
 
         private void PriceRulerOnDrawMajor(double y, double value)

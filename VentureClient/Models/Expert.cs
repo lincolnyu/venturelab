@@ -90,6 +90,7 @@ namespace VentureClient.Models
                 if (!double.TryParse(expectVar, out v)) yield break;
                 yield return new PredictionSample
                 {
+                    Days = days,
                     Step = days - prevDays,
                     Y = y/100,
                     StdVar = v/100
