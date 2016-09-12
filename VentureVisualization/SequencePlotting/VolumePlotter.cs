@@ -30,8 +30,8 @@ namespace VentureVisualization.SequencePlotting
         {
         }
 
-        public double ChartWidth { get; set; }
-        public double ChartHeight { get; set; }
+        public override double ChartWidth { get; set; }
+        public override double ChartHeight { get; set; }
 
         public VerticalModes VertialMode { get; set; } = DefaultVerticalMode;
 

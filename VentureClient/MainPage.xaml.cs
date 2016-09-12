@@ -15,6 +15,7 @@ using VentureClient.Models;
 using VentureClient.Interfaces;
 using VentureVisualization.Samples;
 using static VentureVisualization.SequencePlotting.CandleChartPlotter;
+using static VentureVisualization.SequencePlotting.TimeRuler;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -114,6 +115,8 @@ namespace VentureClient
 
         private Line _crossHori = new Line();
         private Line _crossVert = new Line();
+        private TextBlock _labelTime = new TextBlock();
+        private TextBlock _labelPrice = new TextBlock();
 
         private Point _lastPointPos;
 
@@ -195,8 +198,8 @@ namespace VentureClient
 
         #region Handy properties
 
-        private double IndexRightmost => 
-            Math.Max(0, _sequencer.TotalDataLength - _sequencer.Length + RightmostAllowance);
+        private int IndexRightmost => 
+            (int)Math.Ceiling(Math.Max(0, _sequencer.TotalDataLength - _sequencer.Length + RightmostAllowance));
 
         #endregion
 
@@ -243,7 +246,7 @@ namespace VentureClient
         {
             PrepareChartSizeForRedraw();
 
-            _startIndex = (int)Math.Ceiling(IndexRightmost);
+            _startIndex = IndexRightmost;
 
             ReDraw();
 
@@ -301,9 +304,9 @@ namespace VentureClient
 
         private void WorryAboutRight()
         {
-            if (_startIndex > (int)IndexRightmost)
+            if (_startIndex > IndexRightmost)
             {
-                _startIndex = (int)IndexRightmost;
+                _startIndex = IndexRightmost;
             }
         }
 
@@ -337,6 +340,8 @@ namespace VentureClient
         {
             MainCanvas.Children.Add(_crossHori);
             MainCanvas.Children.Add(_crossVert);
+            MainCanvas.Children.Add(_labelTime);
+            MainCanvas.Children.Add(_labelPrice);
         }
 
         private void SetupInitUI()
@@ -374,7 +379,6 @@ namespace VentureClient
 
             _timeRuler = new TimeRuler();
             _timeRuler.DrawDatePeg += DrawDatePeg;
-            _timeRuler.DrawFutureDatePeg += DrawFutureDatePeg;
             _timeRuler.Subscribe(_sequencer);
 
             _volumePlotter = new VolumePlotter();
@@ -579,20 +583,26 @@ namespace VentureClient
             }
         }
 
-        private void DrawDatePeg(double x, DateTime dt)
+        private void DrawDatePeg(TimeShape ts)
         {
-            var year = dt.Date.Year;
-            var text = string.Format(year > _lastYear ? "{0:dd/MM/yy}" : "{0:dd/MM}", dt.Date);
-            DrawDatePeg(x, text, year > _lastYear ? _redBrush : _blackBrush);
-            _lastYear = year;
+            var x = ts.X;
+            var ds = ts as PastDateShape;
+            if (ds != null)
+            {
+                var year = ds.Date.Year;
+                var text = year > _lastYear ? $"{ds.Date:dd/MM/yy}" : $"{ds.Date:dd/MM}";
+                DrawDatePeg(x, text, year > _lastYear ? _redBrush : _blackBrush);
+                _lastYear = year;
+                return;
+            }
+            var fds = ts as FutureDateShape;
+            if(fds != null)
+            {
+                var text = fds.Days.ToString() + "d";
+                DrawDatePeg(x, text, _blueBrush);
+            }
         }
-
-        private void DrawFutureDatePeg(double x, int days)
-        {
-            var text = days.ToString() + "d";
-            DrawDatePeg(x, text, _blueBrush);
-        }
-
+        
         private void DrawDatePeg(double x, string text, Brush textColor)
         {
             var xpeg = MarginLeft + x;
@@ -636,7 +646,7 @@ namespace VentureClient
 
             var text = new TextBlock
             {
-                Text = string.Format("{0:0.000}", value)
+                Text = $"{value:0.000}"
             };
             text.SetValue(Canvas.TopProperty, y);
             text.SetValue(Canvas.LeftProperty, 0);
@@ -653,6 +663,8 @@ namespace VentureClient
             {
                 _crossHori.Visibility = Visibility.Collapsed;
                 _crossVert.Visibility = Visibility.Collapsed;
+                _labelTime.Visibility = Visibility.Collapsed;
+                _labelPrice.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -670,8 +682,55 @@ namespace VentureClient
                 _crossVert.Y2 = MainCanvas.ActualHeight;
                 _crossVert.X1 = _crossVert.X2 = _lastPointPos.X;
                 _crossVert.Stroke = _blackBrush;
+
                 _crossHori.Visibility = Visibility.Visible;
                 _crossVert.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _crossHori.Visibility = Visibility.Collapsed;
+                _crossVert.Visibility = Visibility.Collapsed;
+            }
+
+            string timeText = null;
+            if (_timeRuler != null)
+            {
+                var x = _lastPointPos.X - _chartXOffset;
+                var ts = _timeRuler.FromXToTimeShape(x);
+                timeText = ts?.ToString();
+            }
+            if (timeText != null)
+            {
+                _labelTime.Text = timeText;
+                _labelTime.SetValue(Canvas.TopProperty, 0);
+                if (_lastPointPos.X + _labelTime.ActualWidth < MainCanvas.ActualWidth || _lastPointPos.X < _labelTime.ActualWidth)
+                {
+                    _labelTime.SetValue(Canvas.LeftProperty, _lastPointPos.X);
+                }
+                else
+                {
+                    _labelTime.SetValue(Canvas.LeftProperty, _lastPointPos.X - _labelTime.ActualWidth);
+                }
+                _labelTime.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _labelTime.Visibility = Visibility.Collapsed;
+            }
+
+            var y = _lastPointPos.Y - _candleChartYOffset;
+            if (_candlePlotter != null && y < _candleChartHeight)
+            {
+                var py = _candlePlotter.ViewYToY(y, _yMarginManager);
+                _labelPrice.Text = $"{py:0.000}";
+
+                _labelPrice.SetValue(Canvas.TopProperty, _lastPointPos.Y);
+                _labelPrice.SetValue(Canvas.LeftProperty, MainCanvas.ActualWidth - _labelPrice.ActualWidth);
+                _labelPrice.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _labelPrice.Visibility = Visibility.Collapsed;
             }
         }
 

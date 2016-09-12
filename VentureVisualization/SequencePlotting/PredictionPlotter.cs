@@ -26,8 +26,8 @@ namespace VentureVisualization.SequencePlotting
         public double YMin => YMarginManager.YMin;
 
         public CandleChartPlotter CandleChartPlotter { get; }
-        public double ChartWidth => CandleChartPlotter.ChartWidth;
-        public double ChartHeight => CandleChartPlotter.ChartHeight;
+        public override double ChartWidth => CandleChartPlotter.ChartWidth;
+        public override double ChartHeight => CandleChartPlotter.ChartHeight;
         public override YModes YMode => CandleChartPlotter.YMode;
         public double Length => Sequencer.Length;
 

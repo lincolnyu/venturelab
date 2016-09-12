@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace VentureVisualization.SequencePlotting
 {
@@ -44,7 +43,6 @@ namespace VentureVisualization.SequencePlotting
             {
                 if (_verticalMode == value) return;
                 UpdateVerticalSettings();
-
             }
         }
 

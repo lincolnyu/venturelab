@@ -100,7 +100,6 @@ namespace VentureClient.Models
         }
 
         // TODO review this
-        private static bool IsStockCode(string expectCode) =>  expectCode.Length == 3 && expectCode.All(char.IsLetterOrDigit);
-
+        private static bool IsStockCode(string expectCode) => expectCode.Length == 3 && expectCode.All(char.IsLetterOrDigit);
     }
 }

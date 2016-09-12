@@ -17,9 +17,11 @@ namespace VentureClient.Models
         /// <returns>True if a different file has been picked</returns>
         public async Task<bool> PickFile()
         {
-            var fop = new FileOpenPicker();
-            fop.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-            fop.FileTypeFilter.Add(".txt");
+            var fop = new FileOpenPicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                FileTypeFilter = { ".txt" }
+            };
             var file = await fop.PickSingleFileAsync();
             if (file != null && File != file)
             {
