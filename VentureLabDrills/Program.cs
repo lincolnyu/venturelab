@@ -17,6 +17,7 @@ using static VentureLab.Helpers.AsxFileHelper;
 using static VentureLab.Asx.StockManager;
 using static VentureCommon.Helpers.StockRecordHelper;
 using System.Collections.Generic;
+using VentureLab.Utilities;
 
 namespace VentureLabDrills
 {
@@ -65,8 +66,6 @@ namespace VentureLabDrills
         private static SimpleTimeEstimator _simpleTimeEstimator = new SimpleTimeEstimator();
 
         private static PointManagerFactory _pointManagerFactory;
-
-        private static readonly string[] _periodNames = new[] { "+1", "+2", "+5", "+10", "+20", "+65" };
 
         private static MyLogger Logger;
 
@@ -401,18 +400,18 @@ namespace VentureLabDrills
                 var stdyi = StatisticsHelper.GetStandardVariance(yi, yyi);
                 var yiperc = (Math.Pow(2, yi) - 1) * 100;
                 var pmperc = (Math.Pow(2, stdyi) - 1) * 100;
-                var yiperStr = GetFormattedStringOfDouble(yiperc, 2);
-                var pmpercStr = GetFormattedStringOfNonNegativeDouble(pmperc, 2);
+                var yiperStr = ExpertResultReRater.GetFormattedStringOfDouble(yiperc, 2);
+                var pmpercStr = ExpertResultReRater.GetFormattedStringOfNonNegativeDouble(pmperc, 2);
                 if (indent != null)
                 {
-                    Logger.WriteLine(MyLogger.Levels.Info, $"{indent}{_periodNames[i]}: {yiperStr}+/-{pmpercStr}%");
+                    Logger.WriteLine(MyLogger.Levels.Info, $"{indent}+{ExpertResultReRater.Periods[i]}: {yiperStr}+/-{pmpercStr}%");
                 }
                 else
                 {
-                    Logger.Write(MyLogger.Levels.Info, $"{_periodNames[i]}: {yiperStr}+/-{pmpercStr}%; ");
+                    Logger.Write(MyLogger.Levels.Info, $"+{ExpertResultReRater.Periods[i]}: {yiperStr}+/-{pmpercStr}%; ");
                 }
             }
-            var clstr = GetScientificExp(result.Strength, 2);
+            var clstr = ExpertResultReRater.GetScientificExp(result.Strength, 2);
             if (indent != null)
             {
                 Logger.WriteLine(MyLogger.Levels.Info, $"{indent}Confidence level: {clstr}");
@@ -421,49 +420,6 @@ namespace VentureLabDrills
             {
                 Logger.Write(MyLogger.Levels.Info, $"Confidence level: {clstr}");
             }
-        }
-
-        private static string GetScientificExp(double value, int decimals)
-        {
-            if (double.IsPositiveInfinity(value))
-            {
-                return "+Inf";
-            }
-            else if (double.IsNegativeInfinity(value))
-            {
-                return "-Inf";
-            }
-            var s = $"{{0:E{decimals}}}";
-            var fmt = string.Format(s, value);
-            return fmt;
-        }
-
-        private static string GetFormattedStringOfDouble(double value, int decimals)
-        {
-            if (double.IsPositiveInfinity(value))
-            {
-                return "+Inf";
-            }
-            else if (double.IsNegativeInfinity(value))
-            {
-                return "-Inf";
-            }
-            var zeros = new string('0', decimals);
-            var s = $"{{0:0.{zeros}}}";
-            var fmt = string.Format(s, value);
-            return fmt;
-        }
-
-        private static string GetFormattedStringOfNonNegativeDouble(double value, int decimals)
-        {
-            if (double.IsInfinity(value))
-            {
-                return "Inf";
-            }
-            var zeros = new string('0', decimals);
-            var s = $"{{0:0.{zeros}}}";
-            var fmt = string.Format(s, value);
-            return fmt;
         }
 
         private static void DisplayWeights(StockItem item, int count = 5)

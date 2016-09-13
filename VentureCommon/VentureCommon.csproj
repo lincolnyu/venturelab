@@ -39,6 +39,7 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\ExpertParser.cs" />
     <Compile Include="Helpers\StockRecordHelper.cs" />
     <Compile Include="StockRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

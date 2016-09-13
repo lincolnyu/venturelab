@@ -1,6 +1,8 @@
-﻿namespace VentureVisualization.Samples
+﻿using VentureCommon.Helpers;
+
+namespace VentureVisualization.Samples
 {
-    public class PredictionSample : IFutureSample
+    public class PredictionSample : ExpertParser.Prediction, IFutureSample
     {
         #region IFutureSample members
 
@@ -15,11 +17,6 @@
 
         #endregion
 
-        public int Days { get; set; }
-
         #endregion
-
-        public double Y { get; set; }
-        public double StdVar { get; set; }
     }
 }

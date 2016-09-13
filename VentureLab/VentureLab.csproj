@@ -87,6 +87,7 @@
     <Compile Include="QbGaussianMethod\Helpers\PredictionCommon.cs" />
     <Compile Include="QbGaussianMethod\Predictors\ConfinedGaussianPredictor.cs" />
     <Compile Include="QbGaussianMethod\Predictors\GenericPredictor.cs" />
+    <Compile Include="Utilities\ExpertResultReRater.cs" />
     <Compile Include="Utilities\ScoreTableFixer.cs" />
   </ItemGroup>
   <ItemGroup>

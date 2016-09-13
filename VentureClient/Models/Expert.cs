@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using VentureVisualization.Samples;
+using VentureCommon.Helpers;
 
 namespace VentureClient.Models
 {
@@ -33,7 +34,7 @@ namespace VentureClient.Models
             foreach (var line in lines)
             {
                 string c;
-                if (ParseAsHeader(line, out rank, out c))
+                if (line.ParseAsHeader(out rank, out c))
                 {
                     code = c;
                     continue;
@@ -51,55 +52,16 @@ namespace VentureClient.Models
             ExpertUpdated?.Invoke();
         }
 
-        private static bool ParseAsHeader(string line, out int rank, out string code)
-        {
-            rank = 0;
-            code = null;
-            var i = line.IndexOf(':');
-            if (i <= 0) return false;
-            var expectRank = line.Substring(0, i);
-            if (!int.TryParse(expectRank, out rank)) return false;
-            var expectCode = line.Substring(i + 1).Trim();
-            if (!IsStockCode(expectCode)) return false;
-            code = expectCode;
-            return true;
-        }
-
         private static IEnumerable<PredictionSample> ParseSample(string line)
         {
-            var segs = line.Split(';');
             var prevDays = 0;
-            foreach (var seg in segs)
+            var samples = ExpertParser.ParseSample<PredictionSample>(line);
+            foreach (var sample in samples)
             {
-                var pair = seg.Split(':');
-                if (pair.Length != 2) yield break;
-                var expectDays = pair[0].Trim();
-                var expectRange = pair[1].Trim();
-                if (string.IsNullOrWhiteSpace(expectDays) || string.IsNullOrWhiteSpace(expectRange)) yield break;
-                int days;
-                expectDays = expectDays.TrimStart('+');
-                if (!int.TryParse(expectDays, out days)) yield break;
-                var i = expectRange.IndexOf("+/-");
-                if (i < 0) yield break;
-                var expectY = expectRange.Substring(0, i);
-                var expectVar = expectRange.Substring(i + 3);
-                if (string.IsNullOrWhiteSpace(expectY) || string.IsNullOrWhiteSpace(expectVar)) yield break;
-                if (expectVar[expectVar.Length - 1] == '%') expectVar = expectVar.Substring(0, expectVar.Length - 1);
-                double y, v;
-                if (!double.TryParse(expectY, out y)) yield break;
-                if (!double.TryParse(expectVar, out v)) yield break;
-                yield return new PredictionSample
-                {
-                    Days = days,
-                    Step = days - prevDays,
-                    Y = y/100,
-                    StdVar = v/100
-                };
-                prevDays = days;
+                sample.Step = sample.Days - prevDays;
+                prevDays = sample.Days;
+                yield return sample;
             }
         }
-
-        // TODO review this
-        private static bool IsStockCode(string expectCode) => expectCode.Length == 3 && expectCode.All(char.IsLetterOrDigit);
     }
 }

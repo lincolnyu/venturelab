@@ -62,7 +62,6 @@ namespace VentureLab.Helpers
             }
         }
 
-
         public static bool IsAsxDateFile(string fileName, out DateTime date)
         {
             var fnwoext = Path.GetFileNameWithoutExtension(fileName);
@@ -75,6 +74,5 @@ namespace VentureLab.Helpers
             if (segs.Length < 1) return null;
             return segs[0];
         }
-
     }
 }
