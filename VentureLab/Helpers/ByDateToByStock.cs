@@ -153,7 +153,7 @@ namespace VentureLab.Helpers
                 using (var codeFile = GetCodeFile(OutputDir, code, cb.Append))
                 {
                     LinesSuccessful += cb.LineCount;
-                    codeFile.WriteLine(cb.Flush());
+                    codeFile.Write(cb.Flush());
                 }
                 cb.Append = true;
             }
@@ -169,12 +169,39 @@ namespace VentureLab.Helpers
             var file = Path.Combine(outputDir, code + ".txt");
             try
             {
+                if (append) TrimFile(file);
                 return new StreamWriter(file, append);
             }
             catch (Exception)
             {
                 Console.WriteLine($"error opening file {file}");
                 throw;
+            }
+        }
+
+        private static void TrimFile(string file)
+        {
+            if (!File.Exists(file)) return;
+            long trimPos = 0;
+            using (var fs = new FileStream(file, FileMode.Open))
+            {
+                fs.Seek(0, SeekOrigin.End);
+                for (; fs.Position >= 0; fs.Position-=2)
+                {
+                    var c = (char)fs.ReadByte();
+                    if (!char.IsWhiteSpace(c))
+                    {
+                        break;
+                    }
+                }
+                fs.SetLength(trimPos);
+            }
+            if (trimPos > 0)
+            {
+                using (var sw = new StreamWriter(file, true))
+                {
+                    sw.WriteLine();
+                }
             }
         }
 
