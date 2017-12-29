@@ -58,12 +58,6 @@
     <Compile Include="SequencePlotting\VolumePlotter.cs" />
     <Compile Include="SequencePlotting\YMarginManager.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\VentureCommon\VentureCommon.csproj">
-      <Project>{c30d6005-074a-4919-95ea-df38c7bbbd01}</Project>
-      <Name>VentureCommon</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

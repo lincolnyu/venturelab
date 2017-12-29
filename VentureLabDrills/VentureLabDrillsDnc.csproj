@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>VentureLabDrills</RootNamespace>
+    <AssemblyName>VentureLabDrillsDnc</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\qlogger\QLogger\QLoggerStd.csproj" />
+    <ProjectReference Include="..\VentureCommon\VentureCommonStd.csproj" />
+    <ProjectReference Include="..\VentureLab\VentureLabStd.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>

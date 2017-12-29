@@ -57,14 +57,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\qlogger\QLogger\QLogger.csproj">
-      <Project>{124e7226-5154-4a8c-b4a1-bdaeba8c1973}</Project>
-      <Name>QLogger</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\VentureCommon\VentureCommon.csproj">
-      <Project>{c30d6005-074a-4919-95ea-df38c7bbbd01}</Project>
-      <Name>VentureCommon</Name>
-    </ProjectReference>
     <ProjectReference Include="..\VentureLab\VentureLab.csproj">
       <Project>{1C47208E-8F5E-41A9-A4B7-325877C1A136}</Project>
       <Name>VentureLab</Name>
