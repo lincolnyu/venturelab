@@ -143,16 +143,15 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VentureCommon\VentureCommonStd.csproj">
-      <Project>{fec33f76-5ac9-4ee9-9069-84175382345a}</Project>
-      <Name>VentureCommonStd</Name>
+    <ProjectReference Include="..\VentureCommon\VentureCommon.csproj">
+      <Project>{0c54844e-4216-406b-b760-25c55fbde0b5}</Project>
+      <Name>VentureCommon</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VentureVisualization\VentureVisualizationStd.csproj">
-      <Project>{52299a2b-7a50-47f2-a44c-24df316476ee}</Project>
-      <Name>VentureVisualizationStd</Name>
+    <ProjectReference Include="..\VentureVisualization\VentureVisualization.csproj">
+      <Project>{ce2baa20-163e-42dd-ba7c-c087202dbede}</Project>
+      <Name>VentureVisualization</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

@@ -55,13 +55,13 @@
     <Compile Include="StrainScoringTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VentureCommon\VentureCommonStd.csproj">
-      <Project>{fec33f76-5ac9-4ee9-9069-84175382345a}</Project>
-      <Name>VentureCommonStd</Name>
+    <ProjectReference Include="..\VentureCommon\VentureCommon.csproj">
+      <Project>{0c54844e-4216-406b-b760-25c55fbde0b5}</Project>
+      <Name>VentureCommon</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VentureLab\VentureLabStd.csproj">
-      <Project>{71f415aa-ef9c-4bf9-bc40-7440d9ab0663}</Project>
-      <Name>VentureLabStd</Name>
+    <ProjectReference Include="..\VentureLab\VentureLab.csproj">
+      <Project>{ed04406e-381c-40f5-828d-f2f3cb76a6db}</Project>
+      <Name>VentureLab</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>
